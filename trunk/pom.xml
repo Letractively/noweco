@@ -233,15 +233,15 @@
   <distributionManagement>
     <repository>
       <id>noweco.intern</id>
-      <url>svn:http://noweco.googlecode.com/svn/repo</url>
+      <url>svn:https://noweco.googlecode.com/svn/repo</url>
     </repository>
     <snapshotRepository>
       <id>noweco.intern</id>
-      <url>svn:http://noweco.googlecode.com/svn/repo</url>
+      <url>svn:https://noweco.googlecode.com/svn/repo</url>
     </snapshotRepository>
     <site>
       <id>noweco.intern</id>
-      <url>svn:http://noweco.googlecode.com/svn/site</url>
+      <url>svn:https://noweco.googlecode.com/svn/site</url>
     </site>
   </distributionManagement>
   <scm>
