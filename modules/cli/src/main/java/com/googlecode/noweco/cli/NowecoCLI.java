@@ -28,7 +28,7 @@ public class NowecoCLI {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NowecoCLI.class);
 
-    private static final Pattern PATTERN = Pattern.compile("http([s])://([^/]*)(.*)");
+    private static final Pattern PATTERN = Pattern.compile("http(s)?://([^/:]*)(?::\\d+)?(.*)");
 
     public static void main(String[] args) {
         File settingsFile = new File(args[0]);

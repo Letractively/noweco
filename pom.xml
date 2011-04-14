@@ -238,10 +238,11 @@
       <id>noweco.intern</id>
       <url>svn:https://noweco.googlecode.com/svn/repo</url>
     </snapshotRepository>
-    <site>
-      <id>noweco.intern</id>
-      <url>svn:https://noweco.googlecode.com/svn/site</url>
-    </site>
+    <!-- disable site because svn auto-props do not work -->
+<!--     <site> -->
+<!--       <id>noweco.intern</id> -->
+<!--       <url>svn:https://noweco.googlecode.com/svn/site</url> -->
+<!--     </site> -->
   </distributionManagement>
   <scm>
     <connection>scm:svn:http://noweco.googlecode.com/svn/trunk</connection>

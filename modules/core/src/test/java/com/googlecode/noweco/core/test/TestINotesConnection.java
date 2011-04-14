@@ -11,7 +11,7 @@ import com.googlecode.noweco.core.INotesConnection;
 
 public class TestINotesConnection {
 
-    private static final Pattern PATTERN = Pattern.compile("http([s])://([^/]*)(.*)");
+    private static final Pattern PATTERN = Pattern.compile("http(s)?://([^/:]*)(?::\\d+)?(.*)");
 
     @Test
     public void testConnect() throws IOException {
