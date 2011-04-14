@@ -3,6 +3,8 @@ package com.googlecode.noweco.core.bull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -26,6 +28,9 @@ import com.googlecode.noweco.core.httpclient.unsecure.UnsecureHttpClientFactory;
 public class BullPortailConnector implements PortailConnector {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BullPortailConnector.class);
+
+    private static final Pattern DATAS = Pattern.compile("name=\"Datas\"\\s*value=\"([^\"]*)\"");
+    private static final Pattern LAST_CNX = Pattern.compile("name=\"lastCnx\"\\s*value=\"([^\"]*)\"");
 
     public HttpClient connect(HttpHost proxy, String user, String password) throws IOException {
         DefaultHttpClient httpclient = UnsecureHttpClientFactory.INSTANCE.createUnsecureHttpClient(proxy);
@@ -60,10 +65,11 @@ public class BullPortailConnector implements PortailConnector {
 
         // free result resources
         HttpEntity entity = rsp.getEntity();
+        String firstEntity = EntityUtils.toString(entity);
         if (entity != null) {
-          //  if (LOGGER.isDebugEnabled()) {
-                LOGGER.info(EntityUtils.toString(entity));
-          //  }
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(firstEntity);
+            }
             EntityUtils.consume(entity);
         }
 
@@ -84,12 +90,17 @@ public class BullPortailConnector implements PortailConnector {
         nvps.add(new BasicNameValuePair("UrlConnect", "https://telefrec.bull.fr/horde/"));
         nvps.add(new BasicNameValuePair("Service", "WEBMAIL-FREC"));
 
-        nvps.add(new BasicNameValuePair(
-                "Datas",
-"TODO FETCH FROM PREVIOUS PAGE"
-        ));
+        Matcher datasMatcher = DATAS.matcher(firstEntity);
+        if (!datasMatcher.find()) {
+            throw new IOException("Unable to find Datas");
+        }
+        nvps.add(new BasicNameValuePair("Datas", datasMatcher.group(1)));
 
-        nvps.add(new BasicNameValuePair("lastCnx", "2011/04/14 13:29"));
+        Matcher lastCnxMatcher = LAST_CNX.matcher(firstEntity);
+        if (!lastCnxMatcher.find()) {
+            throw new IOException("Unable to find lastCnx");
+        }
+        nvps.add(new BasicNameValuePair("lastCnx", lastCnxMatcher.group(1)));
         httpost.setEntity(new UrlEncodedFormEntity(nvps, HTTP.UTF_8));
 
         // send the request
