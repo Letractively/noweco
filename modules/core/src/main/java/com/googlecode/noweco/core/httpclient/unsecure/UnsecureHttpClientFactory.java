@@ -11,9 +11,6 @@ import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
 
-import com.googlecode.noweco.core.UnsecureResponseProcessCookies;
-import com.googlecode.noweco.core.UnsecureX509TrustManager;
-
 public class UnsecureHttpClientFactory {
 
     public static UnsecureHttpClientFactory INSTANCE = new UnsecureHttpClientFactory();
