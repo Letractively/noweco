@@ -1,4 +1,4 @@
-package com.googlecode.noweco.core;
+package com.googlecode.noweco.core.lotus;
 
 import java.io.IOException;
 

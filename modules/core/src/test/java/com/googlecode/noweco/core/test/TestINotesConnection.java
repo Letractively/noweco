@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.googlecode.noweco.core.INotesConnection;
+import com.googlecode.noweco.core.lotus.INotesConnection;
 
 public class TestINotesConnection {
 

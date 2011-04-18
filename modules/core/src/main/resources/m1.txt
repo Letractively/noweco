@@ -1,0 +1,13 @@
+From: =?iso-8859-1?Q?Ga=EBl_Lalire?= <gael.lalire@gmail.com>
+Content-Type: text/plain;
+	charset=us-ascii
+Content-Transfer-Encoding: 7bit
+X-Smtp-Server: smtp.gmail.com:gael.lalire
+Subject: A moi
+X-Universally-Unique-Identifier: a11a0379-f35f-46e7-8b37-3dfc88a30209
+Date: Wed, 30 Mar 2011 10:20:46 +0200
+Message-Id: <00CFF383-4BD3-4D9B-BD0C-891AE5BACCED@gmail.com>
+To: =?iso-8859-1?Q?Ga=EBl_Lalire?= <gael.lalire@bull.net>
+Mime-Version: 1.0 (Apple Message framework v1084)
+
+Youhou le premier message

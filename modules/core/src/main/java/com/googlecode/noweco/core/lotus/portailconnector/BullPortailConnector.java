@@ -1,4 +1,4 @@
-package com.googlecode.noweco.core.bull;
+package com.googlecode.noweco.core.lotus.portailconnector;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,8 +22,8 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.noweco.core.PortailConnector;
 import com.googlecode.noweco.core.httpclient.unsecure.UnsecureHttpClientFactory;
+import com.googlecode.noweco.core.lotus.PortailConnector;
 
 public class BullPortailConnector implements PortailConnector {
 
