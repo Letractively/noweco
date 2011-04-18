@@ -5,8 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -22,13 +20,11 @@ import com.googlecode.noweco.cli.settings.Lotus;
 import com.googlecode.noweco.cli.settings.ObjectFactory;
 import com.googlecode.noweco.cli.settings.Proxy;
 import com.googlecode.noweco.cli.settings.Settings;
-import com.googlecode.noweco.core.INotesConnection;
+import com.googlecode.noweco.core.seam.PopServerFromHTTPClient;
 
 public class NowecoCLI {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NowecoCLI.class);
-
-    private static final Pattern PATTERN = Pattern.compile("http(s)?://([^/:]*)(?::\\d+)?(.*)");
 
     public static void main(String[] args) {
         File settingsFile = new File(args[0]);
@@ -60,38 +56,46 @@ public class NowecoCLI {
         Settings settings = settingsElement.getValue();
 
         LOGGER.info("Starting Noweco");
-        INotesConnection iNotesConnection;
         Proxy proxy = settings.getProxy();
         Lotus lotus = settings.getLotus();
         String url = lotus.getUrl();
-        boolean secure = false;
-        Matcher matcher = PATTERN.matcher(url);
-        if (!matcher.matches()) {
-            LOGGER.error("Unsupported lotus url : {}", url);
-            System.exit(1);
-        }
-        if (matcher.group(1).length() == 0) {
-            secure = false;
-        } else {
-            secure = true;
-        }
-        String host = matcher.group(2);
-        String path = matcher.group(3);
+
+
+        final PopServerFromHTTPClient popServerFromHTTPClient;
         if (proxy == null) {
-            iNotesConnection = new INotesConnection(secure, host);
+            popServerFromHTTPClient = new PopServerFromHTTPClient(url);
         } else {
             String protocol = proxy.getProtocol();
             if (!protocol.equals("http")) {
                 LOGGER.error("Unsupported proxy protocol : {}", protocol);
                 System.exit(1);
             }
-            iNotesConnection = new INotesConnection(proxy.getHost(), proxy.getPort(), secure, host);
+            popServerFromHTTPClient = new PopServerFromHTTPClient(url, proxy.getHost(), proxy.getPort());
         }
         try {
-            iNotesConnection.connect(path, lotus.getUrl(), lotus.getPassword());
+            popServerFromHTTPClient.start();
         } catch (IOException e) {
-            LOGGER.error("Unable to connect to lotus notes", e);
-            System.exit(1);
+            e.printStackTrace();
         }
+
+        LOGGER.info("Noweco started");
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+
+            @Override
+            public void run() {
+                try {
+                    popServerFromHTTPClient.stop();
+                } catch (IOException e) {
+
+                } catch (InterruptedException e) {
+                    // impossible
+                } finally {
+                    LOGGER.info("Noweco shutdown");
+                }
+            }
+
+        });
+
     }
 }

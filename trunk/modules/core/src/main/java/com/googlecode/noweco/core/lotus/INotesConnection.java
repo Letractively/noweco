@@ -1,4 +1,4 @@
-package com.googlecode.noweco.core;
+package com.googlecode.noweco.core.lotus;
 
 import java.io.IOException;
 
@@ -11,7 +11,7 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.noweco.core.bull.BullPortailConnector;
+import com.googlecode.noweco.core.lotus.portailconnector.BullPortailConnector;
 
 public class INotesConnection {
 

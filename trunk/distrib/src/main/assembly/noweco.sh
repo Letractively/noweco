@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ "$(id -u)" != "0" ]; then
+  echo "Noweco listen on privileged ports and needs root permissions."
+  exit
+fi
+
 DIRNAME=`dirname $0`
 if [ "$DIRNAME" = "." ]; then
   DIRNAME="$PWD"
@@ -70,7 +75,7 @@ if [ "$START_NOWECO" = "true" ]; then
     JAVA_OPTS=""
   fi
   if [ "$NOWECO_DEBUG" != "" ]; then
-    JAVA_OPTS="$JAVA_OPTS -Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000"
+    JAVA_OPTS="$JAVA_OPTS -Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8000"
   fi
   nohup java $JAVA_OPTS -cp $CLASSPATH -Dlogback.configurationFile="$DIRNAME/logback.xml" com.googlecode.noweco.cli.NowecoCLI "$DIRNAME/settings.xml" 1>"$DIRNAME/logs/out.console" 2>"$DIRNAME/logs/err.console" &
   NOWECO_PID=$!
