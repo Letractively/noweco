@@ -2,7 +2,8 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://noweco.googlecode.com/SETTINGS http://noweco.googlecode.com/svn/xsd/settings-1.0.0.xsd">
   <lotus>
-    <url>https://apps.lotuslive.com/manage/account/dashboardHandler/input</url>
+    <url>https://telefrec.bull.fr/horde</url>
+<!--     <url>https://apps.lotuslive.com/manage/account/dashboardHandler/input</url> -->
     <userName>YOUR_USER_NAME</userName>
     <password>YOUR_PASSWORD</password>
   </lotus>

@@ -1,6 +1,7 @@
-package com.googlecode.noweco.core.lotus;
+package com.googlecode.noweco.core.webmail.lotus;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -11,11 +12,14 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.noweco.core.lotus.portailconnector.BullPortailConnector;
+import com.googlecode.noweco.core.webmail.Message;
+import com.googlecode.noweco.core.webmail.PortalConnector;
+import com.googlecode.noweco.core.webmail.WebmailConnection;
+import com.googlecode.noweco.core.webmail.portal.BullWebmailFrecPortalConnector;
 
-public class INotesConnection {
+public class INotesWebmailConnection implements WebmailConnection {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(INotesConnection.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(INotesWebmailConnection.class);
 
     private HttpClient httpclient;
 
@@ -23,7 +27,7 @@ public class INotesConnection {
 
     private HttpHost host;
 
-    private PortailConnector portailConnector;
+    private PortalConnector portailConnector;
 
     protected static HttpHost createHost(boolean secure, String host) {
         if(secure) {
@@ -32,18 +36,18 @@ public class INotesConnection {
         return new HttpHost(host, 80, "http");
     }
 
-    public INotesConnection(String proxyHost, int proxyPort, boolean secure, String host) {
+    public INotesWebmailConnection(String proxyHost, int proxyPort, boolean secure, String host) {
         this(new HttpHost(proxyHost, proxyPort, "http"), createHost(secure, host));
     }
 
-    public INotesConnection(boolean secure, String host) {
+    public INotesWebmailConnection(boolean secure, String host) {
         this(null, createHost(secure, host));
     }
 
-    protected INotesConnection(HttpHost proxy, HttpHost host) {
+    protected INotesWebmailConnection(HttpHost proxy, HttpHost host) {
         this.proxy = proxy;
         this.host = host;
-        portailConnector = new BullPortailConnector();
+        portailConnector = new BullWebmailFrecPortalConnector();
     }
 
     public void connect(String loginPath, String user, String password) throws IOException {
@@ -77,6 +81,21 @@ public class INotesConnection {
             release();
         } catch (Throwable e) {
         }
+    }
+
+    public void refresh() throws IOException {
+        // TODO Auto-generated method stub
+
+    }
+
+    public int getPageCount() throws IOException {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    public List<? extends Message> getMessages(int page) throws IOException {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

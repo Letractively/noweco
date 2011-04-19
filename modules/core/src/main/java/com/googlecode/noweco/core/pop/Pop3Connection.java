@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -18,7 +19,7 @@ public class Pop3Connection implements Runnable {
     private static final Charset US_ASCII = Charset.forName("US-ASCII");
 
     public enum Command {
-        QUIT, STAT, LIST, RETR, DELE, NOOP, RSET, USER, PASS
+        QUIT, STAT, LIST, RETR, DELE, NOOP, RSET, USER, PASS, TOP
     }
 
     private Socket socket;
@@ -62,6 +63,7 @@ public class Pop3Connection implements Runnable {
     public void run() {
         try {
             Pop3Transaction transaction = null;
+            List<? extends Message> messages = null;
             State state = State.AUTHORIZATION;
             writeOK("Server ready.");
             mainloop: while (!socket.isClosed()) {
@@ -83,13 +85,19 @@ public class Pop3Connection implements Runnable {
                     if (isCommand(Command.PASS, command)) {
                         String password = command.substring(Command.PASS.name().length() + 1);
                         LOGGER.info("Authent with user {} and password {}", username, password);
-                        transaction = pop3Manager.authent(username, password);
-                        if (transaction != null) {
+                        try {
+                            transaction = pop3Manager.authent(username, password);
                             LOGGER.info("Authent OK");
-                            state = State.TRANSACTION;
-                            writeOK("Authentifed");
-                        } else {
-                            LOGGER.info("Authent KO");
+                            try {
+                                messages = transaction.getMessages();
+                                state = State.TRANSACTION;
+                                writeOK("Authentified");
+                            } catch (IOException e) {
+                                LOGGER.error("Unable to list", e);
+                                writeErr("Authent OK, but unable to list");
+                            }
+                        } catch (IOException e) {
+                            LOGGER.info("Authent KO", e);
                             writeErr("Unable to authent");
                         }
                         continue mainloop;
@@ -99,29 +107,41 @@ public class Pop3Connection implements Runnable {
                     if (isCommand(Command.QUIT, command)) {
                         writeOK("Bye");
                         state = State.UPDATE;
-                        continue mainloop;
+                        break mainloop;
                     } else if (isCommand(Command.STAT, command)) {
-                        List<? extends Message> messages = transaction.getMessages();
-                        int size = 0;
-                        int count = 0;
-                        for (Message message : messages) {
-                            if (!message.isMarkedForDeletion()) {
-                                size += message.getSize();
-                                count++;
-                            }
-                        }
-                        writeOK(count + " " + size);
-                    } else if (isCommand(Command.LIST, command)) {
-                        String arg = command.substring(Command.LIST.name().length()).trim();
-                        List<? extends Message> messages = transaction.getMessages();
-                        if (arg.length() == 0) {
-                            writeOK("Begin to list");
+                        try {
+                            int size = 0;
+                            int count = 0;
                             for (Message message : messages) {
                                 if (!message.isMarkedForDeletion()) {
-                                    writeLine(message.getId() + " " + message.getSize());
+                                    size += message.getSize();
+                                    count++;
                                 }
                             }
-                            writeEndOfLines();
+                            writeOK(count + " " + size);
+                        } catch (IOException e) {
+                            LOGGER.error("Unable to stat", e);
+                            writeErr("Size fetch issue");
+                        }
+                    } else if (isCommand(Command.LIST, command)) {
+                        String arg = command.substring(Command.LIST.name().length()).trim();
+                        if (arg.length() == 0) {
+                            try {
+                                List<String> lines = new ArrayList<String>();
+                                for (Message message : messages) {
+                                    if (!message.isMarkedForDeletion()) {
+                                        lines.add(message.getId() + " " + message.getSize());
+                                    }
+                                }
+                                writeOK("Begin to list");
+                                for (String line : lines) {
+                                    writeLine(line);
+                                }
+                                writeEndOfLines();
+                            } catch (IOException e) {
+                                LOGGER.error("Unable to list", e);
+                                writeErr("Size fetch issue");
+                            }
                         } else {
                             try {
                                 int id = Integer.parseInt(arg);
@@ -139,7 +159,11 @@ public class Pop3Connection implements Runnable {
                                 if (!found) {
                                     writeErr("Message with " + id + " id not found");
                                 }
+                            } catch (IOException e) {
+                                LOGGER.error("Unable to list", e);
+                                writeErr("Size fetch issue");
                             } catch (NumberFormatException e) {
+                                LOGGER.error("Unable to list", e);
                                 writeErr("LIST param must be an integer");
                             }
                         }
@@ -147,7 +171,6 @@ public class Pop3Connection implements Runnable {
                         writeOK(null);
                     } else if (isCommand(Command.RSET, command)) {
                         // avoid message deletion
-                        List<? extends Message> messages = transaction.getMessages();
                         for (Message message : messages) {
                             if (message.isMarkedForDeletion()) {
                                 message.setMarkedForDeletion(false);
@@ -159,7 +182,6 @@ public class Pop3Connection implements Runnable {
                         try {
                             int id = Integer.parseInt(arg);
                             boolean found = false;
-                            List<? extends Message> messages = transaction.getMessages();
                             for (Message message : messages) {
                                 if (message.getId() == id) {
                                     if (message.isMarkedForDeletion()) {
@@ -177,26 +199,72 @@ public class Pop3Connection implements Runnable {
                         } catch (NumberFormatException e) {
                             writeErr("DELE param must be an integer");
                         }
-                    } else if (isCommand(Command.RETR, command)) {
-                        String arg = command.substring(Command.RETR.name().length()).trim();
+                    } else if (isCommand(Command.TOP, command)) {
+                        String args = command.substring(Command.TOP.name().length()).trim();
                         try {
-                            int id = Integer.parseInt(arg);
+                            String[] split = args.split(" ");
+                            int id = Integer.parseInt(split[0]);
+                            int contentLines = Integer.parseInt(split[1]);
                             boolean found = false;
-                            List<? extends Message> messages = transaction.getMessages();
                             for (Message message : messages) {
                                 if (message.getId() == id) {
                                     if (message.isMarkedForDeletion()) {
                                         break;
                                     }
-                                    message.setMarkedForDeletion(true);
-                                    writeOK("Begin message content");
-                                    BufferedReader bufferedReader = new BufferedReader(message.getContent());
-                                    String line = bufferedReader.readLine();
-                                    while (line != null) {
-                                        writeLine(line);
-                                        line = bufferedReader.readLine();
+                                    writeOK("Begin headers content");
+                                    try {
+                                        BufferedReader bufferedReader = new BufferedReader(message.getHeaders());
+                                        String line = bufferedReader.readLine();
+                                        while (line != null) {
+                                            writeLine(line);
+                                            line = bufferedReader.readLine();
+                                        }
+                                        writeLine("");
+                                        if (contentLines != 0) {
+                                            bufferedReader = new BufferedReader(message.getContent());
+                                            line = bufferedReader.readLine();
+                                            while (line != null && contentLines > 0) {
+                                                writeLine(line);
+                                                line = bufferedReader.readLine();
+                                                contentLines--;
+                                            }
+                                        }
+                                        writeEndOfLines();
+                                    } catch (IOException e) {
+                                        // TODO: handle exception
                                     }
-                                    writeEndOfLines();
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found) {
+                                writeErr("Message with " + id + " id not found");
+                            }
+                        } catch (NumberFormatException e) {
+                            writeErr("DELE param must be an integer");
+                        }
+                    } else if (isCommand(Command.RETR, command)) {
+                        String arg = command.substring(Command.RETR.name().length()).trim();
+                        try {
+                            int id = Integer.parseInt(arg);
+                            boolean found = false;
+                            for (Message message : messages) {
+                                if (message.getId() == id) {
+                                    if (message.isMarkedForDeletion()) {
+                                        break;
+                                    }
+                                    writeOK("Begin message content");
+                                    try {
+                                        BufferedReader bufferedReader = new BufferedReader(message.getContent());
+                                        String line = bufferedReader.readLine();
+                                        while (line != null) {
+                                            writeLine(line);
+                                            line = bufferedReader.readLine();
+                                        }
+                                        writeEndOfLines();
+                                    } catch (IOException e) {
+                                        // TODO: handle exception
+                                    }
                                     found = true;
                                     break;
                                 }
@@ -212,21 +280,28 @@ public class Pop3Connection implements Runnable {
                     }
 
                     break;
-                case UPDATE:
-                    List<? extends Message> messages = transaction.getMessages();
+                default:
+                    break;
+                }
+            }
+            if (state == State.UPDATE) {
+                try {
                     for (Message message : messages) {
                         if (message.isMarkedForDeletion()) {
                             message.update();
                         }
                     }
-                    break mainloop;
-                default:
-                    break;
+                } catch (IOException e) {
+                    LOGGER.error("Unable to update", e);
+                }
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    LOGGER.error("Unable to close socket", e);
                 }
             }
-        } catch (IOException e) {
-            // TODO: handle exception
-            e.printStackTrace();
+        } catch (PopSocketException e) {
+            LOGGER.error("Client connection failed", e);
         } finally {
             synchronized (mutex) {
                 finished = true;
@@ -245,11 +320,15 @@ public class Pop3Connection implements Runnable {
         return true;
     }
 
-    public String read() throws IOException {
-        return reader.readLine();
+    public String read() throws PopSocketException {
+        try {
+            return reader.readLine();
+        } catch (IOException e) {
+            throw new PopSocketException(e);
+        }
     }
 
-    public void writeLine(String line) throws IOException {
+    public void writeLine(String line) throws PopSocketException {
         LOGGER.info("Response line : {}", line);
         if (!line.isEmpty() && line.charAt(0) == '.') {
             write(".");
@@ -258,14 +337,14 @@ public class Pop3Connection implements Runnable {
         write("\r\n");
     }
 
-    public void writeEndOfLines() throws IOException {
+    public void writeEndOfLines() throws PopSocketException {
         LOGGER.info("No more lines");
         write(".");
         write("\r\n");
-        outputStream.flush();
+        flush();
     }
 
-    public void writeOK(String message) throws IOException {
+    public void writeOK(String message) throws PopSocketException {
         LOGGER.info("OK Answer : {}", message);
         write("+OK");
         if (message != null) {
@@ -273,19 +352,31 @@ public class Pop3Connection implements Runnable {
             write(message);
         }
         write("\r\n");
-        outputStream.flush();
+        flush();
     }
 
-    public void writeErr(String message) throws IOException {
+    public void writeErr(String message) throws PopSocketException {
         LOGGER.info("Err Answer : {}", message);
         write("-ERR ");
         write(message);
         write("\r\n");
-        outputStream.flush();
+        flush();
     }
 
-    public void write(String message) throws IOException {
-        outputStream.write(message.getBytes(US_ASCII));
+    public void write(String message) throws PopSocketException {
+        try {
+            outputStream.write(message.getBytes(US_ASCII));
+        } catch (IOException e) {
+            throw new PopSocketException(e);
+        }
+    }
+
+    public void flush() throws PopSocketException {
+        try {
+            outputStream.flush();
+        } catch (IOException e) {
+            throw new PopSocketException(e);
+        }
     }
 
 }

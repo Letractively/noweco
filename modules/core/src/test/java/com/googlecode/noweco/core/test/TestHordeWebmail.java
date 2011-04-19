@@ -7,9 +7,10 @@ import java.util.regex.Pattern;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.googlecode.noweco.core.webmail.lotus.INotesWebmailConnection;
+import com.googlecode.noweco.core.webmail.WebmailConnection;
+import com.googlecode.noweco.core.webmail.horde.HordeWebmail;
 
-public class TestINotesConnection {
+public class TestHordeWebmail {
 
     private static final Pattern PATTERN = Pattern.compile("http(s)?://([^/:]*)(?::\\d+)?(.*)");
 
@@ -27,16 +28,19 @@ public class TestINotesConnection {
         String host = matcher.group(2);
         String path = matcher.group(3);
         String proxyHost = TheTestContext.getProxyHost();
-        INotesWebmailConnection iNotesConnection;
+        HordeWebmail webmail;
         if (proxyHost != null && proxyHost.length() != 0) {
-            iNotesConnection = new INotesWebmailConnection(proxyHost, TheTestContext.getProxyPort(), secure, host);
+            webmail = new HordeWebmail(proxyHost, TheTestContext.getProxyPort(), secure, host);
         } else {
-            iNotesConnection = new INotesWebmailConnection(secure, host);
+            webmail = new HordeWebmail(secure, host);
         }
+        WebmailConnection connect = webmail.connect(TheTestContext.getLotusUserName(), TheTestContext.getLotusPassword());
         try {
-            iNotesConnection.connect(path, TheTestContext.getLotusUserName(), TheTestContext.getLotusPassword());
+            for (int i = 0; i < connect.getPageCount(); i++) {
+                System.out.println(connect.getMessages(i));
+            }
         } finally {
-            iNotesConnection.release();
+            connect.release();
         }
     }
 

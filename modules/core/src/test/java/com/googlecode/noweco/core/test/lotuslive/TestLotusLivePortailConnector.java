@@ -4,14 +4,14 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-import com.googlecode.noweco.core.lotus.portailconnector.LotusLivePortailConnector;
 import com.googlecode.noweco.core.test.TheTestContext;
+import com.googlecode.noweco.core.webmail.portal.LotusLivePortalConnector;
 
 public class TestLotusLivePortailConnector {
 
     @Test
     public void test() throws IOException {
-        LotusLivePortailConnector lotusLivePortailConnector = new LotusLivePortailConnector();
+        LotusLivePortalConnector lotusLivePortailConnector = new LotusLivePortalConnector();
         lotusLivePortailConnector.connect(null, TheTestContext.getLotusUserName(), TheTestContext.getLotusPassword());
     }
 
