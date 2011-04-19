@@ -1,4 +1,4 @@
-package com.googlecode.noweco.core.lotus.portailconnector;
+package com.googlecode.noweco.core.webmail.portal;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,11 +23,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.googlecode.noweco.core.httpclient.unsecure.UnsecureHttpClientFactory;
-import com.googlecode.noweco.core.lotus.PortailConnector;
+import com.googlecode.noweco.core.webmail.PortalConnector;
 
-public class BullPortailConnector implements PortailConnector {
+public class BullWebmailFrecPortalConnector implements PortalConnector {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(BullPortailConnector.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(BullWebmailFrecPortalConnector.class);
 
     private static final Pattern DATAS = Pattern.compile("name=\"Datas\"\\s*value=\"([^\"]*)\"");
     private static final Pattern LAST_CNX = Pattern.compile("name=\"lastCnx\"\\s*value=\"([^\"]*)\"");

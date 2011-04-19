@@ -1,4 +1,4 @@
-package com.googlecode.noweco.core.lotus.portailconnector;
+package com.googlecode.noweco.core.webmail.portal;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,11 +20,11 @@ import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
 import com.googlecode.noweco.core.httpclient.unsecure.UnsecureHttpClientFactory;
-import com.googlecode.noweco.core.lotus.PortailConnector;
+import com.googlecode.noweco.core.webmail.PortalConnector;
 
-public class LotusLivePortailConnector implements PortailConnector {
+public class LotusLivePortalConnector implements PortalConnector {
 
-//    private static final Logger LOGGER = LoggerFactory.getLogger(LotusLivePortailConnector.class);
+//    private static final Logger LOGGER = LoggerFactory.getLogger(LotusLivePortalConnector.class);
 
     private static final Pattern SAML_RESPONSE = Pattern.compile("name=\"SAMLResponse\"\\s*value=\"([^\"]*)\"");
 

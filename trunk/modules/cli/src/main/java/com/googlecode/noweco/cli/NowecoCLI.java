@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -20,11 +22,15 @@ import com.googlecode.noweco.cli.settings.Lotus;
 import com.googlecode.noweco.cli.settings.ObjectFactory;
 import com.googlecode.noweco.cli.settings.Proxy;
 import com.googlecode.noweco.cli.settings.Settings;
-import com.googlecode.noweco.core.seam.PopServerFromHTTPClient;
+import com.googlecode.noweco.core.seam.Pop3ServerFromWebmail;
+import com.googlecode.noweco.core.webmail.Webmail;
+import com.googlecode.noweco.core.webmail.horde.HordeWebmail;
 
 public class NowecoCLI {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NowecoCLI.class);
+
+    private static final Pattern PATTERN = Pattern.compile("http(s)?://([^/:]*)(?::\\d+)?(.*)");
 
     public static void main(String[] args) {
         File settingsFile = new File(args[0]);
@@ -60,23 +66,39 @@ public class NowecoCLI {
         Lotus lotus = settings.getLotus();
         String url = lotus.getUrl();
 
+        boolean secure;
+        Matcher matcher = PATTERN.matcher(url);
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException("Unsupported lotus url");
+        }
+        if (matcher.group(1).length() == 0) {
+            secure = false;
+        } else {
+            secure = true;
+        }
+        String host = matcher.group(2);
+      //  String path = matcher.group(3);
 
-        final PopServerFromHTTPClient popServerFromHTTPClient;
+        Webmail webmail;
         if (proxy == null) {
-            popServerFromHTTPClient = new PopServerFromHTTPClient(url);
+            webmail = new HordeWebmail(secure, host);
         } else {
             String protocol = proxy.getProtocol();
             if (!protocol.equals("http")) {
                 LOGGER.error("Unsupported proxy protocol : {}", protocol);
                 System.exit(1);
             }
-            popServerFromHTTPClient = new PopServerFromHTTPClient(url, proxy.getHost(), proxy.getPort());
+            webmail = new HordeWebmail(proxy.getHost(), proxy.getPort(), secure, host);
         }
+
+        final Pop3ServerFromWebmail popServerFromHTTPClient = new Pop3ServerFromWebmail(webmail);
+
         try {
             popServerFromHTTPClient.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
+
 
         LOGGER.info("Noweco started");
 
