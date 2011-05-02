@@ -12,4 +12,9 @@ public class INotesWebmail implements Webmail {
         return null;
     }
 
+    public void release() {
+        // TODO Auto-generated method stub
+
+    }
+
 }

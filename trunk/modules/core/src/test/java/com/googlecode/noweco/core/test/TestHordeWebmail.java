@@ -5,6 +5,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.googlecode.noweco.core.webmail.WebmailConnection;
@@ -15,6 +16,7 @@ public class TestHordeWebmail {
     private static final Pattern PATTERN = Pattern.compile("http(s)?://([^/:]*)(?::\\d+)?(.*)");
 
     @Test
+    @Ignore
     public void testConnect() throws IOException {
         boolean secure = false;
         String lotusURL = TheTestContext.getLotusURL();

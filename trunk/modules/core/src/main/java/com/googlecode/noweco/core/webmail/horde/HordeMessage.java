@@ -50,11 +50,15 @@ public class HordeMessage implements Message {
 
     @Override
     public String toString() {
-        return String.valueOf(id);
+        return getUniqueID();
     }
 
     public void delete() throws IOException {
 
+    }
+
+    public String getUniqueID() {
+        return String.valueOf(id);
     }
 
 }

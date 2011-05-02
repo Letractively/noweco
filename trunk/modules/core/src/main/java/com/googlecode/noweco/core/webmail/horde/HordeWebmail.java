@@ -42,4 +42,7 @@ public class HordeWebmail implements Webmail {
         return new HordeWebmailConnection(portailConnector.connect(proxy, user, password), host);
     }
 
+    public void release() {
+    }
+
 }

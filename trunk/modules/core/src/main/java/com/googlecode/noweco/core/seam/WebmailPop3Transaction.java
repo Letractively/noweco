@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
-import com.googlecode.noweco.core.pop.Pop3Transaction;
+import com.googlecode.noweco.core.pop.spi.Pop3Transaction;
 import com.googlecode.noweco.core.webmail.Message;
 import com.googlecode.noweco.core.webmail.WebmailConnection;
 
