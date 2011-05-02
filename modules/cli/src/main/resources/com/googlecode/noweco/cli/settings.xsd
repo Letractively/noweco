@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-  elementFormDefault="qualified" xmlns="http://noweco.googlecode.com/SETTINGS"
-  targetNamespace="http://noweco.googlecode.com/SETTINGS" version="1.0.0">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" xmlns:tns="http://noweco.googlecode.com/SETTINGS" xmlns="http://noweco.googlecode.com/SETTINGS" targetNamespace="http://noweco.googlecode.com/SETTINGS"
+  version="1.0.0">
   <xs:element name="settings" type="Settings">
     <xs:annotation>
       <xs:documentation source="version">1.0.0</xs:documentation>
@@ -10,53 +9,64 @@
         configuration file.
       </xs:documentation>
     </xs:annotation>
+    <xs:key name="pop3ManagersIdKey">
+      <xs:selector xpath=".//tns:webmail" />
+      <xs:field xpath="@id" />
+    </xs:key>
+
+    <xs:keyref name="pop3ManagersUserKeyRef" refer="pop3ManagersIdKey">
+      <xs:selector xpath=".//tns:user" />
+      <xs:field xpath="@pop3Manager" />
+    </xs:keyref>
+
   </xs:element>
 
   <xs:complexType name="Settings">
-    <xs:all>
-      <xs:element minOccurs="0" name="proxy" type="Proxy" />
-      <xs:element name="lotus" type="Lotus" />
-    </xs:all>
+    <xs:sequence>
+      <xs:element name="pop3Managers" type="Pop3Managers" />
+      <xs:element name="popAccounts" type="PopAccounts" />
+    </xs:sequence>
   </xs:complexType>
 
-  <xs:complexType name="Lotus">
-    <xs:all>
-      <xs:element name="url" type="xs:anyURI">
-        <xs:annotation>
-          <xs:documentation source="version">1.0.0
-          </xs:documentation>
-          <xs:documentation source="description">
-
-            The url of the Lotus Notes server.
-            
-          </xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name="userName" type="xs:string">
-        <xs:annotation>
-          <xs:documentation source="version">1.0.0
-          </xs:documentation>
-          <xs:documentation source="description">
-
-            The name of the Lotus Notes user.
-            
-          </xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name="password" type="xs:string">
-        <xs:annotation>
-          <xs:documentation source="version">1.0.0
-          </xs:documentation>
-          <xs:documentation source="description">
-
-            The password of the Lotus Notes user.
-            
-          </xs:documentation>
-        </xs:annotation>
-      </xs:element>
-    </xs:all>
+  <xs:complexType name="Pop3Managers">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="webmail" type="Webmail" />
+      <!-- TODO : Add other connectors here -->
+    </xs:choice>
   </xs:complexType>
 
+  <xs:complexType name="PopAccounts">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="user" type="User" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="User">
+    <xs:attribute name="matches" type="xs:string" default=".*" />
+    <xs:attribute name="pop3Manager" type="xs:string" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="Pop3Manager">
+    <xs:attribute name="id" type="xs:string" use="required">
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="Webmail">
+    <xs:complexContent>
+      <xs:extension base="Pop3Manager">
+        <xs:all>
+          <xs:element minOccurs="0" name="authent" type="Authent" />
+          <xs:element minOccurs="0" name="proxy" type="Proxy" />
+        </xs:all>
+        <xs:attribute name="class" type="xs:string" use="required" />
+        <xs:attribute name="base" type="xs:string" use="required" />
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="Authent">
+    <xs:attribute name="class" type="xs:string" use="required" />
+  </xs:complexType>
 
   <xs:complexType name="Proxy">
     <xs:annotation>
@@ -69,8 +79,7 @@
         </xs:documentation>
     </xs:annotation>
     <xs:all>
-      <xs:element minOccurs="0" name="protocol" type="xs:string"
-        default="http">
+      <xs:element minOccurs="0" name="protocol" type="xs:string" default="http">
         <xs:annotation>
           <xs:documentation source="version">1.0.0
           </xs:documentation>
@@ -103,8 +112,7 @@
           </xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element minOccurs="0" name="port" type="xs:int"
-        default="8080">
+      <xs:element minOccurs="0" name="port" type="xs:int" default="8080">
         <xs:annotation>
           <xs:documentation source="version">1.0.0
           </xs:documentation>

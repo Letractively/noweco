@@ -8,6 +8,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Executor;
 
+import com.googlecode.noweco.core.pop.spi.Pop3Manager;
+
 public class Pop3Server implements Runnable {
 
     private static final int POP3_PORT = 110;

@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 
-import com.googlecode.noweco.core.pop.Message;
+import com.googlecode.noweco.core.pop.spi.Message;
 
 public class WebmailMessage implements Message {
 

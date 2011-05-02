@@ -6,4 +6,6 @@ public interface Webmail {
 
     WebmailConnection connect(String user, String password) throws IOException;
 
+    void release();
+
 }

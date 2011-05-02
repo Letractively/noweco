@@ -1,7 +1,8 @@
-package com.googlecode.noweco.core.pop;
+package com.googlecode.noweco.core.pop.spi;
 
 import java.io.IOException;
 import java.util.List;
+
 
 public interface Pop3Transaction {
 

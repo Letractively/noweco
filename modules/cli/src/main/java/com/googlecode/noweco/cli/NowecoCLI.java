@@ -1,16 +1,11 @@
 package com.googlecode.noweco.cli;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
@@ -18,13 +13,8 @@ import javax.xml.validation.SchemaFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.noweco.cli.settings.Lotus;
 import com.googlecode.noweco.cli.settings.ObjectFactory;
-import com.googlecode.noweco.cli.settings.Proxy;
-import com.googlecode.noweco.cli.settings.Settings;
-import com.googlecode.noweco.core.seam.Pop3ServerFromWebmail;
-import com.googlecode.noweco.core.webmail.Webmail;
-import com.googlecode.noweco.core.webmail.horde.HordeWebmail;
+import com.googlecode.noweco.core.seam.DispatcherPop3Manager;
 
 public class NowecoCLI {
 
@@ -33,7 +23,7 @@ public class NowecoCLI {
     private static final Pattern PATTERN = Pattern.compile("http(s)?://([^/:]*)(?::\\d+)?(.*)");
 
     public static void main(String[] args) {
-        File settingsFile = new File(args[0]);
+        File homeFile = new File(args[0]);
         Unmarshaller unMarshaller = null;
         try {
             JAXBContext jc = JAXBContext.newInstance(ObjectFactory.class.getPackage().getName());
@@ -48,57 +38,60 @@ public class NowecoCLI {
             System.exit(1);
         }
 
-        JAXBElement<Settings> settingsElement = null;
-        try {
-            settingsElement = (JAXBElement<Settings>) unMarshaller.unmarshal(new FileInputStream(settingsFile));
-        } catch (FileNotFoundException e) {
-            LOGGER.error("Settings file not found");
-            System.exit(1);
-        } catch (JAXBException e) {
-            LOGGER.error("Settings file is not valid", e);
-            System.exit(1);
-        }
+//        JAXBElement<Settings> settingsElement = null;
+//        try {
+//            settingsElement = (JAXBElement<Settings>) unMarshaller.unmarshal(new FileInputStream(new File(homeFile, "settings.xml")));
+//        } catch (FileNotFoundException e) {
+//            LOGGER.error("Settings file not found");
+//            System.exit(1);
+//        } catch (JAXBException e) {
+//            LOGGER.error("Settings file is not valid", e);
+//            System.exit(1);
+//        }
 
-        Settings settings = settingsElement.getValue();
+//        Settings settings = settingsElement.getValue();
 
         LOGGER.info("Starting Noweco");
-        Proxy proxy = settings.getProxy();
-        Lotus lotus = settings.getLotus();
-        String url = lotus.getUrl();
+//        Proxy proxy = settings.getProxy();
+//        Lotus lotus = settings.getLotus();
+//        String url = lotus.getUrl();
 
-        boolean secure;
-        Matcher matcher = PATTERN.matcher(url);
-        if (!matcher.matches()) {
-            throw new IllegalArgumentException("Unsupported lotus url");
-        }
-        if (matcher.group(1).length() == 0) {
-            secure = false;
-        } else {
-            secure = true;
-        }
-        String host = matcher.group(2);
-      //  String path = matcher.group(3);
+//        boolean secure;
+//        Matcher matcher = PATTERN.matcher(url);
+//        if (!matcher.matches()) {
+//            throw new IllegalArgumentException("Unsupported lotus url");
+//        }
+//        if (matcher.group(1).length() == 0) {
+//            secure = false;
+//        } else {
+//            secure = true;
+//        }
+//        String host = matcher.group(2);
+//        // String path = matcher.group(3);
+//
+//        Webmail webmail;
+//        if (proxy == null) {
+//            webmail = new HordeWebmail(secure, host);
+//        } else {
+//            String protocol = proxy.getProtocol();
+//            if (!protocol.equals("http")) {
+//                LOGGER.error("Unsupported proxy protocol : {}", protocol);
+//                System.exit(1);
+//            }
+//            webmail = new HordeWebmail(proxy.getHost(), proxy.getPort(), secure, host);
+//        }
 
-        Webmail webmail;
-        if (proxy == null) {
-            webmail = new HordeWebmail(secure, host);
-        } else {
-            String protocol = proxy.getProtocol();
-            if (!protocol.equals("http")) {
-                LOGGER.error("Unsupported proxy protocol : {}", protocol);
-                System.exit(1);
-            }
-            webmail = new HordeWebmail(proxy.getHost(), proxy.getPort(), secure, host);
+        File data = new File(homeFile, "data");
+        if (!data.exists()) {
+            data.mkdir();
         }
-
-        final Pop3ServerFromWebmail popServerFromHTTPClient = new Pop3ServerFromWebmail(webmail);
+        final DispatcherPop3Manager pop3Manager = new DispatcherPop3Manager(data);
 
         try {
-            popServerFromHTTPClient.start();
+            pop3Manager.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
 
         LOGGER.info("Noweco started");
 
@@ -107,7 +100,7 @@ public class NowecoCLI {
             @Override
             public void run() {
                 try {
-                    popServerFromHTTPClient.stop();
+                    pop3Manager.stop();
                 } catch (IOException e) {
 
                 } catch (InterruptedException e) {

@@ -1,1 +1,1 @@
-mvn clean install -o -pl distrib -am -Dmaven.test.skip && mkdir distrib/target/noweco && pushd distrib/target/noweco && unzip ../noweco.distrib-*-SNAPSHOT-distribution.zip && chmod +x noweco.sh > /dev/null
+mvn clean install -o -pl distrib -am -Dmaven.test.skip && mkdir distrib/target/noweco && pushd distrib/target/noweco && unzip ../noweco.distrib-*-SNAPSHOT-distribution.zip > /dev/null && chmod +x noweco.sh

@@ -77,7 +77,7 @@ if [ "$START_NOWECO" = "true" ]; then
   if [ "$NOWECO_DEBUG" != "" ]; then
     JAVA_OPTS="$JAVA_OPTS -Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8000"
   fi
-  nohup java $JAVA_OPTS -cp $CLASSPATH -Dlogback.configurationFile="$DIRNAME/logback.xml" com.googlecode.noweco.cli.NowecoCLI "$DIRNAME/settings.xml" 1>"$DIRNAME/logs/out.console" 2>"$DIRNAME/logs/err.console" &
+  nohup java $JAVA_OPTS -cp $CLASSPATH -Dlogback.configurationFile="$DIRNAME/logback.xml" com.googlecode.noweco.cli.NowecoCLI "$DIRNAME" 1>"$DIRNAME/logs/out.console" 2>"$DIRNAME/logs/err.console" &
   NOWECO_PID=$!
   echo $NOWECO_PID > "$DIRNAME/noweco.pid"
 fi

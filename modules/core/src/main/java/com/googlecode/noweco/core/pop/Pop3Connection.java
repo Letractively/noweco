@@ -12,6 +12,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.noweco.core.pop.spi.Message;
+import com.googlecode.noweco.core.pop.spi.Pop3Manager;
+import com.googlecode.noweco.core.pop.spi.Pop3Transaction;
+
 public class Pop3Connection implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Pop3Connection.class);
@@ -71,8 +75,12 @@ public class Pop3Connection implements Runnable {
                 LOGGER.info("Receive: {}", command);
                 switch (state) {
                 case AUTHORIZATION:
+                    if (isCommand(Command.QUIT, command)) {
+                        writeOK("Bye");
+                        break mainloop;
+                    }
                     if (!isCommand(Command.USER, command)) {
-                        writeErr("USER command expected");
+                        writeErr("USER or QUIT command expected");
                         continue mainloop;
                     }
                     String username = command.substring(Command.USER.name().length() + 1);
@@ -82,27 +90,28 @@ public class Pop3Connection implements Runnable {
                         writeOK("Bye");
                         break mainloop;
                     }
-                    if (isCommand(Command.PASS, command)) {
-                        String password = command.substring(Command.PASS.name().length() + 1);
-                        LOGGER.info("Authent with user {} and password {}", username, password);
-                        try {
-                            transaction = pop3Manager.authent(username, password);
-                            LOGGER.info("Authent OK");
-                            try {
-                                messages = transaction.getMessages();
-                                state = State.TRANSACTION;
-                                writeOK("Authentified");
-                            } catch (IOException e) {
-                                LOGGER.error("Unable to list", e);
-                                writeErr("Authent OK, but unable to list");
-                            }
-                        } catch (IOException e) {
-                            LOGGER.info("Authent KO", e);
-                            writeErr("Unable to authent");
-                        }
+                    if (!isCommand(Command.PASS, command)) {
+                        writeErr("PASS or QUIT command expected");
                         continue mainloop;
                     }
-                    break;
+                    String password = command.substring(Command.PASS.name().length() + 1);
+                    LOGGER.info("Authent with user {} and password {}", username, password);
+                    try {
+                        transaction = pop3Manager.authent(username, password);
+                        LOGGER.info("Authent OK");
+                        try {
+                            messages = transaction.getMessages();
+                            state = State.TRANSACTION;
+                            writeOK("Authentified");
+                        } catch (IOException e) {
+                            LOGGER.error("Unable to list", e);
+                            writeErr("Authent OK, but unable to list");
+                        }
+                    } catch (IOException e) {
+                        LOGGER.info("Authent KO", e);
+                        writeErr("Unable to authent");
+                    }
+                    continue mainloop;
                 case TRANSACTION:
                     if (isCommand(Command.QUIT, command)) {
                         writeOK("Bye");
