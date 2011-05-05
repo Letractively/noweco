@@ -49,4 +49,8 @@ public class WebmailMessage implements Message {
         return new StringReader(webmailMessage.getHeader());
     }
 
+    public String getUID() throws IOException {
+        return webmailMessage.getUniqueID();
+    }
+
 }

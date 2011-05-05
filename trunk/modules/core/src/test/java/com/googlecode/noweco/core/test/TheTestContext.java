@@ -1,13 +1,15 @@
 package com.googlecode.noweco.core.test;
 
+import junit.framework.AssertionFailedError;
+
 /**
  * Following system properties are needed for tests
  * <ul>
- *   <li>NOWECO_LOTUS_USERNAME</li>
- *   <li>NOWECO_LOTUS_PASSWORD</li>
- *   <li>NOWECO_LOTUS_URL</li>
- *   <li>NOWECO_PROXY_HOST</li>
- *   <li>NOWECO_PROXY_PORT</li>
+ * <li>NOWECO_LOTUS_USERNAME</li>
+ * <li>NOWECO_LOTUS_PASSWORD</li>
+ * <li>NOWECO_LOTUS_URL</li>
+ * <li>NOWECO_PROXY_HOST</li>
+ * <li>NOWECO_PROXY_PORT</li>
  * </ul>
  *
  * In Eclipse you can modify the jvm args to :
@@ -20,15 +22,27 @@ public final class TheTestContext {
     }
 
     public static String getLotusUserName() {
-        return System.getProperty("NOWECO_LOTUS_USERNAME");
+        String property = System.getProperty("NOWECO_LOTUS_USERNAME");
+        if (property == null) {
+            throw new AssertionFailedError("NOWECO_LOTUS_USERNAME undefined");
+        }
+        return property;
     }
 
     public static String getLotusPassword() {
-        return System.getProperty("NOWECO_LOTUS_PASSWORD");
+        String property = System.getProperty("NOWECO_LOTUS_PASSWORD");
+        if (property == null) {
+            throw new AssertionFailedError("NOWECO_LOTUS_USERNAME undefined");
+        }
+        return property;
     }
 
     public static String getLotusURL() {
-        return System.getProperty("NOWECO_LOTUS_URL");
+        String property = System.getProperty("NOWECO_LOTUS_URL");
+        if (property == null) {
+            throw new AssertionFailedError("NOWECO_LOTUS_USERNAME undefined");
+        }
+        return property;
     }
 
     public static String getProxyHost() {

@@ -10,7 +10,6 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -23,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.googlecode.noweco.core.httpclient.unsecure.UnsecureHttpClientFactory;
-import com.googlecode.noweco.core.webmail.PortalConnector;
 
 public class BullWebmailFrecPortalConnector implements PortalConnector {
 
@@ -32,7 +30,7 @@ public class BullWebmailFrecPortalConnector implements PortalConnector {
     private static final Pattern DATAS = Pattern.compile("name=\"Datas\"\\s*value=\"([^\"]*)\"");
     private static final Pattern LAST_CNX = Pattern.compile("name=\"lastCnx\"\\s*value=\"([^\"]*)\"");
 
-    public HttpClient connect(HttpHost proxy, String user, String password) throws IOException {
+    public PortalConnection connect(HttpHost proxy, String user, String password) throws IOException {
         DefaultHttpClient httpclient = UnsecureHttpClientFactory.INSTANCE.createUnsecureHttpClient(proxy);
 
         // prepare the request
@@ -138,7 +136,7 @@ public class BullWebmailFrecPortalConnector implements PortalConnector {
             EntityUtils.consume(entity);
         }
 
-        return httpclient;
+        return new DefaultPortalConnection(httpclient, new HttpHost("telefrec.bull.fr", 443, "https"), "");
     }
 
 }

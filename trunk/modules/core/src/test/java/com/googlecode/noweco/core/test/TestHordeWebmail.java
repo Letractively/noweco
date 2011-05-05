@@ -32,15 +32,15 @@ public class TestHordeWebmail {
         String proxyHost = TheTestContext.getProxyHost();
         HordeWebmail webmail;
         if (proxyHost != null && proxyHost.length() != 0) {
-            webmail = new HordeWebmail(proxyHost, TheTestContext.getProxyPort(), secure, host);
+            webmail = new HordeWebmail(proxyHost, TheTestContext.getProxyPort());
         } else {
-            webmail = new HordeWebmail(secure, host);
+            webmail = new HordeWebmail();
         }
         WebmailConnection connect = webmail.connect(TheTestContext.getLotusUserName(), TheTestContext.getLotusPassword());
         try {
-            for (int i = 0; i < connect.getPageCount(); i++) {
-                System.out.println(connect.getMessages(i));
-            }
+//            for (int i = 0; i < connect.getPageCount(); i++) {
+//                System.out.println(connect.getMessages(i));
+//            }
         } finally {
             connect.release();
         }

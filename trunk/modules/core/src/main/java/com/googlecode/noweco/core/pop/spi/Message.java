@@ -20,4 +20,6 @@ public interface Message {
 
     Reader getHeaders() throws IOException;
 
+    String getUID() throws IOException;
+
 }
