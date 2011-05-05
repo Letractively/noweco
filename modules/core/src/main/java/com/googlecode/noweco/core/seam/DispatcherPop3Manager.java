@@ -11,7 +11,7 @@ import com.googlecode.noweco.core.pop.Pop3Server;
 import com.googlecode.noweco.core.pop.spi.Pop3Manager;
 import com.googlecode.noweco.core.pop.spi.Pop3Transaction;
 import com.googlecode.noweco.core.webmail.cache.CachedWebmail;
-import com.googlecode.noweco.core.webmail.horde.HordeWebmail;
+import com.googlecode.noweco.core.webmail.lotus.LotusWebmail;
 
 public class DispatcherPop3Manager implements Pop3Manager {
 
@@ -23,8 +23,10 @@ public class DispatcherPop3Manager implements Pop3Manager {
 
     public DispatcherPop3Manager(File data) {
         pop3Server = new Pop3Server(this, Executors.newFixedThreadPool(3));
-        String id = "horde";
-        cachedWebmail = new CachedWebmail(new HordeWebmail(true, "telefrec.bull.fr"), new File(data, id + ".data"));
+//        String id = "horde";
+    //    cachedWebmail = new CachedWebmail(new HordeWebmail(), new File(data, id + ".data"));
+        String id = "lotus";
+        cachedWebmail = new CachedWebmail(new LotusWebmail(), new File(data, id + ".data"));
         dests.add(new Dest(Pattern.compile(".*"), new Pop3ManagerFromWebmail(cachedWebmail), id));
     }
 

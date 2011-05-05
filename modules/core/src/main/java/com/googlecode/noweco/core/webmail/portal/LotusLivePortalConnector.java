@@ -10,7 +10,6 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -20,7 +19,6 @@ import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
 import com.googlecode.noweco.core.httpclient.unsecure.UnsecureHttpClientFactory;
-import com.googlecode.noweco.core.webmail.PortalConnector;
 
 public class LotusLivePortalConnector implements PortalConnector {
 
@@ -28,7 +26,7 @@ public class LotusLivePortalConnector implements PortalConnector {
 
     private static final Pattern SAML_RESPONSE = Pattern.compile("name=\"SAMLResponse\"\\s*value=\"([^\"]*)\"");
 
-    public HttpClient connect(HttpHost proxy, String user, String password) throws IOException {
+    public PortalConnection connect(HttpHost proxy, String user, String password) throws IOException {
         DefaultHttpClient httpclient = UnsecureHttpClientFactory.INSTANCE.createUnsecureHttpClient(proxy);
 
         HttpGet httpGet;
@@ -111,6 +109,10 @@ public class LotusLivePortalConnector implements PortalConnector {
             EntityUtils.consume(entity);
         }
 
-        return httpclient;
+        return new DefaultPortalConnection(httpclient, new HttpHost("mail-usw.lotuslive.com", 443), "");
+    }
+
+    public String getPathPrefix() {
+        return "";
     }
 }

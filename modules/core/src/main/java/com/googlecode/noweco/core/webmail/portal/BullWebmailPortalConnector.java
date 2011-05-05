@@ -10,7 +10,6 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -23,16 +22,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.googlecode.noweco.core.httpclient.unsecure.UnsecureHttpClientFactory;
-import com.googlecode.noweco.core.webmail.PortalConnector;
 
-public class BullWebmailINotesPortalConnector implements PortalConnector {
+public class BullWebmailPortalConnector implements PortalConnector {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(BullWebmailINotesPortalConnector.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(BullWebmailPortalConnector.class);
 
     private static final Pattern DATAS = Pattern.compile("name=\"Datas\"\\s*value=\"([^\"]*)\"");
     private static final Pattern LAST_CNX = Pattern.compile("name=\"lastCnx\"\\s*value=\"([^\"]*)\"");
 
-    public HttpClient connect(HttpHost proxy, String user, String password) throws IOException {
+    public PortalConnection connect(HttpHost proxy, String user, String password) throws IOException {
         DefaultHttpClient httpclient = UnsecureHttpClientFactory.INSTANCE.createUnsecureHttpClient(proxy);
 
         // prepare the request
@@ -40,8 +38,8 @@ public class BullWebmailINotesPortalConnector implements PortalConnector {
         List<NameValuePair> nvps = new ArrayList<NameValuePair>();
         nvps.add(new BasicNameValuePair("Internet", "1"));
         nvps.add(new BasicNameValuePair("WebAgt", "1"));
-        nvps.add(new BasicNameValuePair("UrlConnect", "https://telefrec.bull.fr/horde/"));
-        nvps.add(new BasicNameValuePair("Service", "WEBMAIL-FREC"));
+        nvps.add(new BasicNameValuePair("UrlConnect", "https://telemail.bull.fr:443/"));
+        nvps.add(new BasicNameValuePair("Service", "WEB-MAIL"));
         nvps.add(new BasicNameValuePair("Action", "go"));
         nvps.add(new BasicNameValuePair("lng", "EN"));
         nvps.add(new BasicNameValuePair("stdport", "80"));
@@ -59,7 +57,7 @@ public class BullWebmailINotesPortalConnector implements PortalConnector {
 
         if (LOGGER.isDebugEnabled()) {
             for (Cookie c : httpclient.getCookieStore().getCookies()) {
-                LOGGER.debug("Authent Cookie {}", c);
+                LOGGER.debug("STEP 1 Authent Cookie : {}", c);
             }
         }
 
@@ -68,12 +66,12 @@ public class BullWebmailINotesPortalConnector implements PortalConnector {
         String firstEntity = EntityUtils.toString(entity);
         if (entity != null) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(firstEntity);
+                LOGGER.debug("STEP 1 Entity : {}", firstEntity);
             }
             EntityUtils.consume(entity);
         }
 
-        // STEP 2 : WEBMAIL-FREC
+        // STEP 2 : WEB-MAIL
 
         httpost = new HttpPost("https://bullsentry3.bull.fr:443/cgi/wway_cookie");
         nvps = new ArrayList<NameValuePair>();
@@ -87,8 +85,8 @@ public class BullWebmailINotesPortalConnector implements PortalConnector {
         nvps.add(new BasicNameValuePair("ProtoR", "s"));
         nvps.add(new BasicNameValuePair("PortR", "443"));
         nvps.add(new BasicNameValuePair("WebAgt", "1"));
-        nvps.add(new BasicNameValuePair("UrlConnect", "https://telefrec.bull.fr/horde/"));
-        nvps.add(new BasicNameValuePair("Service", "WEBMAIL-FREC"));
+        nvps.add(new BasicNameValuePair("UrlConnect", "https://telemail.bull.fr:443/"));
+        nvps.add(new BasicNameValuePair("Service", "WEB-MAIL"));
 
         Matcher datasMatcher = DATAS.matcher(firstEntity);
         if (!datasMatcher.find()) {
@@ -112,7 +110,7 @@ public class BullWebmailINotesPortalConnector implements PortalConnector {
 
         if (LOGGER.isDebugEnabled()) {
             for (Cookie c : httpclient.getCookieStore().getCookies()) {
-                LOGGER.debug("Apps Cookie {}", c);
+                LOGGER.debug("STEP 2 Apps Cookie : {}", c);
             }
         }
 
@@ -120,25 +118,34 @@ public class BullWebmailINotesPortalConnector implements PortalConnector {
         entity = rsp.getEntity();
         if (entity != null) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(EntityUtils.toString(entity));
+                LOGGER.debug("STEP 2 Entity : {}", EntityUtils.toString(entity));
             }
             EntityUtils.consume(entity);
         }
 
-        // STEP 3 VIEW ROOT PAGE
-
-        HttpGet httpGet = new HttpGet("https://telefrec.bull.fr/horde/imp/mailbox.php?mailbox=INBOX");
+        HttpGet httpGet = new HttpGet("https://telemail.bull.fr:443/HomePage.nsf");
         rsp = httpclient.execute(httpGet);
 
         entity = rsp.getEntity();
+        String secondEntity = EntityUtils.toString(entity);
         if (entity != null) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(EntityUtils.toString(entity));
+                LOGGER.debug(secondEntity);
             }
             EntityUtils.consume(entity);
         }
 
-        return httpclient;
+        Matcher nsfMatcher = PATTERN.matcher(secondEntity);
+        if (!nsfMatcher.find()) {
+            throw new IOException("Unable to find nsf");
+        }
+
+        String pathPrefix = nsfMatcher.group(1).replace('\\', '/');
+        LOGGER.debug("pathPrefix : {}", pathPrefix);
+
+        return new DefaultPortalConnection(httpclient, new HttpHost("teletest.bull.fr", 443, "https"), pathPrefix);
     }
+
+    private static final Pattern PATTERN = Pattern.compile("url=https://teletest.bull.fr(/.*?\\.nsf)");
 
 }

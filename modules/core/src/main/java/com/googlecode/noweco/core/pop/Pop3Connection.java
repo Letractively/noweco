@@ -23,7 +23,7 @@ public class Pop3Connection implements Runnable {
     private static final Charset US_ASCII = Charset.forName("US-ASCII");
 
     public enum Command {
-        QUIT, STAT, LIST, RETR, DELE, NOOP, RSET, USER, PASS, TOP
+        QUIT, STAT, LIST, RETR, DELE, NOOP, RSET, USER, PASS, TOP, UIDL;
     }
 
     private Socket socket;
@@ -174,6 +174,50 @@ public class Pop3Connection implements Runnable {
                             } catch (NumberFormatException e) {
                                 LOGGER.error("Unable to list", e);
                                 writeErr("LIST param must be an integer");
+                            }
+                        }
+                    } else if (isCommand(Command.UIDL, command)) {
+                        String arg = command.substring(Command.UIDL.name().length()).trim();
+                        if (arg.length() == 0) {
+                            try {
+                                List<String> lines = new ArrayList<String>();
+                                for (Message message : messages) {
+                                    if (!message.isMarkedForDeletion()) {
+                                        lines.add(message.getId() + " " + message.getUID());
+                                    }
+                                }
+                                writeOK("Begin to list");
+                                for (String line : lines) {
+                                    writeLine(line);
+                                }
+                                writeEndOfLines();
+                            } catch (IOException e) {
+                                LOGGER.error("Unable to list", e);
+                                writeErr("Size fetch issue");
+                            }
+                        } else {
+                            try {
+                                int id = Integer.parseInt(arg);
+                                boolean found = false;
+                                for (Message message : messages) {
+                                    if (message.getId() == id) {
+                                        if (message.isMarkedForDeletion()) {
+                                            break;
+                                        }
+                                        writeOK(message.getId() + " " + message.getUID());
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                                if (!found) {
+                                    writeErr("Message with " + id + " id not found");
+                                }
+                            } catch (IOException e) {
+                                LOGGER.error("Unable to list", e);
+                                writeErr("Size fetch issue");
+                            } catch (NumberFormatException e) {
+                                LOGGER.error("Unable to uid list", e);
+                                writeErr("UIDL param must be an integer");
                             }
                         }
                     } else if (isCommand(Command.NOOP, command)) {
