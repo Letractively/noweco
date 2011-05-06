@@ -88,7 +88,7 @@ public class LotusWebmailConnection implements WebmailConnection {
     }
 
     private static final Pattern MESSAGE_PATTERN = Pattern
-            .compile("(?s)<tr[^>]*>\\s*<td.*?</td>\\s*<td.*?<input\\s.*?value=\"([^\"]*)\".*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?(\\d+)K.*?</td>.*?</tr>");
+            .compile("(?s)<tr[^>]*>\\s*<td.*?</td>\\s*<td.*?<input\\s.*?value=\"([^\"]*)\".*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?(\\d+)(?:[,.](\\d+))?([KM]).*?</td>.*?</tr>");
 
     public List<? extends Message> getMessages(int index) throws IOException {
         HttpGet httpGet = new HttpGet(pagePrefix + "&Start=" + index);
@@ -108,7 +108,21 @@ public class LotusWebmailConnection implements WebmailConnection {
         Matcher matcher = MESSAGE_PATTERN.matcher(pageContent);
         int start = 0;
         while (matcher.find(start)) {
-            int octets = Integer.parseInt(matcher.group(2)) * 1000;
+            int enOctet = 1;
+            switch (matcher.group(4).charAt(0)) {
+            case 'K':
+                enOctet = 1024;
+                break;
+            case 'M':
+                enOctet = 1024 * 1024;
+            }
+
+            double value = Integer.parseInt(matcher.group(2));
+            String afterCommaValue = matcher.group(3);
+            if (afterCommaValue != null) {
+                value += Double.parseDouble("0." + afterCommaValue);
+            }
+            int octets = (int) (value * enOctet);
             if (octets == 0) {
                 octets = 1;
             }
