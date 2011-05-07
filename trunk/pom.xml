@@ -197,7 +197,7 @@
   </dependencyManagement>
   <repositories>
     <repository>
-      <id>noweco.intern</id>
+      <id>googlecode</id>
       <url>http://noweco.googlecode.com/svn/repo</url>
       <releases>
         <enabled>true</enabled>
@@ -209,7 +209,7 @@
   </repositories>
   <pluginRepositories>
     <pluginRepository>
-      <id>noweco.intern</id>
+      <id>googlecode</id>
       <url>http://noweco.googlecode.com/svn/repo</url>
       <releases>
         <enabled>true</enabled>
@@ -221,16 +221,16 @@
   </pluginRepositories>
   <distributionManagement>
     <repository>
-      <id>noweco.intern</id>
+      <id>googlecode</id>
       <url>svn:https://noweco.googlecode.com/svn/repo</url>
     </repository>
     <snapshotRepository>
-      <id>noweco.intern</id>
+      <id>googlecode</id>
       <url>svn:https://noweco.googlecode.com/svn/repo</url>
     </snapshotRepository>
     <!-- disable site because svn auto-props do not work -->
     <!-- <site> -->
-    <!-- <id>noweco.intern</id> -->
+    <!-- <id>googlecode</id> -->
     <!-- <url>svn:https://noweco.googlecode.com/svn/site</url> -->
     <!-- </site> -->
   </distributionManagement>

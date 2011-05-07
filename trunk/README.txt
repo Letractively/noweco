@@ -16,7 +16,7 @@ Noweco use UTF-8 charset encoding.
 Before using 'release.sh' script you have to add in file '~/.m2/settings.xml' the following server
 
     <server>
-      <id>noweco.intern</id>
+      <id>googlecode</id>
       <username>$GOOGLE_CODE_USERNAME</username>
       <password>$GOOGLE_CODE_PASSWORD</password>
     </server>
