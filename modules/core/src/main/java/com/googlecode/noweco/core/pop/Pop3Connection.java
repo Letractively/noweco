@@ -74,7 +74,7 @@ public class Pop3Connection implements Runnable {
             writeOK("Server ready.");
             mainloop: while (!socket.isClosed()) {
                 String command = read();
-                LOGGER.info("Receive: {}", command);
+                LOGGER.debug("Receive: {}", command);
                 switch (state) {
                 case AUTHORIZATION:
                     if (isCommand(Command.QUIT, command)) {
@@ -416,7 +416,7 @@ public class Pop3Connection implements Runnable {
     }
 
     public void writeLine(String line) throws PopSocketException {
-        LOGGER.info("Response line : {}", line);
+        LOGGER.trace("Response line : {}", line);
         if (!line.isEmpty() && line.charAt(0) == '.') {
             write(".");
         }
@@ -432,7 +432,7 @@ public class Pop3Connection implements Runnable {
     }
 
     public void writeOK(String message) throws PopSocketException {
-        LOGGER.info("OK Answer : {}", message);
+        LOGGER.debug("OK Answer : {}", message);
         write("+OK");
         if (message != null) {
             write(" ");
@@ -443,7 +443,7 @@ public class Pop3Connection implements Runnable {
     }
 
     public void writeErr(String message) throws PopSocketException {
-        LOGGER.info("Err Answer : {}", message);
+        LOGGER.debug("Err Answer : {}", message);
         write("-ERR ");
         write(message);
         write("\r\n");
