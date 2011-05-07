@@ -103,24 +103,14 @@
           <version>2.6</version>
         </plugin>
         <plugin>
-          <groupId>org.apache.felix</groupId>
-          <artifactId>maven-bundle-plugin</artifactId>
-          <version>2.1.0</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.felix</groupId>
-          <artifactId>maven-ipojo-plugin</artifactId>
-          <version>1.6.0</version>
+          <groupId>org.riedelcastro</groupId>
+          <artifactId>gcupload-maven-plugin</artifactId>
+          <version>0.9</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>jaxb2-maven-plugin</artifactId>
           <version>1.3</version>
-        </plugin>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>native-maven-plugin</artifactId>
-          <version>1.0-alpha-5</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -239,10 +229,10 @@
       <url>svn:https://noweco.googlecode.com/svn/repo</url>
     </snapshotRepository>
     <!-- disable site because svn auto-props do not work -->
-<!--     <site> -->
-<!--       <id>noweco.intern</id> -->
-<!--       <url>svn:https://noweco.googlecode.com/svn/site</url> -->
-<!--     </site> -->
+    <!-- <site> -->
+    <!-- <id>noweco.intern</id> -->
+    <!-- <url>svn:https://noweco.googlecode.com/svn/site</url> -->
+    <!-- </site> -->
   </distributionManagement>
   <scm>
     <connection>scm:svn:http://noweco.googlecode.com/svn/trunk</connection>
