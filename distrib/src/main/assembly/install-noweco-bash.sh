@@ -5,11 +5,20 @@ if [ "$DIRNAME" = "." ]; then
   DIRNAME="$PWD"
 fi
 
-echo '_noweco() { local cur; cur=${COMP_WORDS[COMP_CWORD]}; COMPREPLY=($(compgen -W "start stop restart" -- $cur )); }' > ~/noweco.bash_profile
-echo 'complete -F _noweco noweco' >> ~/noweco.bash_profile
-alias noweco='sudo env JAVA_HOME="$JAVA_HOME" JAVA_OPTS="$JAVA_OPTS" NOWECO_DEBUG="$NOWECO_DEBUG" "/Users/gaellalire/apps/noweco/noweco.sh"'
+# create noweco.bash_profile
+echo '_noweco() { local cur; cur=${COMP_WORDS[COMP_CWORD]}; COMPREPLY=($(compgen -W "start stop restart" -- $cur )); }' > "$DIRNAME/noweco.bash_profile"
+echo 'complete -F _noweco noweco' >> "$DIRNAME/noweco.bash_profile"
+echo alias noweco="'"sudo env JAVA_HOME='"$JAVA_HOME"' JAVA_OPTS='"$JAVA_OPTS"' NOWECO_DEBUG='"$NOWECO_DEBUG"' '"'$DIRNAME/noweco.sh'"'"'" >> "$DIRNAME/noweco.bash_profile"
 
-echo alias noweco="'"sudo env JAVA_HOME='"$JAVA_HOME"' JAVA_OPTS='"$JAVA_OPTS"' NOWECO_DEBUG='"$NOWECO_DEBUG"' '"'$DIRNAME/noweco.sh'"'"'" >> ~/noweco.bash_profile
-echo "source ~/noweco.bash_profile" >> ~/.bash_profile
+# add (or replace) inclusion of noweco.bash_profile in ~/.bash_profile
+sed -i .noweco-install-backup '$a\
+source "'$DIRNAME'/noweco.bash_profile"
+;/noweco.bash_profile/d' ~/.bash_profile
+
+rm ~/.bash_profile.noweco-install-backup
+
+# make sh executable
 chmod +x "$DIRNAME/noweco.sh"
-source ~/noweco.bash_profile
+
+# run noweco.bash_profile
+source "$DIRNAME/noweco.bash_profile"
