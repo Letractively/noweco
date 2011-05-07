@@ -1,11 +1,20 @@
 package com.googlecode.noweco.cli;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
@@ -14,14 +23,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.googlecode.noweco.cli.settings.ObjectFactory;
+import com.googlecode.noweco.cli.settings.Proxy;
+import com.googlecode.noweco.cli.settings.Settings;
+import com.googlecode.noweco.cli.settings.User;
+import com.googlecode.noweco.cli.settings.Webmail;
+import com.googlecode.noweco.core.pop.Pop3Server;
+import com.googlecode.noweco.core.pop.spi.Pop3Manager;
+import com.googlecode.noweco.core.seam.DispatchedPop3Manager;
 import com.googlecode.noweco.core.seam.DispatcherPop3Manager;
+import com.googlecode.noweco.core.seam.Pop3ManagerFromWebmail;
+import com.googlecode.noweco.core.webmail.cache.CachedWebmail;
+import com.googlecode.noweco.core.webmail.portal.PortalConnector;
 
 public class NowecoCLI {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NowecoCLI.class);
 
-    private static final Pattern PATTERN = Pattern.compile("http(s)?://([^/:]*)(?::\\d+)?(.*)");
-
+    @SuppressWarnings("unchecked")
     public static void main(String[] args) {
         File homeFile = new File(args[0]);
         Unmarshaller unMarshaller = null;
@@ -38,57 +56,98 @@ public class NowecoCLI {
             System.exit(1);
         }
 
-//        JAXBElement<Settings> settingsElement = null;
-//        try {
-//            settingsElement = (JAXBElement<Settings>) unMarshaller.unmarshal(new FileInputStream(new File(homeFile, "settings.xml")));
-//        } catch (FileNotFoundException e) {
-//            LOGGER.error("Settings file not found");
-//            System.exit(1);
-//        } catch (JAXBException e) {
-//            LOGGER.error("Settings file is not valid", e);
-//            System.exit(1);
-//        }
+        JAXBElement<Settings> settingsElement = null;
+        try {
+            settingsElement = (JAXBElement<Settings>) unMarshaller.unmarshal(new FileInputStream(new File(homeFile, "settings.xml")));
+        } catch (FileNotFoundException e) {
+            LOGGER.error("Settings file not found");
+            System.exit(1);
+        } catch (JAXBException e) {
+            LOGGER.error("Settings file is not valid", e);
+            System.exit(1);
+        }
 
-//        Settings settings = settingsElement.getValue();
+        Settings settings = settingsElement.getValue();
 
         LOGGER.info("Starting Noweco");
-//        Proxy proxy = settings.getProxy();
-//        Lotus lotus = settings.getLotus();
-//        String url = lotus.getUrl();
-
-//        boolean secure;
-//        Matcher matcher = PATTERN.matcher(url);
-//        if (!matcher.matches()) {
-//            throw new IllegalArgumentException("Unsupported lotus url");
-//        }
-//        if (matcher.group(1).length() == 0) {
-//            secure = false;
-//        } else {
-//            secure = true;
-//        }
-//        String host = matcher.group(2);
-//        // String path = matcher.group(3);
-//
-//        Webmail webmail;
-//        if (proxy == null) {
-//            webmail = new HordeWebmail(secure, host);
-//        } else {
-//            String protocol = proxy.getProtocol();
-//            if (!protocol.equals("http")) {
-//                LOGGER.error("Unsupported proxy protocol : {}", protocol);
-//                System.exit(1);
-//            }
-//            webmail = new HordeWebmail(proxy.getHost(), proxy.getPort(), secure, host);
-//        }
 
         File data = new File(homeFile, "data");
         if (!data.exists()) {
             data.mkdir();
         }
-        final DispatcherPop3Manager pop3Manager = new DispatcherPop3Manager(data);
+
+        Map<String, Pop3Manager> map = new HashMap<String, Pop3Manager>();
+
+        for(Webmail webmail : settings.getPop3Managers().getWebmail()) {
+            String webmailClassName = webmail.getClazz();
+            Class<?> webmailClass = null;
+            try {
+                webmailClass = NowecoCLI.class.getClassLoader().loadClass(webmailClassName);
+            } catch (ClassNotFoundException e) {
+                LOGGER.error("Class {} not found", webmailClassName);
+                System.exit(1);
+            }
+            if (!com.googlecode.noweco.core.webmail.Webmail.class.isAssignableFrom(webmailClass)) {
+                LOGGER.error("{} is not a subclass of Pop3Manager", webmailClassName);
+                System.exit(1);
+            }
+            com.googlecode.noweco.core.webmail.Webmail webmailInstance = null;
+            try {
+                webmailInstance = (com.googlecode.noweco.core.webmail.Webmail) webmailClass.newInstance();
+            } catch (InstantiationException e) {
+                LOGGER.error("InstantiationException", e);
+                System.exit(1);
+            } catch (IllegalAccessException e) {
+                LOGGER.error("IllegalAccessException", e);
+                System.exit(1);
+            }
+            String id = webmail.getId();
+            webmailInstance = new CachedWebmail(webmailInstance, new File(data, id + ".data"));
+            Pop3Manager pop3Manager = new Pop3ManagerFromWebmail(webmailInstance);
+
+            Proxy proxy = webmail.getProxy();
+            if (proxy != null) {
+                webmailInstance.setProxy(proxy.getHost(), proxy.getPort());
+            }
+            String authentClassName = webmail.getAuthent().getClazz();
+            Class<?> authentClass = null;
+            try {
+                authentClass = NowecoCLI.class.getClassLoader().loadClass(authentClassName);
+            } catch (ClassNotFoundException e) {
+                LOGGER.error("Class {} not found", authentClassName);
+                System.exit(1);
+            }
+            if (!PortalConnector.class.isAssignableFrom(authentClass)) {
+                LOGGER.error("{} is not a subclass of PortalConnector", authentClassName);
+                System.exit(1);
+            }
+            PortalConnector portalConnector = null;
+            try {
+                portalConnector = (PortalConnector) authentClass.newInstance();
+            } catch (InstantiationException e) {
+                LOGGER.error("InstantiationException", e);
+                System.exit(1);
+            } catch (IllegalAccessException e) {
+                LOGGER.error("IllegalAccessException", e);
+                System.exit(1);
+            }
+            webmailInstance.setAuthent(portalConnector);
+
+            map.put(id, pop3Manager);
+        }
+
+        List<DispatchedPop3Manager> dispatchedPop3Managers = new ArrayList<DispatchedPop3Manager>();
+
+        for (User user : settings.getPopAccounts().getUser()) {
+            String pop3Manager = user.getPop3Manager();
+            dispatchedPop3Managers.add(new DispatchedPop3Manager(pop3Manager, map.get(pop3Manager), Pattern.compile(user.getMatches())));
+        }
+
+        final DispatcherPop3Manager pop3Manager = new DispatcherPop3Manager(dispatchedPop3Managers);
+        final Pop3Server pop3Server = new Pop3Server(pop3Manager, Executors.newFixedThreadPool(3));
 
         try {
-            pop3Manager.start();
+            pop3Server.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -100,7 +159,8 @@ public class NowecoCLI {
             @Override
             public void run() {
                 try {
-                    pop3Manager.stop();
+                    pop3Server.stop();
+                    pop3Manager.release();
                 } catch (IOException e) {
 
                 } catch (InterruptedException e) {

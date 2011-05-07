@@ -15,6 +15,7 @@ public class HordePage implements Page {
     }
 
     public List<? extends Message> getMessages() throws IOException {
+        index++;
         return null;
     }
 

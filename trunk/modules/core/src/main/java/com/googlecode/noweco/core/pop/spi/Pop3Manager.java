@@ -6,4 +6,6 @@ public interface Pop3Manager {
 
     Pop3Transaction authent(String username, String password) throws IOException;
 
+    void release() throws IOException;
+
 }

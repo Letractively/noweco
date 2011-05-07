@@ -18,21 +18,14 @@ public class TestHordeWebmail {
     @Test
     @Ignore
     public void testConnect() throws IOException {
-        boolean secure = false;
         String lotusURL = TheTestContext.getLotusURL();
         Matcher matcher = PATTERN.matcher(lotusURL);
         Assert.assertTrue(matcher.matches());
-        if (matcher.group(1).length() == 0) {
-            secure = false;
-        } else {
-            secure = true;
-        }
-        String host = matcher.group(2);
-        String path = matcher.group(3);
         String proxyHost = TheTestContext.getProxyHost();
         HordeWebmail webmail;
         if (proxyHost != null && proxyHost.length() != 0) {
-            webmail = new HordeWebmail(proxyHost, TheTestContext.getProxyPort());
+            webmail = new HordeWebmail();
+            webmail.setProxy(proxyHost, TheTestContext.getProxyPort());
         } else {
             webmail = new HordeWebmail();
         }
