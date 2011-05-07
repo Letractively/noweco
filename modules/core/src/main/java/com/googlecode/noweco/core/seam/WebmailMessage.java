@@ -12,8 +12,6 @@ public class WebmailMessage implements Message {
 
     private int id;
 
-    private boolean markedForDeletion = false;
-
     public WebmailMessage(int id, com.googlecode.noweco.core.webmail.Message webmailMessage) {
         this.id = id;
         this.webmailMessage = webmailMessage;
@@ -31,18 +29,8 @@ public class WebmailMessage implements Message {
         return new StringReader(webmailMessage.getContent());
     }
 
-    public void setMarkedForDeletion(boolean markedForDeletion) {
-        this.markedForDeletion = markedForDeletion;
-    }
-
-    public boolean isMarkedForDeletion() {
-        return markedForDeletion;
-    }
-
-    public void update() throws IOException {
-        if (markedForDeletion) {
-            webmailMessage.delete();
-        }
+    public void delete() throws IOException {
+        webmailMessage.delete();
     }
 
     public Reader getHeaders() throws IOException {

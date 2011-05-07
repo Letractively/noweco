@@ -9,12 +9,7 @@ public interface Message {
 
     int getSize() throws IOException;
 
-    void setMarkedForDeletion(boolean markedForDeletion);
-
-    boolean isMarkedForDeletion();
-
-    // realy delete messages
-    void update() throws IOException;
+    void delete() throws IOException;
 
     Reader getContent() throws IOException;
 

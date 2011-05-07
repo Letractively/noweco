@@ -54,7 +54,7 @@ public class CachedMessage implements Message, Serializable {
     }
 
     public void delete() throws IOException {
-
+        delegate.delete();
     }
 
 }
