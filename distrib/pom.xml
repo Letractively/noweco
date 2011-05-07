@@ -30,23 +30,22 @@
       <plugin>
         <groupId>org.riedelcastro</groupId>
         <artifactId>gcupload-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>deploy</phase>
+            <goals>
+              <goal>gcupload</goal>
+            </goals>
+          </execution>
+        </executions>
         <configuration>
+          <projectName>noweco</projectName>
           <uploads>
-            <upload>
-              <extensions>jar</extensions>
-            </upload>
             <upload>
               <postfix>distribution</postfix>
               <extensions>zip</extensions>
             </upload>
           </uploads>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <configuration>
-          <goals>deploy gcupload:gcupload</goals>
         </configuration>
       </plugin>
     </plugins>
