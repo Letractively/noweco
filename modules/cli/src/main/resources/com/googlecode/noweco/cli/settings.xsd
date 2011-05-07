@@ -55,11 +55,10 @@
     <xs:complexContent>
       <xs:extension base="Pop3Manager">
         <xs:all>
-          <xs:element minOccurs="0" name="authent" type="Authent" />
+          <xs:element name="authent" type="Authent" />
           <xs:element minOccurs="0" name="proxy" type="Proxy" />
         </xs:all>
         <xs:attribute name="class" type="xs:string" use="required" />
-        <xs:attribute name="base" type="xs:string" use="required" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

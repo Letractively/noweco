@@ -1,23 +1,13 @@
 <settings xmlns="http://noweco.googlecode.com/SETTINGS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://noweco.googlecode.com/SETTINGS http://noweco.googlecode.com/svn/xsd/settings-1.0.0.xsd">
   <pop3Managers>
-    <!-- webmail is link to Pop3ManagerFromWebmail -->
-    <webmail id="horde.bull.net" class="com.googlecode.noweco.core.webmail.horde.HordeWebmail" base="https://telefrec.bull.fr">
-      <authent class="com.googlecode.noweco.core.webmail.portal.BullWebmailFrecPortalConnector" />
-    </webmail>
-    <webmail id="inotes.bull.net" class="com.googlecode.noweco.core.webmail.lotus.LotusWebmail" base="https://???">
-      <authent class="com.googlecode.noweco.core.webmail.portal.BullWebmailINotesPortalConnector" />
-    </webmail>
-    <webmail id="inotes.lotuslive.com" class="com.googlecode.noweco.core.webmail.lotus.LotusWebmail" base="https://mail-usw.lotuslive.com/mail">
-      <authent class="com.googlecode.noweco.core.webmail.portal.LotusLivePortalConnector" />
-      <proxy>
-        <host>ldprox.bull.fr</host>
-        <port>80</port>
-      </proxy>
+<!--     <webmail id="horde.bull.net" class="com.googlecode.noweco.core.webmail.horde.HordeWebmail"> -->
+<!--       <authent class="com.googlecode.noweco.core.webmail.portal.BullWebmailFrecPortalConnector" /> -->
+<!--     </webmail> -->
+    <webmail id="notes.bull.net" class="com.googlecode.noweco.core.webmail.lotus.LotusWebmail">
+      <authent class="com.googlecode.noweco.core.webmail.portal.BullWebmailPortalConnector" />
     </webmail>
   </pop3Managers>
   <popAccounts>
-    <user matches=".*@horde.bull.net" pop3Manager="horde.bull.net" />
-    <user matches=".*@inotes.bull.net" pop3Manager="inotes.bull.net" />
-    <user matches=".*@inotes.lotuslive.com" pop3Manager="inotes.lotuslive.com" />
+    <user matches=".*" pop3Manager="notes.bull.net" />
   </popAccounts>
 </settings>

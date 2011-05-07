@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.googlecode.noweco.core.webmail.Webmail;
 import com.googlecode.noweco.core.webmail.WebmailConnection;
+import com.googlecode.noweco.core.webmail.portal.PortalConnector;
 
 public class CachedWebmail implements Webmail {
 
@@ -27,6 +28,7 @@ public class CachedWebmail implements Webmail {
 
     private Map<String, CachedWebmailConnection> restoredWebmailConnectionByUser = new HashMap<String, CachedWebmailConnection>();
 
+    @SuppressWarnings("unchecked")
     public CachedWebmail(Webmail webmail, File data) {
         if (data.exists()) {
             try {
@@ -75,6 +77,14 @@ public class CachedWebmail implements Webmail {
             LOGGER.error("Unable to save cached data", e);
         }
 
+    }
+
+    public void setAuthent(PortalConnector portalConnector) {
+        webmail.setAuthent(portalConnector);
+    }
+
+    public void setProxy(String host, int port) {
+        webmail.setProxy(host, port);
     }
 
 }

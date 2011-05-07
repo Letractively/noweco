@@ -17,4 +17,8 @@ public class Pop3ManagerFromWebmail implements Pop3Manager {
     public Pop3Transaction authent(String username, String password) throws IOException {
         return new WebmailPop3Transaction(webmail.connect(username, password));
     }
+
+    public void release() throws IOException {
+        webmail.release();
+    }
 }
