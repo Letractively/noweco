@@ -54,7 +54,7 @@ public class HordeMessage implements Message {
     }
 
     public void delete() throws IOException {
-
+        throw new IOException("Delete unsupported");
     }
 
     public String getUniqueID() {

@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -68,6 +69,7 @@ public class Pop3Connection implements Runnable {
         try {
             Pop3Transaction transaction = null;
             List<? extends Message> messages = null;
+            boolean[] markForDeletion = null;
             State state = State.AUTHORIZATION;
             writeOK("Server ready.");
             mainloop: while (!socket.isClosed()) {
@@ -101,6 +103,7 @@ public class Pop3Connection implements Runnable {
                         LOGGER.info("Authent OK");
                         try {
                             messages = transaction.getMessages();
+                            markForDeletion = new boolean[messages.size()];
                             state = State.TRANSACTION;
                             writeOK("Authentified");
                         } catch (IOException e) {
@@ -114,18 +117,19 @@ public class Pop3Connection implements Runnable {
                     continue mainloop;
                 case TRANSACTION:
                     if (isCommand(Command.QUIT, command)) {
-                        writeOK("Bye");
                         state = State.UPDATE;
                         break mainloop;
                     } else if (isCommand(Command.STAT, command)) {
                         try {
                             int size = 0;
                             int count = 0;
+                            int pos = 0;
                             for (Message message : messages) {
-                                if (!message.isMarkedForDeletion()) {
+                                if (!markForDeletion[pos]) {
                                     size += message.getSize();
                                     count++;
                                 }
+                                pos++;
                             }
                             writeOK(count + " " + size);
                         } catch (IOException e) {
@@ -137,10 +141,12 @@ public class Pop3Connection implements Runnable {
                         if (arg.length() == 0) {
                             try {
                                 List<String> lines = new ArrayList<String>();
+                                int pos = 0;
                                 for (Message message : messages) {
-                                    if (!message.isMarkedForDeletion()) {
+                                    if (!markForDeletion[pos]) {
                                         lines.add(message.getId() + " " + message.getSize());
                                     }
+                                    pos++;
                                 }
                                 writeOK("Begin to list");
                                 for (String line : lines) {
@@ -155,15 +161,17 @@ public class Pop3Connection implements Runnable {
                             try {
                                 int id = Integer.parseInt(arg);
                                 boolean found = false;
+                                int pos = 0;
                                 for (Message message : messages) {
                                     if (message.getId() == id) {
-                                        if (message.isMarkedForDeletion()) {
+                                        if (markForDeletion[pos]) {
                                             break;
                                         }
                                         writeOK(message.getId() + " " + message.getSize());
                                         found = true;
                                         break;
                                     }
+                                    pos++;
                                 }
                                 if (!found) {
                                     writeErr("Message with " + id + " id not found");
@@ -181,10 +189,12 @@ public class Pop3Connection implements Runnable {
                         if (arg.length() == 0) {
                             try {
                                 List<String> lines = new ArrayList<String>();
+                                int pos = 0;
                                 for (Message message : messages) {
-                                    if (!message.isMarkedForDeletion()) {
+                                    if (!markForDeletion[pos]) {
                                         lines.add(message.getId() + " " + message.getUID());
                                     }
+                                    pos++;
                                 }
                                 writeOK("Begin to list");
                                 for (String line : lines) {
@@ -199,15 +209,17 @@ public class Pop3Connection implements Runnable {
                             try {
                                 int id = Integer.parseInt(arg);
                                 boolean found = false;
+                                int pos = 0;
                                 for (Message message : messages) {
                                     if (message.getId() == id) {
-                                        if (message.isMarkedForDeletion()) {
+                                        if (markForDeletion[pos]) {
                                             break;
                                         }
                                         writeOK(message.getId() + " " + message.getUID());
                                         found = true;
                                         break;
                                     }
+                                    pos++;
                                 }
                                 if (!found) {
                                     writeErr("Message with " + id + " id not found");
@@ -224,27 +236,25 @@ public class Pop3Connection implements Runnable {
                         writeOK(null);
                     } else if (isCommand(Command.RSET, command)) {
                         // avoid message deletion
-                        for (Message message : messages) {
-                            if (message.isMarkedForDeletion()) {
-                                message.setMarkedForDeletion(false);
-                            }
-                        }
+                        Arrays.fill(markForDeletion, false);
                         writeOK(null);
                     } else if (isCommand(Command.DELE, command)) {
                         String arg = command.substring(Command.DELE.name().length()).trim();
                         try {
                             int id = Integer.parseInt(arg);
                             boolean found = false;
+                            int pos = 0;
                             for (Message message : messages) {
                                 if (message.getId() == id) {
-                                    if (message.isMarkedForDeletion()) {
+                                    if (markForDeletion[pos]) {
                                         break;
                                     }
-                                    message.setMarkedForDeletion(true);
+                                    markForDeletion[pos] = true;
                                     writeOK("Message deleted");
                                     found = true;
                                     break;
                                 }
+                                pos++;
                             }
                             if (!found) {
                                 writeErr("Message with " + id + " id not found");
@@ -259,22 +269,27 @@ public class Pop3Connection implements Runnable {
                             int id = Integer.parseInt(split[0]);
                             int contentLines = Integer.parseInt(split[1]);
                             boolean found = false;
+                            int pos = 0;
                             for (Message message : messages) {
                                 if (message.getId() == id) {
-                                    if (message.isMarkedForDeletion()) {
+                                    if (markForDeletion[pos]) {
                                         break;
                                     }
                                     writeOK("Begin headers content");
                                     try {
-                                        BufferedReader bufferedReader = new BufferedReader(message.getHeaders());
+                                        BufferedReader bufferedReader;
+                                        if (contentLines == 0) {
+                                            bufferedReader = new BufferedReader(message.getHeaders());
+                                        } else {
+                                            bufferedReader = new BufferedReader(message.getContent());
+                                        }
                                         String line = bufferedReader.readLine();
-                                        while (line != null) {
+                                        while (line != null && line.length() != 0) {
                                             writeLine(line);
                                             line = bufferedReader.readLine();
                                         }
                                         writeLine("");
-                                        if (contentLines != 0) {
-                                            bufferedReader = new BufferedReader(message.getContent());
+                                        if (contentLines != 0 && line != null) {
                                             line = bufferedReader.readLine();
                                             while (line != null && contentLines > 0) {
                                                 writeLine(line);
@@ -284,11 +299,13 @@ public class Pop3Connection implements Runnable {
                                         }
                                         writeEndOfLines();
                                     } catch (IOException e) {
-                                        // TODO: handle exception
+                                        LOGGER.error("Unable to read message", e);
+                                        throw new PopSocketException(e);
                                     }
                                     found = true;
                                     break;
                                 }
+                                pos++;
                             }
                             if (!found) {
                                 writeErr("Message with " + id + " id not found");
@@ -301,9 +318,10 @@ public class Pop3Connection implements Runnable {
                         try {
                             int id = Integer.parseInt(arg);
                             boolean found = false;
+                            int pos = 0;
                             for (Message message : messages) {
                                 if (message.getId() == id) {
-                                    if (message.isMarkedForDeletion()) {
+                                    if (markForDeletion[pos]) {
                                         break;
                                     }
                                     writeOK("Begin message content");
@@ -316,11 +334,13 @@ public class Pop3Connection implements Runnable {
                                         }
                                         writeEndOfLines();
                                     } catch (IOException e) {
-                                        // TODO: handle exception
+                                        LOGGER.error("Unable to read message", e);
+                                        throw new PopSocketException(e);
                                     }
                                     found = true;
                                     break;
                                 }
+                                pos++;
                             }
                             if (!found) {
                                 writeErr("Message with " + id + " id not found");
@@ -339,23 +359,37 @@ public class Pop3Connection implements Runnable {
             }
             if (state == State.UPDATE) {
                 try {
+                    int pos = 0;
                     for (Message message : messages) {
-                        if (message.isMarkedForDeletion()) {
-                            message.update();
+                        if (markForDeletion[pos]) {
+                            message.delete();
                         }
+                        pos++;
                     }
+                    writeOK("Updated");
                 } catch (IOException e) {
                     LOGGER.error("Unable to update", e);
-                }
-                try {
-                    socket.close();
-                } catch (IOException e) {
-                    LOGGER.error("Unable to close socket", e);
+                    writeErr("Update of one message failed");
                 }
             }
         } catch (PopSocketException e) {
             LOGGER.error("Client connection failed", e);
         } finally {
+            try {
+                outputStream.close();
+            } catch (IOException e) {
+                LOGGER.error("Unable to close outputStream", e);
+            }
+            try {
+                reader.close();
+            } catch (IOException e) {
+                LOGGER.error("Unable to close reader", e);
+            }
+            try {
+                socket.close();
+            } catch (IOException e) {
+                LOGGER.error("Unable to close socket", e);
+            }
             synchronized (mutex) {
                 finished = true;
                 mutex.notifyAll();
