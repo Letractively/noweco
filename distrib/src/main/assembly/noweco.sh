@@ -37,15 +37,26 @@ if [ "$STOP_NOWECO" = "true" ]; then
   if [ -f "$DIRNAME/noweco.pid" ]; then
     NOWECO_PID=$(cat "$DIRNAME/noweco.pid")
     PS_NOWECO_PID=$(ps -p $NOWECO_PID | wc -l)
-    if [ $PS_NOWECO_PID = 2 ]; then
+    if [ $PS_NOWECO_PID -eq 2 ]; then
       kill $NOWECO_PID
+      WAIT_COUNT=0
+      # 10 seconds timeout
+      while [ $WAIT_COUNT -lt 10 -a $PS_NOWECO_PID -eq 2 ]; do
+        sleep 1
+        PS_NOWECO_PID=$(ps -p $NOWECO_PID | wc -l)
+        let WAIT_COUNT=WAIT_COUNT+1
+      done     
+      if [ $PS_NOWECO_PID -eq 2 ]; then
+        echo "Unable to stop Noweco process"
+        exit
+      fi
     else
-      echo "Noweco process not launched";
+      echo "Noweco process not launched"
       exit
     fi
     rm "$DIRNAME/noweco.pid"
   else
-    echo "Noweco process not launched";
+    echo "Noweco process not launched"
     exit
   fi
 fi
@@ -55,8 +66,8 @@ if [ "$START_NOWECO" = "true" ]; then
     NOWECO_PID=$(cat "$DIRNAME/noweco.pid")
     PS_NOWECO_PID=$(ps -p $NOWECO_PID | wc -l)
     # 2 = HEADER + PID
-    if [ $PS_NOWECO_PID = 2 ]; then
-      echo "Noweco process already launched";
+    if [ $PS_NOWECO_PID -eq 2 ]; then
+      echo "Noweco process already launched"
       exit
     fi
     rm "$DIRNAME/noweco.pid"
@@ -87,5 +98,3 @@ if [ "$START_NOWECO" = "true" ]; then
   NOWECO_PID=$!
   echo $NOWECO_PID > "$DIRNAME/noweco.pid"
 fi
-
-
