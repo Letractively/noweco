@@ -42,6 +42,8 @@
           <projectName>noweco</projectName>
           <uploads>
             <upload>
+              <summary>${project.name} :: ${project.version}</summary>
+              <labels>Featured</labels>
               <postfix>distribution</postfix>
               <extensions>zip</extensions>
             </upload>
