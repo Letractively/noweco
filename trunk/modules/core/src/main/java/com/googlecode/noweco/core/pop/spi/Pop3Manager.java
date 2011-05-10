@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public interface Pop3Manager {
 
-    Pop3Transaction authent(String username, String password) throws IOException;
+    Pop3Account authent(String username, String password) throws IOException;
 
     void release() throws IOException;
 

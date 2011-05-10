@@ -31,7 +31,7 @@ import com.googlecode.noweco.core.pop.Pop3Server;
 import com.googlecode.noweco.core.pop.spi.Pop3Manager;
 import com.googlecode.noweco.core.seam.DispatchedPop3Manager;
 import com.googlecode.noweco.core.seam.DispatcherPop3Manager;
-import com.googlecode.noweco.core.seam.Pop3ManagerFromWebmail;
+import com.googlecode.noweco.core.seam.WebmailPop3Manager;
 import com.googlecode.noweco.core.webmail.cache.CachedWebmail;
 import com.googlecode.noweco.core.webmail.portal.PortalConnector;
 
@@ -103,7 +103,7 @@ public class NowecoCLI {
             }
             String id = webmail.getId();
             webmailInstance = new CachedWebmail(webmailInstance, new File(data, id + ".data"));
-            Pop3Manager pop3Manager = new Pop3ManagerFromWebmail(webmailInstance);
+            Pop3Manager pop3Manager = new WebmailPop3Manager(webmailInstance);
 
             Proxy proxy = webmail.getProxy();
             if (proxy != null) {

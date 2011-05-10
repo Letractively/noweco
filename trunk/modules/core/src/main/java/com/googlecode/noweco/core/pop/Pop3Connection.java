@@ -14,8 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.googlecode.noweco.core.pop.spi.Message;
+import com.googlecode.noweco.core.pop.spi.Pop3Account;
 import com.googlecode.noweco.core.pop.spi.Pop3Manager;
-import com.googlecode.noweco.core.pop.spi.Pop3Transaction;
 
 public class Pop3Connection implements Runnable {
 
@@ -26,6 +26,8 @@ public class Pop3Connection implements Runnable {
     public enum Command {
         QUIT, STAT, LIST, RETR, DELE, NOOP, RSET, USER, PASS, TOP, UIDL;
     }
+
+    private Thread thread;
 
     private Socket socket;
 
@@ -50,6 +52,7 @@ public class Pop3Connection implements Runnable {
         if (!isFinished()) {
             socket.close();
         }
+        thread.interrupt();
         synchronized (mutex) {
             while (!finished) {
                 mutex.wait();
@@ -66,8 +69,9 @@ public class Pop3Connection implements Runnable {
     };
 
     public void run() {
+        this.thread = Thread.currentThread();
         try {
-            Pop3Transaction transaction = null;
+            Pop3Account pop3Account = null;
             List<? extends Message> messages = null;
             boolean[] markForDeletion = null;
             State state = State.AUTHORIZATION;
@@ -97,12 +101,12 @@ public class Pop3Connection implements Runnable {
                         continue mainloop;
                     }
                     String password = command.substring(Command.PASS.name().length() + 1);
-                    LOGGER.info("Authent with user {} and password {}", username, password);
+                    LOGGER.info("Authent {} user", username);
                     try {
-                        transaction = pop3Manager.authent(username, password);
+                        pop3Account = pop3Manager.authent(username, password);
                         LOGGER.info("Authent OK");
                         try {
-                            messages = transaction.getMessages();
+                            messages = pop3Account.getMessages();
                             markForDeletion = new boolean[messages.size()];
                             state = State.TRANSACTION;
                             writeOK("Authentified");
@@ -144,7 +148,7 @@ public class Pop3Connection implements Runnable {
                                 int pos = 0;
                                 for (Message message : messages) {
                                     if (!markForDeletion[pos]) {
-                                        lines.add(message.getId() + " " + message.getSize());
+                                        lines.add((pos + 1) + " " + message.getSize());
                                     }
                                     pos++;
                                 }
@@ -160,21 +164,11 @@ public class Pop3Connection implements Runnable {
                         } else {
                             try {
                                 int id = Integer.parseInt(arg);
-                                boolean found = false;
-                                int pos = 0;
-                                for (Message message : messages) {
-                                    if (message.getId() == id) {
-                                        if (markForDeletion[pos]) {
-                                            break;
-                                        }
-                                        writeOK(message.getId() + " " + message.getSize());
-                                        found = true;
-                                        break;
-                                    }
-                                    pos++;
-                                }
-                                if (!found) {
+                                int pos = id - 1;
+                                if (pos < 0 || pos >= messages.size() || markForDeletion[pos]) {
                                     writeErr("Message with " + id + " id not found");
+                                } else {
+                                    writeOK(id + " " + messages.get(pos).getSize());
                                 }
                             } catch (IOException e) {
                                 LOGGER.error("Unable to list", e);
@@ -187,46 +181,28 @@ public class Pop3Connection implements Runnable {
                     } else if (isCommand(Command.UIDL, command)) {
                         String arg = command.substring(Command.UIDL.name().length()).trim();
                         if (arg.length() == 0) {
-                            try {
-                                List<String> lines = new ArrayList<String>();
-                                int pos = 0;
-                                for (Message message : messages) {
-                                    if (!markForDeletion[pos]) {
-                                        lines.add(message.getId() + " " + message.getUID());
-                                    }
-                                    pos++;
+                            List<String> lines = new ArrayList<String>();
+                            int pos = 0;
+                            for (Message message : messages) {
+                                if (!markForDeletion[pos]) {
+                                    lines.add((pos + 1) + " " + message.getUID());
                                 }
-                                writeOK("Begin to list");
-                                for (String line : lines) {
-                                    writeLine(line);
-                                }
-                                writeEndOfLines();
-                            } catch (IOException e) {
-                                LOGGER.error("Unable to list", e);
-                                writeErr("Size fetch issue");
+                                pos++;
                             }
+                            writeOK("Begin to list");
+                            for (String line : lines) {
+                                writeLine(line);
+                            }
+                            writeEndOfLines();
                         } else {
                             try {
                                 int id = Integer.parseInt(arg);
-                                boolean found = false;
-                                int pos = 0;
-                                for (Message message : messages) {
-                                    if (message.getId() == id) {
-                                        if (markForDeletion[pos]) {
-                                            break;
-                                        }
-                                        writeOK(message.getId() + " " + message.getUID());
-                                        found = true;
-                                        break;
-                                    }
-                                    pos++;
-                                }
-                                if (!found) {
+                                int pos = id - 1;
+                                if (pos < 0 || pos >= messages.size() || markForDeletion[pos]) {
                                     writeErr("Message with " + id + " id not found");
+                                } else {
+                                    writeOK(id + " " + messages.get(pos).getUID());
                                 }
-                            } catch (IOException e) {
-                                LOGGER.error("Unable to list", e);
-                                writeErr("Size fetch issue");
                             } catch (NumberFormatException e) {
                                 LOGGER.error("Unable to uid list", e);
                                 writeErr("UIDL param must be an integer");
@@ -242,22 +218,12 @@ public class Pop3Connection implements Runnable {
                         String arg = command.substring(Command.DELE.name().length()).trim();
                         try {
                             int id = Integer.parseInt(arg);
-                            boolean found = false;
-                            int pos = 0;
-                            for (Message message : messages) {
-                                if (message.getId() == id) {
-                                    if (markForDeletion[pos]) {
-                                        break;
-                                    }
-                                    markForDeletion[pos] = true;
-                                    writeOK("Message deleted");
-                                    found = true;
-                                    break;
-                                }
-                                pos++;
-                            }
-                            if (!found) {
+                            int pos = id - 1;
+                            if (pos < 0 || pos >= messages.size() || markForDeletion[pos]) {
                                 writeErr("Message with " + id + " id not found");
+                            } else {
+                                markForDeletion[pos] = true;
+                                writeOK("Message deleted");
                             }
                         } catch (NumberFormatException e) {
                             writeErr("DELE param must be an integer");
@@ -268,47 +234,39 @@ public class Pop3Connection implements Runnable {
                             String[] split = args.split(" ");
                             int id = Integer.parseInt(split[0]);
                             int contentLines = Integer.parseInt(split[1]);
-                            boolean found = false;
-                            int pos = 0;
-                            for (Message message : messages) {
-                                if (message.getId() == id) {
-                                    if (markForDeletion[pos]) {
-                                        break;
+                            int pos = id - 1;
+                            if (pos < 0 || pos >= messages.size() || markForDeletion[pos]) {
+                                writeErr("Message with " + id + " id not found");
+                            } else {
+                                Message message = messages.get(pos);
+
+                                writeOK("Begin headers content");
+                                try {
+                                    BufferedReader bufferedReader;
+                                    if (contentLines <= 0) {
+                                        bufferedReader = new BufferedReader(message.getHeaders());
+                                    } else {
+                                        bufferedReader = new BufferedReader(message.getContent());
                                     }
-                                    writeOK("Begin headers content");
-                                    try {
-                                        BufferedReader bufferedReader;
-                                        if (contentLines == 0) {
-                                            bufferedReader = new BufferedReader(message.getHeaders());
-                                        } else {
-                                            bufferedReader = new BufferedReader(message.getContent());
-                                        }
-                                        String line = bufferedReader.readLine();
-                                        while (line != null && line.length() != 0) {
+                                    String line = bufferedReader.readLine();
+                                    while (line != null && line.length() != 0) {
+                                        writeLine(line);
+                                        line = bufferedReader.readLine();
+                                    }
+                                    writeLine("");
+                                    if (contentLines != 0 && line != null) {
+                                        line = bufferedReader.readLine();
+                                        while (line != null && contentLines > 0) {
                                             writeLine(line);
                                             line = bufferedReader.readLine();
+                                            contentLines--;
                                         }
-                                        writeLine("");
-                                        if (contentLines != 0 && line != null) {
-                                            line = bufferedReader.readLine();
-                                            while (line != null && contentLines > 0) {
-                                                writeLine(line);
-                                                line = bufferedReader.readLine();
-                                                contentLines--;
-                                            }
-                                        }
-                                        writeEndOfLines();
-                                    } catch (IOException e) {
-                                        LOGGER.error("Unable to read message", e);
-                                        throw new PopSocketException(e);
                                     }
-                                    found = true;
-                                    break;
+                                    writeEndOfLines();
+                                } catch (IOException e) {
+                                    LOGGER.error("Unable to read message", e);
+                                    throw new PopSocketException(e);
                                 }
-                                pos++;
-                            }
-                            if (!found) {
-                                writeErr("Message with " + id + " id not found");
                             }
                         } catch (NumberFormatException e) {
                             writeErr("DELE param must be an integer");
@@ -317,33 +275,25 @@ public class Pop3Connection implements Runnable {
                         String arg = command.substring(Command.RETR.name().length()).trim();
                         try {
                             int id = Integer.parseInt(arg);
-                            boolean found = false;
-                            int pos = 0;
-                            for (Message message : messages) {
-                                if (message.getId() == id) {
-                                    if (markForDeletion[pos]) {
-                                        break;
-                                    }
-                                    writeOK("Begin message content");
-                                    try {
-                                        BufferedReader bufferedReader = new BufferedReader(message.getContent());
-                                        String line = bufferedReader.readLine();
-                                        while (line != null) {
-                                            writeLine(line);
-                                            line = bufferedReader.readLine();
-                                        }
-                                        writeEndOfLines();
-                                    } catch (IOException e) {
-                                        LOGGER.error("Unable to read message", e);
-                                        throw new PopSocketException(e);
-                                    }
-                                    found = true;
-                                    break;
-                                }
-                                pos++;
-                            }
-                            if (!found) {
+                            int pos = id - 1;
+                            if (pos < 0 || pos >= messages.size() || markForDeletion[pos]) {
                                 writeErr("Message with " + id + " id not found");
+                            } else {
+                                Message message = messages.get(pos);
+                                writeOK("Begin message content");
+                                LOGGER.info("Send content of {}", message.getUID());
+                                try {
+                                    BufferedReader bufferedReader = new BufferedReader(message.getContent());
+                                    String line = bufferedReader.readLine();
+                                    while (line != null) {
+                                        writeLine(line);
+                                        line = bufferedReader.readLine();
+                                    }
+                                    writeEndOfLines();
+                                } catch (IOException e) {
+                                    LOGGER.error("Unable to read message", e);
+                                    throw new PopSocketException(e);
+                                }
                             }
                         } catch (NumberFormatException e) {
                             writeErr("DELE param must be an integer");
@@ -359,18 +309,24 @@ public class Pop3Connection implements Runnable {
             }
             if (state == State.UPDATE) {
                 try {
+                    List<String> uids = new ArrayList<String>();
                     int pos = 0;
                     for (Message message : messages) {
                         if (markForDeletion[pos]) {
-                            message.delete();
+                            uids.add(message.getUID());
                         }
                         pos++;
+                    }
+                    if (uids.size() != 0) {
+                        LOGGER.info("Suppress messages : {}", uids);
+                        pop3Account.delete(uids);
                     }
                     writeOK("Updated");
                 } catch (IOException e) {
                     LOGGER.error("Unable to update", e);
                     writeErr("Update of one message failed");
                 }
+                LOGGER.info("Transaction committed");
             }
         } catch (PopSocketException e) {
             LOGGER.error("Client connection failed", e);
@@ -425,7 +381,7 @@ public class Pop3Connection implements Runnable {
     }
 
     public void writeEndOfLines() throws PopSocketException {
-        LOGGER.info("No more lines");
+        LOGGER.trace("No more lines");
         write(".");
         write("\r\n");
         flush();

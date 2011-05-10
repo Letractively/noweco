@@ -29,15 +29,11 @@ public class WebmailMessage implements Message {
         return new StringReader(webmailMessage.getContent());
     }
 
-    public void delete() throws IOException {
-        webmailMessage.delete();
-    }
-
     public Reader getHeaders() throws IOException {
         return new StringReader(webmailMessage.getHeader());
     }
 
-    public String getUID() throws IOException {
+    public String getUID() {
         return webmailMessage.getUniqueID();
     }
 

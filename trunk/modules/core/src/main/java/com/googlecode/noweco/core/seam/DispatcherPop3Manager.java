@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.googlecode.noweco.core.pop.spi.Pop3Manager;
-import com.googlecode.noweco.core.pop.spi.Pop3Transaction;
+import com.googlecode.noweco.core.pop.spi.Pop3Account;
 
 public class DispatcherPop3Manager implements Pop3Manager {
 
@@ -20,7 +20,7 @@ public class DispatcherPop3Manager implements Pop3Manager {
         }
     }
 
-    public Pop3Transaction authent(String username, String password) throws IOException {
+    public Pop3Account authent(String username, String password) throws IOException {
         for (DispatchedPop3Manager dest : dispatchedPop3Managers) {
             if (dest.getPattern().matcher(username).matches()) {
                 return dest.getPop3Manager().authent(username, password);

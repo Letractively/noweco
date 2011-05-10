@@ -7,11 +7,13 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.noweco.core.webmail.Page;
 import com.googlecode.noweco.core.webmail.Webmail;
 import com.googlecode.noweco.core.webmail.WebmailConnection;
 import com.googlecode.noweco.core.webmail.portal.PortalConnector;
@@ -45,7 +47,7 @@ public class CachedWebmail implements Webmail {
         this.data = data;
     }
 
-    public WebmailConnection connect(String user, String password) throws IOException {
+    public CachedWebmailConnection connect(String user, String password) throws IOException {
         CachedWebmailConnection cachedWebmailConnection = cachedWebmailConnectionByUser.get(user);
         if (cachedWebmailConnection == null) {
             WebmailConnection connect = webmail.connect(user, password);
@@ -59,6 +61,16 @@ public class CachedWebmail implements Webmail {
         } else {
             if (!cachedWebmailConnection.getPassword().equals(password)) {
                 throw new IOException("Bad password");
+            }
+            Iterator<Page> pages = cachedWebmailConnection.getPages();
+            try {
+                if (pages.hasNext()) {
+                    pages.next().getMessages();
+                }
+            } catch (IOException e) {
+                LOGGER.info("Try to reconnect", e);
+                WebmailConnection connect = webmail.connect(user, password);
+                cachedWebmailConnection.setDelegate(connect);
             }
         }
         return cachedWebmailConnection;
@@ -76,7 +88,7 @@ public class CachedWebmail implements Webmail {
         } catch (IOException e) {
             LOGGER.error("Unable to save cached data", e);
         }
-
+        webmail.release();
     }
 
     public void setAuthent(PortalConnector portalConnector) {
