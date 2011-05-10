@@ -53,10 +53,6 @@ public class LotusMessage implements Message {
         return getUniqueID();
     }
 
-    public void delete() throws IOException {
-        throw new IOException("Delete unsupported");
-    }
-
     public String getUniqueID() {
         return id;
     }

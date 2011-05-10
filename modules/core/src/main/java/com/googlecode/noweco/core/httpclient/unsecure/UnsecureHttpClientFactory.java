@@ -10,6 +10,7 @@ import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.HttpConnectionParams;
 
 public class UnsecureHttpClientFactory {
 
@@ -34,6 +35,7 @@ public class UnsecureHttpClientFactory {
         if (proxy != null) {
             httpclient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
         }
+        HttpConnectionParams.setSoTimeout(httpclient.getParams(), 7000);
         return httpclient;
     }
 

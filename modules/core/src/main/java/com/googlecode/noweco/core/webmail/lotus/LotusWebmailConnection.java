@@ -87,6 +87,8 @@ public class LotusWebmailConnection implements WebmailConnection {
         return content;
     }
 
+    private static final Pattern CONNECTED_PATTERN = Pattern.compile("<form\\s*name=\"_DominoForm\"");
+
     private static final Pattern MESSAGE_PATTERN = Pattern
             .compile("(?s)<tr[^>]*>\\s*<td.*?</td>\\s*<td.*?<input\\s.*?value=\"([^\"]*)\".*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?(\\d+)(?:[,.](\\d+))?([KM]).*?</td>.*?</tr>");
 
@@ -104,6 +106,10 @@ public class LotusWebmailConnection implements WebmailConnection {
         }
 
         List<Message> messages = new ArrayList<Message>();
+
+        if (!CONNECTED_PATTERN.matcher(pageContent).find()) {
+            throw new IOException("Page content is not valid");
+        }
 
         Matcher matcher = MESSAGE_PATTERN.matcher(pageContent);
         int start = 0;
@@ -136,6 +142,10 @@ public class LotusWebmailConnection implements WebmailConnection {
 
     public Iterator<Page> getPages() throws IOException {
         return new LotusPagesIterator(this);
+    }
+
+    public void delete(List<String> messageUids) throws IOException {
+        throw new IOException("Delete unsupported");
     }
 
 }

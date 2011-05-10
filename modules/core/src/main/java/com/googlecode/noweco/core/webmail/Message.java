@@ -12,6 +12,4 @@ public interface Message {
 
     String getContent() throws IOException;
 
-    void delete() throws IOException;
-
 }

@@ -61,4 +61,8 @@ public class CachedWebmailConnection implements WebmailConnection, Serializable 
         delegate.release();
     }
 
+    public void delete(List<String> messageUids) throws IOException {
+        delegate.delete(messageUids);
+    }
+
 }
