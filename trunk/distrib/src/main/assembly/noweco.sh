@@ -1,8 +1,8 @@
 #!/bin/bash
 
-if [ "$(id -u)" != "0" ]; then
+if [ $(id -u) -ne 0 ]; then
   echo "Noweco listen on privileged ports and needs root permissions."
-  exit
+  exit 1
 fi
 
 DIRNAME=`dirname $0`
@@ -48,16 +48,16 @@ if [ "$STOP_NOWECO" = "true" ]; then
       done     
       if [ $PS_NOWECO_PID -eq 2 ]; then
         echo "Unable to stop Noweco process"
-        exit
+        exit 2
       fi
     else
       echo "Noweco process not launched"
-      exit
+      exit 3
     fi
     rm "$DIRNAME/noweco.pid"
   else
     echo "Noweco process not launched"
-    exit
+    exit 3
   fi
 fi
 
@@ -68,7 +68,7 @@ if [ "$START_NOWECO" = "true" ]; then
     # 2 = HEADER + PID
     if [ $PS_NOWECO_PID -eq 2 ]; then
       echo "Noweco process already launched"
-      exit
+      exit 4
     fi
     rm "$DIRNAME/noweco.pid"
   fi
