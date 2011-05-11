@@ -373,7 +373,7 @@ public class Pop3Connection implements Runnable {
 
     public void writeLine(String line) throws PopSocketException {
         LOGGER.trace("Response line : {}", line);
-        if (!line.isEmpty() && line.charAt(0) == '.') {
+        if (line.length() != 0 && line.charAt(0) == '.') {
             write(".");
         }
         write(line);
@@ -408,6 +408,7 @@ public class Pop3Connection implements Runnable {
 
     public void write(String message) throws PopSocketException {
         try {
+		    String US_ASCII = "US_ASCII";
             outputStream.write(message.getBytes(US_ASCII));
         } catch (IOException e) {
             throw new PopSocketException(e);
