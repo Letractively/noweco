@@ -13,23 +13,33 @@ if "%1"=="start" (
 		)
 		echo ----%JAVA%
 		
+		set LC="%JAVA%\jre\lib\rt.jar"
+		echo %LC%
+		for %%j in (lib\*.jar) do set LC=%LC%;%%j
+		echo ----LC=%LC%
 		
+		rem if exist lcp.bat del lcp.bat
+		rem for %%j in (lib\*.jar) do echo set LC=%%LC%%;%%j >> lcp.bat
+		rem echo echo %%LC%% >> lcp.bat
+		rem call lcp.bat
+		rem echo %LC%
 		
-		SETLOCAL enableDelayedExpansion
-		set lalire=
-		echo lalire is ----%lalire%;
-		set tmp=
-		FOR %%F IN (lib/*.jar) DO (
-			set fichier=%%F
-			set tmp=;lib/!fichier!
-			echo tmp is %tmp%
-			set lalire=!lalire!%tmp%
-			echo lalire is %lalire%
-		)
-		ENDLOCAL
+		rem SETLOCAL enableDelayedExpansion
+		rem set lalire=
+		rem echo lalire is ----%lalire%;
 		
-		echo ----%lalire%
-		%JAVA% -cp %lalire% -Dlogback.configurationFile="%currectFolder%/logback.xml" com.googlecode.noweco.cli.NowecoCLI
+		rem set tmp=
+		rem FOR %%F IN (lib/*.jar) DO (
+		rem 	set fichier=%%F
+		rem 	set tmp=;lib/!fichier!
+		rem 	echo tmp is %tmp%
+		rem 	set lalire=!lalire!%tmp%
+		rem 	echo lalire is %lalire%
+		rem )
+		rem ENDLOCAL
+		
+		rem echo ----%lalire%
+		%JAVA% -cp %LC% -Dlogback.configurationFile="%currectFolder%/logback.xml" com.googlecode.noweco.cli.NowecoCLI
 ) ELSE (
 	if "%1"=="stop" (
 		echo stop;
