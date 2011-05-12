@@ -1,6 +1,5 @@
 cls
 @echo off
-echo Ce batch ne fonctionne pas, en effet l'affectation de variable dans la boucle for construisant le classpath de la commande Java ne fonctionne pas !!!
 
 if "%1"=="start" (
 		echo start
