@@ -65,12 +65,11 @@ public class LotusWebmailConnection implements WebmailConnection {
         }
         pagePrefix = matcher.group(1);
 
-         httpGet = new HttpGet(prefix + "/($Trash)/?OpenView");
-         rsp = httpclient.execute(host, httpGet);
+        httpGet = new HttpGet(prefix + "/($Trash)/?OpenView");
+        rsp = httpclient.execute(host, httpGet);
 
-         entity = rsp.getEntity();
-         string = EntityUtils.toString(entity);
-         System.out.println(string);
+        entity = rsp.getEntity();
+        string = EntityUtils.toString(entity);
         if (entity != null) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug(string);
@@ -213,7 +212,7 @@ public class LotusWebmailConnection implements WebmailConnection {
                 nvps.add(new BasicNameValuePair("$$SelectDoc", doc));
             }
             Matcher matcherRandNum = TEMP_RAND_NUM_PATTERN.matcher(pageContent);
-            if(!matcherRandNum.find()) {
+            if (!matcherRandNum.find()) {
                 throw new IOException("No rand num find");
             }
             nvps.add(new BasicNameValuePair("tmpRandNum", matcherRandNum.group(1)));
