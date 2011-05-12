@@ -9,7 +9,7 @@ $ chmod +x noweco.sh
 Use
 ---------------------
 
-Noweco is controlled via noweco alias (which sudo the noweco.sh script).
+Noweco is controlled by noweco.sh script.
 
 Following command are available :
 $ sudo -E ./noweco.sh start
