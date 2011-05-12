@@ -183,7 +183,10 @@ public class LotusWebmailConnection implements WebmailConnection {
 
     public void delete(List<String> messageUids) throws IOException {
         List<String> toDelete = new ArrayList<String>();
-        for (int page = 0; page < 1; page++) {
+        int page = 0;
+        int messageCount;
+        do {
+            messageCount = 0;
             int index = 1 + page * 30;
             String pageContent = loadPageContent(index);
 
@@ -202,6 +205,7 @@ public class LotusWebmailConnection implements WebmailConnection {
                     toDelete.add(group);
                 }
                 start = matcher.end();
+                messageCount++;
             }
             HttpPost httpPost = new HttpPost(pagePrefix + "&Start=" + index);
             List<NameValuePair> nvps = new ArrayList<NameValuePair>();
@@ -221,7 +225,8 @@ public class LotusWebmailConnection implements WebmailConnection {
             httpPost.setEntity(new UrlEncodedFormEntity(nvps, HTTP.UTF_8));
             HttpResponse rsp = httpclient.execute(host, httpPost);
             EntityUtils.consume(rsp.getEntity());
-        }
+            page++;
+        } while (messageCount == 30);
 
         // clear garbage
 
