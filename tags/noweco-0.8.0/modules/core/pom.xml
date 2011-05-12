@@ -1,0 +1,63 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <groupId>com.googlecode.noweco</groupId>
+    <artifactId>noweco.modules</artifactId>
+    <version>0.8.0</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>noweco.modules.core</artifactId>
+  <packaging>jar</packaging>
+  <name>Noweco :: Modules :: Core</name>
+  <build>
+    <defaultGoal>install</defaultGoal>
+    <plugins>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <forkMode>once</forkMode>
+          <systemPropertyVariables>
+            <NOWECO_LOTUS_USERNAME>${lotus.userName}</NOWECO_LOTUS_USERNAME>
+            <NOWECO_LOTUS_PASSWORD>${lotus.password}</NOWECO_LOTUS_PASSWORD>
+            <NOWECO_LOTUS_URL>${lotus.url}</NOWECO_LOTUS_URL>
+            <NOWECO_PROXY_HOST>${proxy.host}</NOWECO_PROXY_HOST>
+            <NOWECO_PROXY_PORT>${proxy.port}</NOWECO_PROXY_PORT>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <dependencies>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpmime</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.mail</groupId>
+      <artifactId>mail</artifactId>
+      <version>1.4</version>
+    </dependency>
+    <!-- <dependency> -->
+    <!-- <groupId>org.slf4j</groupId> -->
+    <!-- <artifactId>slf4j-simple</artifactId> -->
+    <!-- <scope>test</scope> -->
+    <!-- </dependency> -->
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>
