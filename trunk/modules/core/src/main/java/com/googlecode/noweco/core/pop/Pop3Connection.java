@@ -5,7 +5,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,7 +20,7 @@ public class Pop3Connection implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Pop3Connection.class);
 
-    private static final Charset US_ASCII = Charset.forName("US-ASCII");
+    private static final String US_ASCII = "US-ASCII";
 
     public enum Command {
         QUIT, STAT, LIST, RETR, DELE, NOOP, RSET, USER, PASS, TOP, UIDL;
@@ -408,7 +407,6 @@ public class Pop3Connection implements Runnable {
 
     public void write(String message) throws PopSocketException {
         try {
-		    String US_ASCII = "US_ASCII";
             outputStream.write(message.getBytes(US_ASCII));
         } catch (IOException e) {
             throw new PopSocketException(e);
