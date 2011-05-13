@@ -46,11 +46,16 @@ public class LotusWebmailConnection implements WebmailConnection {
 
     public LotusWebmailConnection(HttpClient httpclient, HttpHost host, String prefix) throws IOException {
         this.prefix = prefix;
+        HttpGet httpGet;
+        HttpResponse rsp;
+        HttpEntity entity;
 
-        HttpGet httpGet = new HttpGet(prefix + "/($Inbox)?OpenView");
-        HttpResponse rsp = httpclient.execute(host, httpGet);
+        httpGet = new HttpGet(prefix + "/($Inbox)?OpenView");
+        httpGet.setHeader("Accept-Language", "fr-fr,fr;q=0.8,en;q=0.5,en-us;q=0.3");
 
-        HttpEntity entity = rsp.getEntity();
+        rsp = httpclient.execute(host, httpGet);
+
+        entity = rsp.getEntity();
         String string = EntityUtils.toString(entity);
         if (entity != null) {
             if (LOGGER.isDebugEnabled()) {

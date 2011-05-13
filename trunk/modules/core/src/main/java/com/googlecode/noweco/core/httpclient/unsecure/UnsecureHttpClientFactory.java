@@ -5,12 +5,13 @@ import javax.net.ssl.TrustManager;
 
 import org.apache.http.HttpHost;
 import org.apache.http.client.protocol.ResponseProcessCookies;
-import org.apache.http.conn.params.ConnRoutePNames;
+import org.apache.http.conn.params.ConnRouteParams;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 
 public class UnsecureHttpClientFactory {
 
@@ -32,10 +33,11 @@ public class UnsecureHttpClientFactory {
         }
         httpclient.removeResponseInterceptorByClass(ResponseProcessCookies.class);
         httpclient.addResponseInterceptor(new UnsecureResponseProcessCookies());
+        HttpParams params = httpclient.getParams();
         if (proxy != null) {
-            httpclient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
+            ConnRouteParams.setDefaultProxy(params, proxy);
         }
-        HttpConnectionParams.setSoTimeout(httpclient.getParams(), 7000);
+        HttpConnectionParams.setSoTimeout(params, 7000);
         return httpclient;
     }
 

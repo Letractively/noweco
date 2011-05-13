@@ -364,7 +364,11 @@ public class Pop3Connection implements Runnable {
 
     public String read() throws PopSocketException {
         try {
-            return reader.readLine();
+            String line = reader.readLine();
+            if (line == null) {
+                throw new PopSocketException(new IOException("Client ends connection"));
+            }
+            return line;
         } catch (IOException e) {
             throw new PopSocketException(e);
         }
