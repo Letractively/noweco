@@ -30,7 +30,7 @@ public class LotusWebmailConnection implements WebmailConnection {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LotusWebmailConnection.class);
 
-    private static final int MAX_MESSAGE = 30;
+    public static final int MAX_MESSAGE = 30;
 
     private HttpClient httpclient;
 
@@ -242,8 +242,6 @@ public class LotusWebmailConnection implements WebmailConnection {
 
                 @Override
                 public void appendMessage(String messageId, int messageSize) {
-                    System.out.println("Find "+messageId);
-
                     if (messageUids.contains(messageId)) {
                         toDelete.add(messageId);
                     }
