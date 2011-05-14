@@ -122,6 +122,15 @@
           <target>1.5</target>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <configuration>
+          <configLocation>${basedir}/src/main/config/checkstyle_config.xml</configLocation>
+          <enableRulesSummary>false</enableRulesSummary>
+          <violationSeverity>warning</violationSeverity>
+        </configuration>
+      </plugin>
     </plugins>
     <extensions>
       <extension>
@@ -259,7 +268,6 @@
         <configuration>
           <configLocation>${basedir}/src/main/config/checkstyle_config.xml</configLocation>
           <enableRulesSummary>false</enableRulesSummary>
-          <includes>**/*.java</includes>
         </configuration>
       </plugin>
       <plugin>

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2011 The Apache Software Foundation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.googlecode.noweco.core.test;
 
 import java.io.ByteArrayOutputStream;
@@ -12,19 +28,27 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import org.junit.Ignore;
+import org.junit.Test;
 
+/**
+ *
+ * @author Gael Lalire
+ */
 public class Ess {
 
-    public static void main(String[] args) throws Exception {
+    @Test
+    @Ignore
+    public void test(final String[] args) throws Exception {
         ess("from@localhost", "to@localhost");
     }
 
-    public static void ess(String from, String to) throws Exception {
+    private void ess(final String from, final String to) throws Exception {
         Session session = Session.getDefaultInstance(new Properties());
         // TODO Auto-generated constructor stub
         MimeMessage msg = new MimeMessage(session);
         msg.setFrom(new InternetAddress(from));
-        InternetAddress[] address = { new InternetAddress(to) };
+        InternetAddress[] address = new InternetAddress[] { new InternetAddress(to) };
         msg.setRecipients(Message.RecipientType.TO, address);
         msg.setSubject("JavaMail APIs Multipart Test");
         msg.setSentDate(new Date());

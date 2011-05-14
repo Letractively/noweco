@@ -1,3 +1,19 @@
+/*
+ * Copyright 2011 The Apache Software Foundation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.googlecode.noweco.core.webmail.horde;
 
 import java.io.IOException;
@@ -20,6 +36,10 @@ import com.googlecode.noweco.core.webmail.Message;
 import com.googlecode.noweco.core.webmail.Page;
 import com.googlecode.noweco.core.webmail.WebmailConnection;
 
+/**
+ *
+ * @author Gael Lalire
+ */
 public class HordeWebmailConnection implements WebmailConnection {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HordeWebmailConnection.class);
@@ -28,7 +48,7 @@ public class HordeWebmailConnection implements WebmailConnection {
 
     private HttpHost host;
 
-    public HordeWebmailConnection(HttpClient httpclient, HttpHost host) {
+    public HordeWebmailConnection(final HttpClient httpclient, final HttpHost host) {
         this.httpclient = httpclient;
         this.host = host;
     }
@@ -45,10 +65,11 @@ public class HordeWebmailConnection implements WebmailConnection {
         try {
             release();
         } catch (Throwable e) {
+            // ignore
         }
     }
 
-    public String getContent(int id) throws IOException {
+    public String getContent(final int id) throws IOException {
         HttpGet httpGet = new HttpGet("/horde/imp/view.php?index=" + id + "&mailbox=INBOX&actionID=view_source&id=0");
         HttpResponse response = httpclient.execute(host, httpGet);
         HttpEntity entity = response.getEntity();
@@ -68,7 +89,7 @@ public class HordeWebmailConnection implements WebmailConnection {
 
     private static final Pattern MESSAGES_PATTERN = Pattern.compile("var messagelist = new Array\\(\"([^)]*)\"\\)");
 
-    public List<? extends Message> getMessages(int page) throws IOException {
+    public List<? extends Message> getMessages(final int page) throws IOException {
         HttpGet httpGet = new HttpGet("/horde/imp/mailbox.php?page=" + (page + 1));
         HttpResponse rsp = httpclient.execute(host, httpGet);
 
@@ -120,7 +141,7 @@ public class HordeWebmailConnection implements WebmailConnection {
         return null;
     }
 
-    public List<String> delete(List<String> messageUids) throws IOException {
+    public List<String> delete(final List<String> messageUids) throws IOException {
         throw new IOException("NYI");
     }
 

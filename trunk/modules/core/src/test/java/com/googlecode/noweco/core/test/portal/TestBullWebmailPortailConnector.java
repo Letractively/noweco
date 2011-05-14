@@ -14,23 +14,28 @@
  * limitations under the License.
  */
 
-package com.googlecode.noweco.core.pop.spi;
+package com.googlecode.noweco.core.test.portal;
 
 import java.io.IOException;
-import java.io.Reader;
+
+import org.junit.Ignore;
+import org.junit.Test;
+
+import com.googlecode.noweco.core.test.TheTestContext;
+import com.googlecode.noweco.core.webmail.portal.BullWebmailPortalConnector;
+import com.googlecode.noweco.core.webmail.portal.PortalConnector;
 
 /**
  *
  * @author Gael Lalire
  */
-public interface Message {
+public class TestBullWebmailPortailConnector {
 
-    int getSize() throws IOException;
-
-    Reader getContent() throws IOException;
-
-    Reader getHeaders() throws IOException;
-
-    String getUID();
+    @Test
+    @Ignore
+    public void test() throws IOException {
+        PortalConnector lotusLivePortailConnector = new BullWebmailPortalConnector();
+        lotusLivePortailConnector.connect(null, TheTestContext.getLotusUserName(), TheTestContext.getLotusPassword());
+    }
 
 }

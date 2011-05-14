@@ -1,3 +1,19 @@
+/*
+ * Copyright 2011 The Apache Software Foundation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.googlecode.noweco.core.webmail.portal;
 
 import java.io.IOException;
@@ -23,6 +39,10 @@ import org.slf4j.LoggerFactory;
 
 import com.googlecode.noweco.core.httpclient.unsecure.UnsecureHttpClientFactory;
 
+/**
+ *
+ * @author Gael Lalire
+ */
 public class BullWebmailFrecPortalConnector implements PortalConnector {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BullWebmailFrecPortalConnector.class);
@@ -30,7 +50,7 @@ public class BullWebmailFrecPortalConnector implements PortalConnector {
     private static final Pattern DATAS = Pattern.compile("name=\"Datas\"\\s*value=\"([^\"]*)\"");
     private static final Pattern LAST_CNX = Pattern.compile("name=\"lastCnx\"\\s*value=\"([^\"]*)\"");
 
-    public PortalConnection connect(HttpHost proxy, String user, String password) throws IOException {
+    public PortalConnection connect(final HttpHost proxy, final String user, final String password) throws IOException {
         DefaultHttpClient httpclient = UnsecureHttpClientFactory.INSTANCE.createUnsecureHttpClient(proxy);
 
         // prepare the request
