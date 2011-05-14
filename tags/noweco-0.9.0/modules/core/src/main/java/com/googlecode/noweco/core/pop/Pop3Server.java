@@ -1,0 +1,95 @@
+/*
+ * Copyright 2011 The Apache Software Foundation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.googlecode.noweco.core.pop;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.Executor;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.googlecode.noweco.core.pop.spi.Pop3Manager;
+
+/**
+ *
+ * @author Gael Lalire
+ */
+public class Pop3Server implements Runnable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Pop3Server.class);
+
+    private static final int POP3_PORT = 110;
+
+    private List<Pop3Connection> connections;
+
+    private ServerSocket serverSocket;
+
+    private Thread thread;
+
+    private Executor executor;
+
+    private Pop3Manager pop3Manager;
+
+    public Pop3Server(final Pop3Manager pop3Manager, final Executor executor) {
+        this.executor = executor;
+        connections = new ArrayList<Pop3Connection>();
+        this.pop3Manager = pop3Manager;
+    }
+
+    public void start() throws IOException {
+        connections.clear();
+        serverSocket = new ServerSocket(getPop3Port());
+        thread = new Thread(this);
+        thread.start();
+    }
+
+    public void stop() throws IOException, InterruptedException {
+        serverSocket.close();
+        for (Pop3Connection connection : connections) {
+            connection.stop();
+        }
+        thread.join();
+    }
+
+    public int getPop3Port() {
+        return POP3_PORT;
+    }
+
+    public void run() {
+        while (!serverSocket.isClosed()) {
+            try {
+                Socket accept = serverSocket.accept();
+                Pop3Connection command = new Pop3Connection(pop3Manager, accept);
+                connections.add(command);
+                executor.execute(command);
+                Iterator<Pop3Connection> iterator = connections.iterator();
+                while (iterator.hasNext()) {
+                    if (iterator.next().isFinished()) {
+                        iterator.remove();
+                    }
+                }
+            } catch (IOException e) {
+                LOGGER.error("Exception on POP3Server", e);
+            }
+        }
+    }
+}
