@@ -29,8 +29,8 @@ public class LotusPagesIterator implements Iterator<Page> {
             throw new NoSuchElementException();
         }
         try {
-            final List<? extends Message> messages = lotusWebmail.getMessages(1 + page * 30);
-            if (messages.size() != 30) {
+            final List<? extends Message> messages = lotusWebmail.getMessages(1 + page * LotusWebmailConnection.MAX_MESSAGE);
+            if (messages.size() != LotusWebmailConnection.MAX_MESSAGE) {
                 hasNext = false;
             }
             page++;
