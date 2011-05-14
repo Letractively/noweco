@@ -30,6 +30,8 @@ public class LotusWebmailConnection implements WebmailConnection {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LotusWebmailConnection.class);
 
+    private static final int MAX_MESSAGE = 30;
+
     private HttpClient httpclient;
 
     private HttpHost host;
@@ -38,7 +40,7 @@ public class LotusWebmailConnection implements WebmailConnection {
 
     private String pagePrefix;
 
-    private String garbagePrefix;
+//    private String garbagePrefix;
 
     private static final String MIME_SUFFIX = "/?OpenDocument&Form=l_MailMessageHeader&PresetFields=FullMessage;1";
 
@@ -51,7 +53,6 @@ public class LotusWebmailConnection implements WebmailConnection {
         HttpEntity entity;
 
         httpGet = new HttpGet(prefix + "/($Inbox)?OpenView");
-        httpGet.setHeader("Accept-Language", "fr-fr,fr;q=0.8,en;q=0.5,en-us;q=0.3");
 
         rsp = httpclient.execute(host, httpGet);
 
@@ -70,23 +71,23 @@ public class LotusWebmailConnection implements WebmailConnection {
         }
         pagePrefix = matcher.group(1);
 
-        httpGet = new HttpGet(prefix + "/($Trash)/?OpenView");
-        rsp = httpclient.execute(host, httpGet);
-
-        entity = rsp.getEntity();
-        string = EntityUtils.toString(entity);
-        if (entity != null) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(string);
-            }
-            EntityUtils.consume(entity);
-        }
-
-        matcher = MAIN_PAGE_PATTERN.matcher(string);
-        if (!matcher.find()) {
-            throw new IOException("Unable to parse garbage page");
-        }
-        garbagePrefix = matcher.group(1);
+//        httpGet = new HttpGet(prefix + "/($Trash)/?OpenView");
+//        rsp = httpclient.execute(host, httpGet);
+//
+//        entity = rsp.getEntity();
+//        string = EntityUtils.toString(entity);
+//        if (entity != null) {
+//            if (LOGGER.isDebugEnabled()) {
+//                LOGGER.debug(string);
+//            }
+//            EntityUtils.consume(entity);
+//        }
+//
+//        matcher = MAIN_PAGE_PATTERN.matcher(string);
+//        if (!matcher.find()) {
+//            throw new IOException("Unable to parse garbage page");
+//        }
+//        garbagePrefix = matcher.group(1);
 
         this.httpclient = httpclient;
         this.host = host;
@@ -120,39 +121,74 @@ public class LotusWebmailConnection implements WebmailConnection {
 
     private static final Pattern CONNECTED_PATTERN = Pattern.compile("<form\\s*name=\"_DominoForm\"");
 
+    private static final Pattern MESSAGE_BOUND = Pattern.compile("(?s)<tr[^>]*>.*?<(/?)tr>");
+
     private static final Pattern MESSAGE_PATTERN = Pattern
             .compile("(?s)<tr[^>]*>\\s*<td.*?</td>\\s*<td.*?<input\\s.*?value=\"([^\"]*)\".*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?(\\d+)(?:[,.](\\d+))?([KM]).*?</td>.*?</tr>");
+
+    public static abstract class MessageListener {
+
+        private boolean maxMessage = false;
+
+        public MessageListener(String pageContent) {
+            Matcher matcherBound = MESSAGE_BOUND.matcher(pageContent);
+            int messageCount = 0;
+            int start = 0;
+            while (matcherBound.find(start)) {
+                String group = matcherBound.group(1);
+                if(group != null && group.length() != 0) {
+                    // simple tr
+                    Matcher matcher = MESSAGE_PATTERN.matcher(matcherBound.group());
+                    if(matcher.matches()) {
+                        int enOctet = 1;
+                        switch (matcher.group(4).charAt(0)) {
+                        case 'K':
+                            enOctet = 1024;
+                            break;
+                        case 'M':
+                            enOctet = 1024 * 1024;
+                        }
+
+                        double value = Integer.parseInt(matcher.group(2));
+                        String afterCommaValue = matcher.group(3);
+                        if (afterCommaValue != null) {
+                            value += Double.parseDouble("0." + afterCommaValue);
+                        }
+                        int octets = (int) (value * enOctet);
+                        if (octets == 0) {
+                            octets = 1;
+                        }
+                        messageCount++;
+                        appendMessage(matcher.group(1), octets);
+                    }
+                }
+                start = matcherBound.end();
+            }
+            if (messageCount == MAX_MESSAGE) {
+                maxMessage = true;
+            }
+        }
+
+        public boolean isMaxMessage() {
+            return maxMessage;
+        }
+
+        public abstract void appendMessage(String messageId, int messageSize);
+
+    }
 
     public List<? extends Message> getMessages(int index) throws IOException {
         String pageContent = loadPageContent(index);
 
-        List<Message> messages = new ArrayList<Message>();
+        final List<Message> messages = new ArrayList<Message>();
 
-        Matcher matcher = MESSAGE_PATTERN.matcher(pageContent);
-        int start = 0;
-        while (matcher.find(start)) {
-            int enOctet = 1;
-            switch (matcher.group(4).charAt(0)) {
-            case 'K':
-                enOctet = 1024;
-                break;
-            case 'M':
-                enOctet = 1024 * 1024;
-            }
+        new MessageListener(pageContent) {
 
-            double value = Integer.parseInt(matcher.group(2));
-            String afterCommaValue = matcher.group(3);
-            if (afterCommaValue != null) {
-                value += Double.parseDouble("0." + afterCommaValue);
+            @Override
+            public void appendMessage(String messageId, int messageSize) {
+                messages.add(new LotusMessage(LotusWebmailConnection.this, messageId, messageSize));
             }
-            int octets = (int) (value * enOctet);
-            if (octets == 0) {
-                octets = 1;
-            }
-            messages.add(new LotusMessage(this, matcher.group(1), octets));
-
-            start = matcher.end();
-        }
+        };
 
         return messages;
     }
@@ -164,9 +200,7 @@ public class LotusWebmailConnection implements WebmailConnection {
         HttpEntity entity = rsp.getEntity();
         String pageContent = EntityUtils.toString(entity);
         if (entity != null) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(pageContent);
-            }
+            LOGGER.debug(pageContent);
             EntityUtils.consume(entity);
         }
 
@@ -182,17 +216,19 @@ public class LotusWebmailConnection implements WebmailConnection {
 
     private static final Pattern TEMP_RAND_NUM_PATTERN = Pattern.compile("<input name=\"tmpRandNum\"[^>]*value=\"([^\"]*)\">");
 
-    private static final Pattern DELETE_DELETE_PATTERN = Pattern.compile("_doClick\\('([^/]*/\\$V5ACTIONS/4\\.7C1A)'");
+    private static final Pattern DELETE_DELETE_PATTERN = Pattern.compile("_doClick\\('([^/]*/\\$V5ACTIONS/4\\.7C1.)'");
 
-    private static final Pattern CLEAR_GARBAGE_PATTERN = Pattern.compile("_doClick\\('([^/]*/\\$V5ACTIONS/0\\.FFC)'");
+    private static final Pattern DELETE_GARBAGE_PATTERN = Pattern.compile("_doClick\\('([^/]*/\\$V5ACTIONS/4\\.7C5.)'");
 
-    public void delete(List<String> messageUids) throws IOException {
-        List<String> toDelete = new ArrayList<String>();
+//    private static final Pattern CLEAR_GARBAGE_PATTERN = Pattern.compile("_doClick\\('([^/]*/\\$V5ACTIONS/0\\.FFC)'");
+
+    public List<String> delete(final List<String> messageUids) throws IOException {
+        List<String> deleted = new ArrayList<String>();
+        final List<String> toDelete = new ArrayList<String>();
         int page = 0;
-        int messageCount;
+        boolean maxMessage;
         do {
-            messageCount = 0;
-            int index = 1 + page * 30;
+            int index = 1 + page * MAX_MESSAGE;
             String pageContent = loadPageContent(index);
 
             toDelete.clear();
@@ -202,16 +238,19 @@ public class LotusWebmailConnection implements WebmailConnection {
                 throw new IOException("No DELETE/DELETE find");
             }
 
-            Matcher matcher = MESSAGE_PATTERN.matcher(pageContent);
-            int start = 0;
-            while (matcher.find(start)) {
-                String group = matcher.group(1);
-                if (messageUids.contains(group)) {
-                    toDelete.add(group);
+            maxMessage = new MessageListener(pageContent) {
+
+                @Override
+                public void appendMessage(String messageId, int messageSize) {
+                    System.out.println("Find "+messageId);
+
+                    if (messageUids.contains(messageId)) {
+                        toDelete.add(messageId);
+                    }
                 }
-                start = matcher.end();
-                messageCount++;
-            }
+
+            }.isMaxMessage();
+
             HttpPost httpPost = new HttpPost(pagePrefix + "&Start=" + index);
             List<NameValuePair> nvps = new ArrayList<NameValuePair>();
             nvps.add(new BasicNameValuePair("__Click", matcherDelete.group(1)));
@@ -219,6 +258,7 @@ public class LotusWebmailConnection implements WebmailConnection {
             nvps.add(new BasicNameValuePair("$$SelectDestFolder", "--Aucun dossier disponible--"));
             for (String doc : toDelete) {
                 nvps.add(new BasicNameValuePair("$$SelectDoc", doc));
+                deleted.add(doc);
             }
             Matcher matcherRandNum = TEMP_RAND_NUM_PATTERN.matcher(pageContent);
             if (!matcherRandNum.find()) {
@@ -231,38 +271,66 @@ public class LotusWebmailConnection implements WebmailConnection {
             HttpResponse rsp = httpclient.execute(host, httpPost);
             EntityUtils.consume(rsp.getEntity());
             page++;
-        } while (messageCount == 30);
+        } while (maxMessage);
 
-        // clear garbage
+        // inline clear garbage
 
-        HttpGet httpGet = new HttpGet(garbagePrefix);
-        HttpResponse rsp = httpclient.execute(host, httpGet);
+        String pageContent = loadPageContent(1);
 
-        HttpEntity entity = rsp.getEntity();
-        String pageContent = EntityUtils.toString(entity);
-        if (entity != null) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(pageContent);
-            }
-            EntityUtils.consume(entity);
+        Matcher matcherDeleteGarbage = DELETE_GARBAGE_PATTERN.matcher(pageContent);
+        if (!matcherDeleteGarbage.find()) {
+            throw new IOException("No DELETE/EMPTY_TRASH find");
         }
 
-        Matcher matcherGarbage = CLEAR_GARBAGE_PATTERN.matcher(pageContent);
-        if (!matcherGarbage.find()) {
-            throw new IOException("No Garbage/Clear find");
-        }
-
-        HttpPost httpPost = new HttpPost(garbagePrefix);
+        HttpPost httpPost = new HttpPost(pagePrefix);
         List<NameValuePair> nvps = new ArrayList<NameValuePair>();
-        nvps.add(new BasicNameValuePair("__Click", matcherGarbage.group(1)));
+        nvps.add(new BasicNameValuePair("__Click", matcherDeleteGarbage.group(1)));
+        nvps.add(new BasicNameValuePair("%%Surrogate_$$SelectDestFolder", "1"));
+        nvps.add(new BasicNameValuePair("$$SelectDestFolder", "--Aucun dossier disponible--"));
         Matcher matcherRandNum = TEMP_RAND_NUM_PATTERN.matcher(pageContent);
         if (!matcherRandNum.find()) {
             throw new IOException("No rand num find");
         }
         nvps.add(new BasicNameValuePair("tmpRandNum", matcherRandNum.group(1)));
+        nvps.add(new BasicNameValuePair("viewName", "($Inbox)"));
+        nvps.add(new BasicNameValuePair("folderError", ""));
         httpPost.setEntity(new UrlEncodedFormEntity(nvps, HTTP.UTF_8));
-        rsp = httpclient.execute(host, httpPost);
+        HttpResponse rsp = httpclient.execute(host, httpPost);
         EntityUtils.consume(rsp.getEntity());
+
+
+        // clear garbage
+
+//        HttpGet httpGet = new HttpGet(garbagePrefix);
+//        HttpResponse rsp = httpclient.execute(host, httpGet);
+//
+//        HttpEntity entity = rsp.getEntity();
+//        String pageContent = EntityUtils.toString(entity);
+//        if (entity != null) {
+//            if (LOGGER.isDebugEnabled()) {
+//                LOGGER.debug(pageContent);
+//            }
+//            EntityUtils.consume(entity);
+//        }
+//
+//        Matcher matcherGarbage = CLEAR_GARBAGE_PATTERN.matcher(pageContent);
+//        if (!matcherGarbage.find()) {
+//            throw new IOException("No Garbage/Clear find");
+//        }
+//
+//        HttpPost httpPost = new HttpPost(garbagePrefix);
+//        List<NameValuePair> nvps = new ArrayList<NameValuePair>();
+//        nvps.add(new BasicNameValuePair("__Click", matcherGarbage.group(1)));
+//        Matcher matcherRandNum = TEMP_RAND_NUM_PATTERN.matcher(pageContent);
+//        if (!matcherRandNum.find()) {
+//            throw new IOException("No rand num find");
+//        }
+//        nvps.add(new BasicNameValuePair("tmpRandNum", matcherRandNum.group(1)));
+//        httpPost.setEntity(new UrlEncodedFormEntity(nvps, HTTP.UTF_8));
+//        rsp = httpclient.execute(host, httpPost);
+//        EntityUtils.consume(rsp.getEntity());
+
+        return deleted;
     }
 
 }

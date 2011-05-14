@@ -8,7 +8,7 @@ public interface WebmailConnection {
 
     Iterator<Page> getPages() throws IOException;
 
-    void delete(List<String> messageUids) throws IOException;
+    List<String> delete(List<String> messageUids) throws IOException;
 
     void release();
 

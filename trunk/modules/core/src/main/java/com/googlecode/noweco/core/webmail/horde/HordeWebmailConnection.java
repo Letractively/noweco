@@ -120,9 +120,8 @@ public class HordeWebmailConnection implements WebmailConnection {
         return null;
     }
 
-    public void delete(List<String> messageUids) throws IOException {
-        // TODO Auto-generated method stub
-
+    public List<String> delete(List<String> messageUids) throws IOException {
+        throw new IOException("NYI");
     }
 
 }
