@@ -18,6 +18,7 @@ package com.googlecode.noweco.core.webmail.cache;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.ref.SoftReference;
 
 import com.googlecode.noweco.core.webmail.Message;
 
@@ -41,7 +42,7 @@ public class CachedMessage implements Message, Serializable {
 
     private String header;
 
-    private String content;
+    private SoftReference<String> content;
 
     public CachedMessage(final Message delegate) {
         this.delegate = delegate;
@@ -67,10 +68,15 @@ public class CachedMessage implements Message, Serializable {
     }
 
     public String getContent() throws IOException {
-        if (content == null) {
-            content = delegate.getContent();
+        String result = null;
+        if (content != null) {
+            result = content.get();
         }
-        return content;
+        if (result == null) {
+            result = delegate.getContent();
+            content = new SoftReference<String>(result);
+        }
+        return result;
     }
 
 }

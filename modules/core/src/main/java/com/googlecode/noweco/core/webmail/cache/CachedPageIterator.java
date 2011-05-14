@@ -16,7 +16,10 @@
 
 package com.googlecode.noweco.core.webmail.cache;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import com.googlecode.noweco.core.webmail.Page;
 
@@ -30,17 +33,46 @@ public class CachedPageIterator implements Iterator<Page> {
 
     private Iterator<Page> delegate;
 
+    private List<String> uids;
+
+    private int pageCount = 0;
+
+    private int uidCount = 0;
+
     public CachedPageIterator(final CachedWebmailConnection cachedWebmailConnection, final Iterator<Page> delegate) {
+        Map<String, CachedMessage> messagesByUID = cachedWebmailConnection.getMessagesByUID();
+        synchronized (messagesByUID) {
+            uids = new ArrayList<String>(messagesByUID.keySet());
+        }
         this.cachedWebmailConnection = cachedWebmailConnection;
         this.delegate = delegate;
     }
 
+    public void addUIDs(final List<String> uids) {
+        this.uids.removeAll(uids);
+        uidCount++;
+        if (ended && pageCount == uidCount) {
+            cachedWebmailConnection.removeFromCache(this.uids);
+        }
+    }
+
+    private boolean ended;
+
     public boolean hasNext() {
-        return delegate.hasNext();
+        boolean hasNext = delegate.hasNext();
+        if (!hasNext) {
+            ended = true;
+            if (pageCount == uidCount) {
+                cachedWebmailConnection.removeFromCache(uids);
+            }
+        }
+        return hasNext;
     }
 
     public Page next() {
-        return new CachedPage(delegate.next(), cachedWebmailConnection);
+        CachedPage cachedPage = new CachedPage(this, delegate.next(), cachedWebmailConnection);
+        pageCount++;
+        return cachedPage;
     }
 
     public void remove() {

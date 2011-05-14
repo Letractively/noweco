@@ -17,6 +17,7 @@
 package com.googlecode.noweco.core.webmail.cache;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.googlecode.noweco.core.webmail.Message;
@@ -32,13 +33,29 @@ public class CachedPage implements Page {
 
     private CachedWebmailConnection cachedWebmailConnection;
 
-    public CachedPage(final Page delegate, final CachedWebmailConnection cachedWebmailConnection) {
+    private CachedPageIterator cachedPageIterator;
+
+    public CachedPage(final CachedPageIterator cachedPageIterator, final Page delegate, final CachedWebmailConnection cachedWebmailConnection) {
+        this.cachedPageIterator = cachedPageIterator;
         this.delegate = delegate;
         this.cachedWebmailConnection = cachedWebmailConnection;
     }
 
+    private boolean send = false;
+
     public List<? extends Message> getMessages() throws IOException {
-        return cachedWebmailConnection.getMessages(delegate.getMessages());
+        List<? extends Message> messages = cachedWebmailConnection.getMessages(delegate.getMessages());
+        synchronized (this) {
+            if (!send) {
+                List<String> uids = new ArrayList<String>();
+                for (Message message : messages) {
+                    uids.add(message.getUniqueID());
+                }
+                cachedPageIterator.addUIDs(uids);
+                send = true;
+            }
+        }
+        return messages;
     }
 
 }

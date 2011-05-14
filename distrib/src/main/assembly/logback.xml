@@ -6,10 +6,12 @@
     </encoder>
   </appender>
 
+
   <logger name="com.googlecode.noweco.cli" level="INFO" />
   <logger name="com.googlecode.noweco.core" level="INFO" />
+  <logger name="com.googlecode.noweco.core.webmail.cache" level="ERROR" />
 
-  <root level="info">
+  <root level="TRACE">
     <appender-ref ref="STDOUT" />
   </root>
 </configuration>

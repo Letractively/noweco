@@ -172,7 +172,8 @@ public final class NowecoCLI {
         try {
             pop3Server.start();
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("Unable to start Noweco", e);
+            System.exit(1);
         }
 
         LOGGER.info("Noweco started");

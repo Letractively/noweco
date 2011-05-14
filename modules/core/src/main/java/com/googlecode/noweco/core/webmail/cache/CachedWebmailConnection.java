@@ -24,6 +24,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.googlecode.noweco.core.webmail.Message;
 import com.googlecode.noweco.core.webmail.Page;
 import com.googlecode.noweco.core.webmail.WebmailConnection;
@@ -34,9 +37,15 @@ import com.googlecode.noweco.core.webmail.WebmailConnection;
  */
 public class CachedWebmailConnection implements WebmailConnection, Serializable {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CachedWebmailConnection.class);
+
     private static final long serialVersionUID = 7636772578295623800L;
 
     private Map<String, CachedMessage> messagesByUID = new HashMap<String, CachedMessage>();
+
+    public Map<String, CachedMessage> getMessagesByUID() {
+        return messagesByUID;
+    }
 
     private transient WebmailConnection delegate;
 
@@ -55,19 +64,32 @@ public class CachedWebmailConnection implements WebmailConnection, Serializable 
         return password;
     }
 
+    public void removeFromCache(final List<String> uids) {
+        synchronized (messagesByUID) {
+            for (String uid : uids) {
+                if (messagesByUID.remove(uid) != null) {
+                    LOGGER.info("Remove {} from cache", uid);
+                }
+            }
+        }
+    }
+
     public List<? extends Message> getMessages(final List<? extends Message> messages) {
         List<Message> result = new ArrayList<Message>(messages.size());
 
-        for (Message message : messages) {
-            String uniqueID = message.getUniqueID();
-            CachedMessage cachedMessage = messagesByUID.get(uniqueID);
-            if (cachedMessage == null) {
-                cachedMessage = new CachedMessage(message);
-                messagesByUID.put(uniqueID, cachedMessage);
-            } else {
-                cachedMessage.setDelegate(message);
+        synchronized (messagesByUID) {
+            for (Message message : messages) {
+                String uniqueID = message.getUniqueID();
+                CachedMessage cachedMessage = messagesByUID.get(uniqueID);
+                if (cachedMessage == null) {
+                    cachedMessage = new CachedMessage(message);
+                    LOGGER.info("Add {} to cache", uniqueID);
+                    messagesByUID.put(uniqueID, cachedMessage);
+                } else {
+                    cachedMessage.setDelegate(message);
+                }
+                result.add(cachedMessage);
             }
-            result.add(cachedMessage);
         }
 
         return result;
