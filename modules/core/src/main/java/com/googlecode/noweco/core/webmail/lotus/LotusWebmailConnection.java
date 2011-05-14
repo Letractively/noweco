@@ -121,10 +121,10 @@ public class LotusWebmailConnection implements WebmailConnection {
 
     private static final Pattern CONNECTED_PATTERN = Pattern.compile("<form\\s*name=\"_DominoForm\"");
 
-    private static final Pattern MESSAGE_BOUND = Pattern.compile("(?s)<tr[^>]*>.*?<(/?)tr>");
+    private static final Pattern MESSAGE_BOUND = Pattern.compile("(?s)<tr[^>]*>.*?<(/?)tr");
 
     private static final Pattern MESSAGE_PATTERN = Pattern
-            .compile("(?s)<tr[^>]*>\\s*<td.*?</td>\\s*<td.*?<input\\s.*?value=\"([^\"]*)\".*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?(\\d+)(?:[,.](\\d+))?([KM]).*?</td>.*?</tr>");
+            .compile("(?s)<tr[^>]*>\\s*<td.*?</td>\\s*<td.*?<input\\s.*?value=\"([^\"]*)\".*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?(\\d+)(?:[,.](\\d+))?([KM]).*?</td>.*?</tr");
 
     public static abstract class MessageListener {
 
@@ -161,8 +161,10 @@ public class LotusWebmailConnection implements WebmailConnection {
                         messageCount++;
                         appendMessage(matcher.group(1), octets);
                     }
+                    start = matcherBound.end();
+                } else {
+                    start = matcherBound.end() - "<tr".length();
                 }
-                start = matcherBound.end();
             }
             if (messageCount == MAX_MESSAGE) {
                 maxMessage = true;
