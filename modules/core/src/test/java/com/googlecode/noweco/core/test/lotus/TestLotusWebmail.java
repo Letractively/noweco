@@ -2,6 +2,7 @@ package com.googlecode.noweco.core.test.lotus;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -20,7 +21,8 @@ public class TestLotusWebmail {
         LotusWebmail lotusWebmail = new LotusWebmail();
         lotusWebmail.setAuthent(new BullWebmailPortalConnector());
         WebmailConnection connect = lotusWebmail.connect(TheTestContext.getLotusUserName(), TheTestContext.getLotusPassword());
-        connect.delete(Arrays.asList("c2d2dd3763b45fca1e7c9a9014d5ae69".toUpperCase()));
+        List<String> delete = connect.delete(Arrays.asList("1989da2fc0f6488f1ccd23090b69752a".toUpperCase()));
+        Assert.assertTrue(delete.size() != 0);
     }
 
     @Test

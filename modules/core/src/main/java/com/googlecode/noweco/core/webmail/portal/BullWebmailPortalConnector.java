@@ -2,10 +2,12 @@ package com.googlecode.noweco.core.webmail.portal;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -13,8 +15,10 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.params.ClientParamBean;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
@@ -32,6 +36,12 @@ public class BullWebmailPortalConnector implements PortalConnector {
 
     public PortalConnection connect(HttpHost proxy, String user, String password) throws IOException {
         DefaultHttpClient httpclient = UnsecureHttpClientFactory.INSTANCE.createUnsecureHttpClient(proxy);
+
+        // mailbox does not appear with no FR language
+        // with Mozilla actions are simple
+        new ClientParamBean(httpclient.getParams()).setDefaultHeaders(Arrays.asList((Header) new BasicHeader("Accept-Language", "fr-fr,fr;q=0.8,en;q=0.5,en-us;q=0.3"),
+                new BasicHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:2.0.1) Gecko/20100101 Firefox/4.0.1")
+        ));
 
         // prepare the request
         HttpPost httpost = new HttpPost("https://bullsentry3.bull.net:443/cgi/wway_authent?TdsName=PILX");
@@ -65,9 +75,7 @@ public class BullWebmailPortalConnector implements PortalConnector {
         HttpEntity entity = rsp.getEntity();
         String firstEntity = EntityUtils.toString(entity);
         if (entity != null) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("STEP 1 Entity : {}", firstEntity);
-            }
+            LOGGER.debug("STEP 1 Entity : {}", firstEntity);
             EntityUtils.consume(entity);
         }
 
@@ -140,12 +148,21 @@ public class BullWebmailPortalConnector implements PortalConnector {
             throw new IOException("Unable to find nsf");
         }
 
-        String pathPrefix = nsfMatcher.group(1).replace('\\', '/');
+        String pathPrefix = nsfMatcher.group(3).replace('\\', '/');
         LOGGER.debug("pathPrefix : {}", pathPrefix);
 
-        return new DefaultPortalConnection(httpclient, new HttpHost("teletest.bull.fr", 443, "https"), pathPrefix);
+        String protocol = nsfMatcher.group(1);
+        int port;
+        if ("http".equals(protocol)) {
+            port = 80;
+        } else if ("https".equals(protocol)) {
+            port = 443;
+        } else {
+            throw new IOException("Unknown protocol " + protocol);
+        }
+        return new DefaultPortalConnection(httpclient, new HttpHost(nsfMatcher.group(2), port, protocol), pathPrefix);
     }
 
-    private static final Pattern PATTERN = Pattern.compile("url=https://teletest.bull.fr(/.*?\\.nsf)");
+    private static final Pattern PATTERN = Pattern.compile("url=(https?)://([^/]*)(/.*?\\.nsf)");
 
 }
