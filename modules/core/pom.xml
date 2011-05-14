@@ -12,6 +12,17 @@
     <defaultGoal>install</defaultGoal>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <forkMode>once</forkMode>
@@ -48,18 +59,25 @@
       <groupId>javax.mail</groupId>
       <artifactId>mail</artifactId>
       <version>1.4</version>
+      <scope>test</scope>
     </dependency>
     <!-- <dependency> -->
     <!-- <groupId>org.slf4j</groupId> -->
     <!-- <artifactId>slf4j-simple</artifactId> -->
     <!-- <scope>test</scope> -->
     <!-- </dependency> -->
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>2.0.1</version>
-      <scope>test</scope>
-    </dependency>
+<!--     <dependency> -->
+<!--       <groupId>commons-io</groupId> -->
+<!--       <artifactId>commons-io</artifactId> -->
+<!--       <version>2.0.1</version> -->
+<!--       <scope>test</scope> -->
+<!--     </dependency> -->
+<!--     <dependency> -->
+<!--       <groupId>dnsjava</groupId> -->
+<!--       <artifactId>dnsjava</artifactId> -->
+<!--       <version>2.1.0</version> -->
+<!--       <scope>test</scope> -->
+<!--     </dependency> -->
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>

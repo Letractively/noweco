@@ -1,3 +1,19 @@
+/*
+ * Copyright 2011 The Apache Software Foundation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.googlecode.noweco.core.webmail.lotus;
 
 import java.io.IOException;
@@ -26,6 +42,9 @@ import com.googlecode.noweco.core.webmail.Message;
 import com.googlecode.noweco.core.webmail.Page;
 import com.googlecode.noweco.core.webmail.WebmailConnection;
 
+/**
+ * @author Gael Lalire
+ */
 public class LotusWebmailConnection implements WebmailConnection {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LotusWebmailConnection.class);
@@ -40,13 +59,13 @@ public class LotusWebmailConnection implements WebmailConnection {
 
     private String pagePrefix;
 
-//    private String garbagePrefix;
+    // private String garbagePrefix;
 
     private static final String MIME_SUFFIX = "/?OpenDocument&Form=l_MailMessageHeader&PresetFields=FullMessage;1";
 
     private static final Pattern MAIN_PAGE_PATTERN = Pattern.compile("location.replace\\(\"([^\"]*?&AutoFramed)\"\\);");
 
-    public LotusWebmailConnection(HttpClient httpclient, HttpHost host, String prefix) throws IOException {
+    public LotusWebmailConnection(final HttpClient httpclient, final HttpHost host, final String prefix) throws IOException {
         this.prefix = prefix;
         HttpGet httpGet;
         HttpResponse rsp;
@@ -71,23 +90,23 @@ public class LotusWebmailConnection implements WebmailConnection {
         }
         pagePrefix = matcher.group(1);
 
-//        httpGet = new HttpGet(prefix + "/($Trash)/?OpenView");
-//        rsp = httpclient.execute(host, httpGet);
-//
-//        entity = rsp.getEntity();
-//        string = EntityUtils.toString(entity);
-//        if (entity != null) {
-//            if (LOGGER.isDebugEnabled()) {
-//                LOGGER.debug(string);
-//            }
-//            EntityUtils.consume(entity);
-//        }
-//
-//        matcher = MAIN_PAGE_PATTERN.matcher(string);
-//        if (!matcher.find()) {
-//            throw new IOException("Unable to parse garbage page");
-//        }
-//        garbagePrefix = matcher.group(1);
+        // httpGet = new HttpGet(prefix + "/($Trash)/?OpenView");
+        // rsp = httpclient.execute(host, httpGet);
+        //
+        // entity = rsp.getEntity();
+        // string = EntityUtils.toString(entity);
+        // if (entity != null) {
+        // if (LOGGER.isDebugEnabled()) {
+        // LOGGER.debug(string);
+        // }
+        // EntityUtils.consume(entity);
+        // }
+        //
+        // matcher = MAIN_PAGE_PATTERN.matcher(string);
+        // if (!matcher.find()) {
+        // throw new IOException("Unable to parse garbage page");
+        // }
+        // garbagePrefix = matcher.group(1);
 
         this.httpclient = httpclient;
         this.host = host;
@@ -105,10 +124,11 @@ public class LotusWebmailConnection implements WebmailConnection {
         try {
             release();
         } catch (Throwable e) {
+            // ignore
         }
     }
 
-    public String getContent(String id) throws IOException {
+    public String getContent(final String id) throws IOException {
         HttpGet httpGet = new HttpGet(prefix + "/($Inbox)/" + id + MIME_SUFFIX);
         HttpResponse response = httpclient.execute(host, httpGet);
         HttpEntity entity = response.getEntity();
@@ -126,20 +146,23 @@ public class LotusWebmailConnection implements WebmailConnection {
     private static final Pattern MESSAGE_PATTERN = Pattern
             .compile("(?s)<tr[^>]*>\\s*<td.*?</td>\\s*<td.*?<input\\s.*?value=\"([^\"]*)\".*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?</td>\\s*<td.*?(\\d+)(?:[,.](\\d+))?([KM]).*?</td>.*?</tr");
 
-    public static abstract class MessageListener {
+    /**
+     * @author Gael Lalire
+     */
+    public abstract static class MessageListener {
 
         private boolean maxMessage = false;
 
-        public MessageListener(String pageContent) {
+        public MessageListener(final String pageContent) {
             Matcher matcherBound = MESSAGE_BOUND.matcher(pageContent);
             int messageCount = 0;
             int start = 0;
             while (matcherBound.find(start)) {
                 String group = matcherBound.group(1);
-                if(group != null && group.length() != 0) {
+                if (group != null && group.length() != 0) {
                     // simple tr
                     Matcher matcher = MESSAGE_PATTERN.matcher(matcherBound.group());
-                    if(matcher.matches()) {
+                    if (matcher.matches()) {
                         int enOctet = 1;
                         switch (matcher.group(4).charAt(0)) {
                         case 'K':
@@ -147,6 +170,9 @@ public class LotusWebmailConnection implements WebmailConnection {
                             break;
                         case 'M':
                             enOctet = 1024 * 1024;
+                        default:
+                            // unreachable
+                            break;
                         }
 
                         double value = Integer.parseInt(matcher.group(2));
@@ -179,7 +205,7 @@ public class LotusWebmailConnection implements WebmailConnection {
 
     }
 
-    public List<? extends Message> getMessages(int index) throws IOException {
+    public List<? extends Message> getMessages(final int index) throws IOException {
         String pageContent = loadPageContent(index);
 
         final List<Message> messages = new ArrayList<Message>();
@@ -187,7 +213,7 @@ public class LotusWebmailConnection implements WebmailConnection {
         new MessageListener(pageContent) {
 
             @Override
-            public void appendMessage(String messageId, int messageSize) {
+            public void appendMessage(final String messageId, final int messageSize) {
                 messages.add(new LotusMessage(LotusWebmailConnection.this, messageId, messageSize));
             }
         };
@@ -195,7 +221,7 @@ public class LotusWebmailConnection implements WebmailConnection {
         return messages;
     }
 
-    public String loadPageContent(int index) throws IOException, ClientProtocolException {
+    public String loadPageContent(final int index) throws IOException, ClientProtocolException {
         HttpGet httpGet = new HttpGet(pagePrefix + "&Start=" + index);
         HttpResponse rsp = httpclient.execute(host, httpGet);
 
@@ -222,7 +248,8 @@ public class LotusWebmailConnection implements WebmailConnection {
 
     private static final Pattern DELETE_GARBAGE_PATTERN = Pattern.compile("_doClick\\('([^/]*/\\$V5ACTIONS/4\\.7C5.)'");
 
-//    private static final Pattern CLEAR_GARBAGE_PATTERN = Pattern.compile("_doClick\\('([^/]*/\\$V5ACTIONS/0\\.FFC)'");
+    // private static final Pattern CLEAR_GARBAGE_PATTERN =
+    // Pattern.compile("_doClick\\('([^/]*/\\$V5ACTIONS/0\\.FFC)'");
 
     public List<String> delete(final List<String> messageUids) throws IOException {
         List<String> deleted = new ArrayList<String>();
@@ -243,7 +270,7 @@ public class LotusWebmailConnection implements WebmailConnection {
             maxMessage = new MessageListener(pageContent) {
 
                 @Override
-                public void appendMessage(String messageId, int messageSize) {
+                public void appendMessage(final String messageId, final int messageSize) {
                     if (messageUids.contains(messageId)) {
                         toDelete.add(messageId);
                     }
@@ -298,37 +325,37 @@ public class LotusWebmailConnection implements WebmailConnection {
         HttpResponse rsp = httpclient.execute(host, httpPost);
         EntityUtils.consume(rsp.getEntity());
 
-
         // clear garbage
 
-//        HttpGet httpGet = new HttpGet(garbagePrefix);
-//        HttpResponse rsp = httpclient.execute(host, httpGet);
-//
-//        HttpEntity entity = rsp.getEntity();
-//        String pageContent = EntityUtils.toString(entity);
-//        if (entity != null) {
-//            if (LOGGER.isDebugEnabled()) {
-//                LOGGER.debug(pageContent);
-//            }
-//            EntityUtils.consume(entity);
-//        }
-//
-//        Matcher matcherGarbage = CLEAR_GARBAGE_PATTERN.matcher(pageContent);
-//        if (!matcherGarbage.find()) {
-//            throw new IOException("No Garbage/Clear find");
-//        }
-//
-//        HttpPost httpPost = new HttpPost(garbagePrefix);
-//        List<NameValuePair> nvps = new ArrayList<NameValuePair>();
-//        nvps.add(new BasicNameValuePair("__Click", matcherGarbage.group(1)));
-//        Matcher matcherRandNum = TEMP_RAND_NUM_PATTERN.matcher(pageContent);
-//        if (!matcherRandNum.find()) {
-//            throw new IOException("No rand num find");
-//        }
-//        nvps.add(new BasicNameValuePair("tmpRandNum", matcherRandNum.group(1)));
-//        httpPost.setEntity(new UrlEncodedFormEntity(nvps, HTTP.UTF_8));
-//        rsp = httpclient.execute(host, httpPost);
-//        EntityUtils.consume(rsp.getEntity());
+        // HttpGet httpGet = new HttpGet(garbagePrefix);
+        // HttpResponse rsp = httpclient.execute(host, httpGet);
+        //
+        // HttpEntity entity = rsp.getEntity();
+        // String pageContent = EntityUtils.toString(entity);
+        // if (entity != null) {
+        // if (LOGGER.isDebugEnabled()) {
+        // LOGGER.debug(pageContent);
+        // }
+        // EntityUtils.consume(entity);
+        // }
+        //
+        // Matcher matcherGarbage = CLEAR_GARBAGE_PATTERN.matcher(pageContent);
+        // if (!matcherGarbage.find()) {
+        // throw new IOException("No Garbage/Clear find");
+        // }
+        //
+        // HttpPost httpPost = new HttpPost(garbagePrefix);
+        // List<NameValuePair> nvps = new ArrayList<NameValuePair>();
+        // nvps.add(new BasicNameValuePair("__Click", matcherGarbage.group(1)));
+        // Matcher matcherRandNum = TEMP_RAND_NUM_PATTERN.matcher(pageContent);
+        // if (!matcherRandNum.find()) {
+        // throw new IOException("No rand num find");
+        // }
+        // nvps.add(new BasicNameValuePair("tmpRandNum",
+        // matcherRandNum.group(1)));
+        // httpPost.setEntity(new UrlEncodedFormEntity(nvps, HTTP.UTF_8));
+        // rsp = httpclient.execute(host, httpPost);
+        // EntityUtils.consume(rsp.getEntity());
 
         return deleted;
     }

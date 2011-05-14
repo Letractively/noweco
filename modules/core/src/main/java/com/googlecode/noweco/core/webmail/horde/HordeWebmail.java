@@ -1,3 +1,19 @@
+/*
+ * Copyright 2011 The Apache Software Foundation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.googlecode.noweco.core.webmail.horde;
 
 import java.io.IOException;
@@ -9,6 +25,10 @@ import com.googlecode.noweco.core.webmail.WebmailConnection;
 import com.googlecode.noweco.core.webmail.portal.PortalConnection;
 import com.googlecode.noweco.core.webmail.portal.PortalConnector;
 
+/**
+ *
+ * @author Gael Lalire
+ */
 public class HordeWebmail implements Webmail {
 
     private HttpHost proxy;
@@ -18,7 +38,7 @@ public class HordeWebmail implements Webmail {
     public HordeWebmail() {
     }
 
-    public WebmailConnection connect(String user, String password) throws IOException {
+    public WebmailConnection connect(final String user, final String password) throws IOException {
         PortalConnection connect = portalConnector.connect(proxy, user, password);
         return new HordeWebmailConnection(connect.getHttpClient(), connect.getHttpHost());
     }
@@ -26,11 +46,11 @@ public class HordeWebmail implements Webmail {
     public void release() {
     }
 
-    public void setAuthent(PortalConnector portalConnector) {
+    public void setAuthent(final PortalConnector portalConnector) {
         this.portalConnector = portalConnector;
     }
 
-    public void setProxy(String host, int port) {
+    public void setProxy(final String host, final int port) {
         this.proxy = new HttpHost(host, port, "http");
     }
 

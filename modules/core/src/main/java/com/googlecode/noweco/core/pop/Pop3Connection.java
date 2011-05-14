@@ -1,3 +1,19 @@
+/*
+ * Copyright 2011 The Apache Software Foundation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.googlecode.noweco.core.pop;
 
 import java.io.BufferedReader;
@@ -16,13 +32,20 @@ import com.googlecode.noweco.core.pop.spi.Message;
 import com.googlecode.noweco.core.pop.spi.Pop3Account;
 import com.googlecode.noweco.core.pop.spi.Pop3Manager;
 
+/**
+ *
+ * @author Gael Lalire
+ */
 public class Pop3Connection implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Pop3Connection.class);
 
     private static final String US_ASCII = "US-ASCII";
 
-    public enum Command {
+    /**
+     * @author Gael Lalire
+     */
+    private static enum Command {
         QUIT, STAT, LIST, RETR, DELE, NOOP, RSET, USER, PASS, TOP, UIDL;
     }
 
@@ -40,7 +63,7 @@ public class Pop3Connection implements Runnable {
 
     private Object mutex = new Object();
 
-    public Pop3Connection(Pop3Manager pop3Manager, Socket socket) throws IOException {
+    public Pop3Connection(final Pop3Manager pop3Manager, final Socket socket) throws IOException {
         this.pop3Manager = pop3Manager;
         this.socket = socket;
         reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), US_ASCII));
@@ -63,7 +86,10 @@ public class Pop3Connection implements Runnable {
         return finished;
     }
 
-    enum State {
+    /**
+     * @author Gael Lalire
+     */
+    private static enum State {
         AUTHORIZATION, TRANSACTION, UPDATE;
     };
 
@@ -352,7 +378,7 @@ public class Pop3Connection implements Runnable {
         }
     }
 
-    public boolean isCommand(Command command, String line) {
+    public boolean isCommand(final Command command, final String line) {
         if (!line.toUpperCase().startsWith(command.name())) {
             return false;
         }
@@ -374,7 +400,7 @@ public class Pop3Connection implements Runnable {
         }
     }
 
-    public void writeLine(String line) throws PopSocketException {
+    public void writeLine(final String line) throws PopSocketException {
         LOGGER.trace("Response line : {}", line);
         if (line.length() != 0 && line.charAt(0) == '.') {
             write(".");
@@ -390,7 +416,7 @@ public class Pop3Connection implements Runnable {
         flush();
     }
 
-    public void writeOK(String message) throws PopSocketException {
+    public void writeOK(final String message) throws PopSocketException {
         LOGGER.debug("OK Answer : {}", message);
         write("+OK");
         if (message != null) {
@@ -401,7 +427,7 @@ public class Pop3Connection implements Runnable {
         flush();
     }
 
-    public void writeErr(String message) throws PopSocketException {
+    public void writeErr(final String message) throws PopSocketException {
         LOGGER.debug("Err Answer : {}", message);
         write("-ERR ");
         write(message);
@@ -409,7 +435,7 @@ public class Pop3Connection implements Runnable {
         flush();
     }
 
-    public void write(String message) throws PopSocketException {
+    public void write(final String message) throws PopSocketException {
         try {
             outputStream.write(message.getBytes(US_ASCII));
         } catch (IOException e) {

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2011 The Apache Software Foundation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.googlecode.noweco.cli;
 
 import java.io.File;
@@ -35,12 +51,19 @@ import com.googlecode.noweco.core.seam.WebmailPop3Manager;
 import com.googlecode.noweco.core.webmail.cache.CachedWebmail;
 import com.googlecode.noweco.core.webmail.portal.PortalConnector;
 
-public class NowecoCLI {
+/**
+ *
+ * @author Gael Lalire
+ */
+public final class NowecoCLI {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NowecoCLI.class);
 
+    private NowecoCLI() {
+    }
+
     @SuppressWarnings("unchecked")
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         File homeFile = new File(args[0]);
         Unmarshaller unMarshaller = null;
         try {
@@ -78,7 +101,7 @@ public class NowecoCLI {
 
         Map<String, Pop3Manager> map = new HashMap<String, Pop3Manager>();
 
-        for(Webmail webmail : settings.getPop3Managers().getWebmail()) {
+        for (Webmail webmail : settings.getPop3Managers().getWebmail()) {
             String webmailClassName = webmail.getClazz();
             Class<?> webmailClass = null;
             try {
@@ -162,9 +185,9 @@ public class NowecoCLI {
                     pop3Server.stop();
                     pop3Manager.release();
                 } catch (IOException e) {
-
+                    LOGGER.info("Noweco stop issue", e);
                 } catch (InterruptedException e) {
-                    // impossible
+                    // unreachable
                 } finally {
                     LOGGER.info("Noweco shutdown");
                 }
