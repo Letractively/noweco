@@ -17,6 +17,8 @@
 package com.googlecode.noweco.core.webmail.cache;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
 
@@ -42,7 +44,7 @@ public class CachedMessage implements Message, Serializable {
 
     private String header;
 
-    private SoftReference<String> content;
+    private transient SoftReference<String> content;
 
     public CachedMessage(final Message delegate) {
         this.delegate = delegate;
@@ -77,6 +79,23 @@ public class CachedMessage implements Message, Serializable {
             content = new SoftReference<String>(result);
         }
         return result;
+    }
+
+    private void writeObject(final ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        String result = null;
+        if (content != null) {
+            result = content.get();
+        }
+        out.writeObject(result);
+    }
+
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        String result = (String) in.readObject();
+        if (result != null) {
+            content = new SoftReference<String>(result);
+        }
     }
 
 }
