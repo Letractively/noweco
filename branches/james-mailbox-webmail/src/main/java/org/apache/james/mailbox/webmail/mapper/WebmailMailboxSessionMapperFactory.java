@@ -10,6 +10,7 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
+import org.apache.james.mailbox.webmail.WebmailUtils;
 import org.apache.james.mailbox.webmail.processor.WebmailProcessorFactory;
 
 /**
@@ -29,8 +30,8 @@ public class WebmailMailboxSessionMapperFactory extends MailboxSessionMapperFact
      * @see org.apache.james.mailbox.store.MailboxSessionMapperFactory#createMailboxMapper(org.apache.james.mailbox.MailboxSession)
      */
     @Override
-    protected MailboxMapper<Integer> createMailboxMapper(MailboxSession session) throws MailboxException {
-        return new WebmailMailboxMapper(processorRegistry.getProcessor(session));
+    protected MailboxMapper<Integer> createMailboxMapper(final MailboxSession session) throws MailboxException {
+        return new WebmailMailboxMapper(processorRegistry.getProcessor(WebmailUtils.getProfile(session)));
     }
 
     /*
@@ -39,8 +40,8 @@ public class WebmailMailboxSessionMapperFactory extends MailboxSessionMapperFact
      * @see org.apache.james.mailbox.store.MailboxSessionMapperFactory#createMessageMapper(org.apache.james.mailbox.MailboxSession)
      */
     @Override
-    protected MessageMapper<Integer> createMessageMapper(MailboxSession session) throws MailboxException {
-        return new WebmailMessageMapper(processorRegistry.getProcessor(session));
+    protected MessageMapper<Integer> createMessageMapper(final MailboxSession session) throws MailboxException {
+        return new WebmailMessageMapper(processorRegistry.getProcessor(WebmailUtils.getProfile(session)));
     }
 
     /*
@@ -49,7 +50,7 @@ public class WebmailMailboxSessionMapperFactory extends MailboxSessionMapperFact
      * @see org.apache.james.mailbox.store.MailboxSessionMapperFactory#createSubscriptionMapper(org.apache.james.mailbox.MailboxSession)
      */
     @Override
-    protected SubscriptionMapper createSubscriptionMapper(MailboxSession session) throws SubscriptionException {
-        return new WebmailSubscriptionMapper(processorRegistry.getProcessor(session));
+    protected SubscriptionMapper createSubscriptionMapper(final MailboxSession session) throws SubscriptionException {
+        return new WebmailSubscriptionMapper(processorRegistry.getProcessor(WebmailUtils.getProfile(session)));
     }
 }
