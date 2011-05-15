@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +64,8 @@ public class Pop3Server implements Runnable {
     }
 
     public void stop() throws IOException, InterruptedException {
+        Thread thread = this.thread;
+        this.thread = null;
         serverSocket.close();
         for (Pop3Connection connection : connections) {
             connection.stop();
@@ -77,19 +80,33 @@ public class Pop3Server implements Runnable {
     public void run() {
         while (!serverSocket.isClosed()) {
             try {
-                Socket accept = serverSocket.accept();
-                Pop3Connection command = new Pop3Connection(pop3Manager, accept);
-                connections.add(command);
-                executor.execute(command);
-                Iterator<Pop3Connection> iterator = connections.iterator();
-                while (iterator.hasNext()) {
-                    if (iterator.next().isFinished()) {
-                        iterator.remove();
-                    }
-                }
+                accept(serverSocket.accept());
             } catch (IOException e) {
-                LOGGER.error("Exception on POP3Server", e);
+                if (thread == null) {
+                    LOGGER.trace("POP3Server stopped", e);
+                } else {
+                    LOGGER.error("Exception on POP3Server", e);
+                }
             }
         }
     }
+
+    public void accept(final Socket socket) {
+        try {
+            Pop3Connection command = new Pop3Connection(pop3Manager, socket);
+            connections.add(command);
+            executor.execute(command);
+        } catch (IOException e) {
+            LOGGER.info("Cannot create connection", e);
+        } catch (RejectedExecutionException e) {
+            LOGGER.info("No thread available", e);
+        }
+        Iterator<Pop3Connection> iterator = connections.iterator();
+        while (iterator.hasNext()) {
+            if (iterator.next().isFinished()) {
+                iterator.remove();
+            }
+        }
+    }
+
 }

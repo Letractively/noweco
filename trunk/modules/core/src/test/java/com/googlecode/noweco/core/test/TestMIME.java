@@ -35,11 +35,11 @@ import org.junit.Test;
  *
  * @author Gael Lalire
  */
-public class Ess {
+public class TestMIME {
 
     @Test
     @Ignore
-    public void test(final String[] args) throws Exception {
+    public void test() throws Exception {
         ess("from@localhost", "to@localhost");
     }
 
