@@ -25,7 +25,7 @@ public class AuthenticatorMapper implements Authenticator {
      * @see org.apache.james.mailbox.store.Authenticator#isAuthentic(java.lang.String, java.lang.CharSequence)
      */
     public boolean isAuthentic(final String userid, final CharSequence passwd) {
-        WebmailProcessor processor = processorRegistry.getProcessor(WebmailUtils.getProfile(userid));
+        WebmailProcessor processor = processorRegistry.getProcessor(WebmailUtils.getProfileName(userid));
         return processor.isAuthentic(userid, passwd);
     }
 

@@ -14,7 +14,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 public class WebmailMailbox implements Mailbox<Integer> {
 
     /**
-     * 
+     * id
      */
     private Integer id = null;
 
@@ -43,12 +43,13 @@ public class WebmailMailbox implements Mailbox<Integer> {
      * @param session
      * @param randomUidValidity
      */
-    public WebmailMailbox(MailboxPath mailboxPath, MailboxSession session, int uidValidity) {
+    public WebmailMailbox(final MailboxPath mailboxPath, final MailboxSession session, final int uidValidity) {
         this.uidValidity = uidValidity;
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.mail.model.Mailbox#getMailboxId()
      */
     public Integer getMailboxId() {
@@ -57,6 +58,7 @@ public class WebmailMailbox implements Mailbox<Integer> {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.mail.model.Mailbox#getNamespace()
      */
     public String getNamespace() {
@@ -65,14 +67,16 @@ public class WebmailMailbox implements Mailbox<Integer> {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.mail.model.Mailbox#setNamespace(java.lang.String)
      */
-    public void setNamespace(String namespace) {
+    public void setNamespace(final String namespace) {
         this.namespace = namespace;
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.mail.model.Mailbox#getUser()
      */
     public String getUser() {
@@ -81,14 +85,16 @@ public class WebmailMailbox implements Mailbox<Integer> {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.mail.model.Mailbox#setUser(java.lang.String)
      */
-    public void setUser(String user) {
+    public void setUser(final String user) {
         this.user = user;
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.mail.model.Mailbox#getName()
      */
     public String getName() {
@@ -97,14 +103,16 @@ public class WebmailMailbox implements Mailbox<Integer> {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.mail.model.Mailbox#setName(java.lang.String)
      */
-    public void setName(String name) {
+    public void setName(final String name) {
         this.name = name;
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.mail.model.Mailbox#getUidValidity()
      */
     public long getUidValidity() {
@@ -113,19 +121,23 @@ public class WebmailMailbox implements Mailbox<Integer> {
 
     /*
      * (non-Javadoc)
+     * 
      * @see java.lang.Object#equals(java.lang.Object)
      */
-    public boolean equals(Object obj) {
+    @Override
+    public boolean equals(final Object obj) {
         if (obj == this) {
             return true;
         }
         if (obj instanceof WebmailMailbox) {
             if (id != null) {
-                if (id.equals(((WebmailMailbox) obj).getMailboxId()))
+                if (id.equals(((WebmailMailbox) obj).getMailboxId())) {
                     return true;
+                }
             } else {
-                if (((WebmailMailbox) obj).getMailboxId() == null)
+                if (((WebmailMailbox) obj).getMailboxId() == null) {
                     return true;
+                }
             }
         }
         return false;
@@ -133,6 +145,7 @@ public class WebmailMailbox implements Mailbox<Integer> {
 
     /*
      * (non-Javadoc)
+     * 
      * @see java.lang.Object#hashCode()
      */
     @Override
@@ -147,6 +160,7 @@ public class WebmailMailbox implements Mailbox<Integer> {
 
     /*
      * (non-Javadoc)
+     * 
      * @see java.lang.Object#toString()
      */
     @Override

@@ -13,61 +13,73 @@ import org.apache.james.mailbox.webmail.processor.WebmailProcessor;
 
 /**
  * @author Pierre-Marie Dhaussy
- *
+ * 
  */
 public class WebmailSubscriptionMapper implements SubscriptionMapper {
 
     /**
-     * 
+     * The processor
      */
     private WebmailProcessor processor = null;
-    
+
     /**
      * @param processor
      */
-    public WebmailSubscriptionMapper(WebmailProcessor processor) {
+    public WebmailSubscriptionMapper(final WebmailProcessor processor) {
         this.processor = processor;
     }
-    
-    /* (non-Javadoc)
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.transaction.Mapper#endRequest()
      */
     public void endRequest() {
         processor.endRequest();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.transaction.Mapper#execute(org.apache.james.mailbox.store.transaction.Mapper.Transaction)
      */
-    public <T> T execute(Transaction<T> transaction) throws MailboxException {
+    public <T> T execute(final Transaction<T> transaction) throws MailboxException {
         return processor.execute(transaction);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.user.SubscriptionMapper#findMailboxSubscriptionForUser(java.lang.String, java.lang.String)
      */
-    public Subscription findMailboxSubscriptionForUser(String user, String mailbox) throws SubscriptionException {
+    public Subscription findMailboxSubscriptionForUser(final String user, final String mailbox) throws SubscriptionException {
         return processor.findMailboxSubscriptionForUser(user, mailbox);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.user.SubscriptionMapper#save(org.apache.james.mailbox.store.user.model.Subscription)
      */
-    public void save(Subscription subscription) throws SubscriptionException {
+    public void save(final Subscription subscription) throws SubscriptionException {
         processor.save(subscription);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.user.SubscriptionMapper#findSubscriptionsForUser(java.lang.String)
      */
-    public List<Subscription> findSubscriptionsForUser(String user) throws SubscriptionException {
+    public List<Subscription> findSubscriptionsForUser(final String user) throws SubscriptionException {
         return processor.findSubscriptionsForUser(user);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.user.SubscriptionMapper#delete(org.apache.james.mailbox.store.user.model.Subscription)
      */
-    public void delete(Subscription subscription) throws SubscriptionException {
+    public void delete(final Subscription subscription) throws SubscriptionException {
         processor.delete(subscription);
     }
 }

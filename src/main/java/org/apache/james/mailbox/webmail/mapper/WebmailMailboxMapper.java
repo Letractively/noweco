@@ -14,72 +14,88 @@ import org.apache.james.mailbox.webmail.processor.WebmailProcessor;
 
 /**
  * @author Pierre-Marie Dhaussy
- *
+ * 
  */
 public class WebmailMailboxMapper implements MailboxMapper<Integer> {
 
     /**
-     * 
+     * The processor
      */
     private WebmailProcessor processor = null;
-    
+
     /**
      * @param processor
      */
-    public WebmailMailboxMapper(WebmailProcessor processor) {
+    public WebmailMailboxMapper(final WebmailProcessor processor) {
         this.processor = processor;
     }
-    
-    /* (non-Javadoc)
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.transaction.Mapper#endRequest()
      */
     public void endRequest() {
         processor.endRequest();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.transaction.Mapper#execute(org.apache.james.mailbox.store.transaction.Mapper.Transaction)
      */
-    public <T> T execute(Transaction<T> transaction) throws MailboxException {
+    public <T> T execute(final Transaction<T> transaction) throws MailboxException {
         return processor.execute(transaction);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#save(org.apache.james.mailbox.store.mail.model.Mailbox)
      */
-    public void save(Mailbox<Integer> mailbox) throws MailboxException {
+    public void save(final Mailbox<Integer> mailbox) throws MailboxException {
         processor.save(mailbox);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#delete(org.apache.james.mailbox.store.mail.model.Mailbox)
      */
-    public void delete(Mailbox<Integer> mailbox) throws MailboxException {
+    public void delete(final Mailbox<Integer> mailbox) throws MailboxException {
         processor.delete(mailbox);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#findMailboxByPath(org.apache.james.mailbox.MailboxPath)
      */
-    public Mailbox<Integer> findMailboxByPath(MailboxPath mailboxName) throws MailboxException, MailboxNotFoundException {
+    public Mailbox<Integer> findMailboxByPath(final MailboxPath mailboxName) throws MailboxException, MailboxNotFoundException {
         return processor.findMailboxByPath(mailboxName);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#findMailboxWithPathLike(org.apache.james.mailbox.MailboxPath)
      */
-    public List<Mailbox<Integer>> findMailboxWithPathLike(MailboxPath mailboxPath) throws MailboxException {
+    public List<Mailbox<Integer>> findMailboxWithPathLike(final MailboxPath mailboxPath) throws MailboxException {
         return processor.findMailboxWithPathLike(mailboxPath);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#hasChildren(org.apache.james.mailbox.store.mail.model.Mailbox, char)
      */
-    public boolean hasChildren(Mailbox<Integer> mailbox, char delimiter) throws MailboxException, MailboxNotFoundException {
+    public boolean hasChildren(final Mailbox<Integer> mailbox, final char delimiter) throws MailboxException, MailboxNotFoundException {
         return processor.hasChildren(mailbox, delimiter);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#list()
      */
     public List<Mailbox<Integer>> list() throws MailboxException {

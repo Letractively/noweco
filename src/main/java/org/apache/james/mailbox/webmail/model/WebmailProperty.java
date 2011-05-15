@@ -8,22 +8,25 @@ import org.apache.james.mailbox.store.mail.model.Property;
 
 /**
  * @author Pierre-Marie Dhaussy
- *
+ * 
  */
 public class WebmailProperty extends AbstractComparableProperty<WebmailProperty> {
 
     private int order;
+
     private String namespace;
+
     private String localName;
+
     private String value;
-    
+
     public WebmailProperty(final String namespace, final String localName, final String value, final int order) {
         this.namespace = namespace;
         this.localName = localName;
         this.value = value;
         this.order = order;
     }
-    
+
     public WebmailProperty(final Property property, final int order) {
         this(property.getNamespace(), property.getLocalName(), property.getValue(), order);
     }
@@ -31,6 +34,7 @@ public class WebmailProperty extends AbstractComparableProperty<WebmailProperty>
     /**
      * @return the order
      */
+    @Override
     public int getOrder() {
         return order;
     }
@@ -38,7 +42,7 @@ public class WebmailProperty extends AbstractComparableProperty<WebmailProperty>
     /**
      * @param order the order to set
      */
-    public void setOrder(int order) {
+    public void setOrder(final int order) {
         this.order = order;
     }
 
@@ -52,7 +56,7 @@ public class WebmailProperty extends AbstractComparableProperty<WebmailProperty>
     /**
      * @param namespace the namespace to set
      */
-    public void setNamespace(String namespace) {
+    public void setNamespace(final String namespace) {
         this.namespace = namespace;
     }
 
@@ -66,7 +70,7 @@ public class WebmailProperty extends AbstractComparableProperty<WebmailProperty>
     /**
      * @param localName the localName to set
      */
-    public void setLocalName(String localName) {
+    public void setLocalName(final String localName) {
         this.localName = localName;
     }
 
@@ -80,7 +84,7 @@ public class WebmailProperty extends AbstractComparableProperty<WebmailProperty>
     /**
      * @param value the value to set
      */
-    public void setValue(String value) {
+    public void setValue(final String value) {
         this.value = value;
     }
 }
