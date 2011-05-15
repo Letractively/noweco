@@ -10,3 +10,5 @@ For now, the name NoWeCo is used by 2 projects :
 
 
 Originaly NoWeCo was only intend to provide access to Lotus Notes Webmail through POP or IMAP. Besides _NoWeCo_ means *NOtes WEb COnnector*.
+
+Apache James server page : http://james.apache.org/
