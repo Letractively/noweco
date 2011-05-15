@@ -1,0 +1,43 @@
+// ------------------------------------------------------------------
+// Transitive dependencies of this project determined from the
+// maven pom organized by organization.
+// ------------------------------------------------------------------
+
+Apache James Webmail Mailbox
+
+
+From: 'an unknown organization'
+  - javax.activation API v.1.1  javax.activation:activation:jar:1.1.1
+
+
+From: 'QOS.ch' (http://www.qos.ch)
+  - SLF4J API Module (http://www.slf4j.org) org.slf4j:slf4j-api:jar:1.6.1
+    License: MIT License  (http://www.opensource.org/licenses/mit-license.php)
+
+From: 'Sun Microsystems, Inc.' (http://www.sun.com)
+  - JavaMail API (http://java.sun.com/projects/javamail/mail) javax.mail:mail:jar:1.4.3
+    License: CDDL  (http://www.sun.com/cddl)    License: GPLv2+CE  (https://glassfish.dev.java.net/public/CDDL+GPL.html)
+
+From: 'The Apache Software Foundation' (http://www.apache.org)
+  - Apache James Mailbox API (http://james.apache.org/mailbox/apache-james-mailbox-api) org.apache.james:apache-james-mailbox-api:jar:0.2-M2-SNAPSHOT
+    License: Apache License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.html)
+  - Apache James Mailbox Store Framework (http://james.apache.org/mailbox/apache-james-mailbox-store) org.apache.james:apache-james-mailbox-store:jar:0.2-M2-SNAPSHOT
+    License: Apache License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.html)
+  - Apache JAMES Mime4j (http://james.apache.org/mime4j) org.apache.james:apache-mime4j:jar:0.6.1
+    License: Apache License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.html)
+
+From: 'The Apache Software Foundation' (http://www.apache.org/)
+  - Commons IO (http://commons.apache.org/io/) commons-io:commons-io:jar:2.0.1
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Commons Lang (http://commons.apache.org/lang/) commons-lang:commons-lang:jar:2.4
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Commons Logging (http://commons.apache.org/logging) commons-logging:commons-logging:jar:1.1.1
+    License: The Apache Software License, Version 2.0  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Lucene Analyzers (http://lucene.apache.org/java/lucene-contrib/lucene-analyzers) org.apache.lucene:lucene-analyzers:jar:3.0.3
+    License: Apache 2  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Lucene Core (http://lucene.apache.org/java/lucene-core) org.apache.lucene:lucene-core:jar:3.0.3
+    License: Apache 2  (http://www.apache.org/licenses/LICENSE-2.0.txt)
+
+
+
+
