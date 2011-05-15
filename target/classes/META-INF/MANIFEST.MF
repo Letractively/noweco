@@ -1,0 +1,76 @@
+Manifest-Version: 1.0
+Export-Package: org.apache.james.mailbox.util;uses:="org.apache.james.
+ mailbox,javax.mail",org.apache.james.mailbox.webmail;uses:="org.apach
+ e.james.mailbox.store,org.apache.james.mailbox.util,org.apache.james.
+ mailbox.store.mail.model,org.apache.james.mailbox,org.apache.james.ma
+ ilbox.store.mail,org.apache.james.mailbox.webmail.processor",org.apac
+ he.james.mailbox.store.user.model,org.apache.james.mailbox.webmail.pr
+ ocessor.third;uses:="org.apache.james.mailbox.webmail.processor",org.
+ apache.james.mailbox;uses:="javax.mail,org.slf4j",org.apache.james.ma
+ ilbox.store.mail;uses:="org.apache.james.mailbox.store.mail.model,org
+ .apache.james.mailbox,org.apache.james.mailbox.store.transaction,java
+ x.mail",org.apache.james.mailbox.store.streaming;uses:="org.apache.ja
+ mes.mailbox.store,org.apache.james.mailbox,org.apache.james.mime4j.pa
+ rser,org.apache.james.mailbox.store.mail.model,org.apache.james.mime4
+ j",org.apache.james.mailbox.store.lucene;uses:="org.apache.lucene.ana
+ lysis.ngram,org.apache.lucene.analysis,org.apache.james.mime4j.parser
+ ,org.apache.james.mailbox.store.mail.model,org.apache.lucene.document
+ ,org.apache.james.mime4j.message,org.apache.james.mime4j.descriptor,o
+ rg.apache.james.mailbox,org.apache.james.mime4j,org.apache.lucene.ind
+ ex,org.apache.lucene.store,org.apache.james.mailbox.store,org.apache.
+ commons.lang.time,javax.mail,org.apache.lucene.search",org.apache.jam
+ es.mailbox.store.user;uses:="org.apache.james.mailbox.store.transacti
+ on,org.apache.james.mailbox.store.user.model,org.apache.james.mailbox
+ ",org.apache.james.mailbox.webmail.mapper;uses:="org.apache.james.mai
+ lbox.store.transaction,org.apache.james.mailbox.store.mail.model,org.
+ apache.james.mailbox.webmail.processor,org.apache.james.mailbox,org.a
+ pache.james.mailbox.store.mail,org.apache.james.mailbox.store.user,or
+ g.apache.james.mailbox.store,javax.mail,org.apache.james.mailbox.stor
+ e.user.model",org.apache.james.mailbox.store;uses:="org.apache.james.
+ mailbox,javax.mail,org.apache.james.mailbox.store.user,org.apache.jam
+ es.mailbox.store.mail,org.apache.james.mailbox.store.mail.model,org.a
+ pache.james.mailbox.store.streaming,org.apache.james.mime4j.parser,or
+ g.apache.james.mime4j,org.slf4j,org.apache.james.mime4j.field.datetim
+ e,org.apache.james.mime4j.field.datetime.parser,org.apache.james.mime
+ 4j.descriptor,org.apache.james.mailbox.util,org.apache.james.mailbox.
+ store.transaction,javax.mail.util,org.apache.james.mailbox.store.user
+ .model",org.apache.james.mailbox.store.transaction;uses:="org.apache.
+ james.mailbox.store.mail.model,org.apache.james.mailbox",org.apache.j
+ ames.mailbox.store.mail.model;uses:="javax.mail",org.apache.james.mai
+ lbox.webmail.processor;uses:="org.apache.james.mailbox.store.transact
+ ion,org.apache.james.mailbox.store.user.model,org.apache.james.mailbo
+ x.store.mail.model,javax.mail,org.apache.james.mailbox,org.apache.jam
+ es.mailbox.store.user,org.apache.james.mailbox.store,org.apache.james
+ .mailbox.store.mail"
+Implementation-Title: Apache James Webmail Mailbox
+Implementation-Version: 0.2-M2-SNAPSHOT
+Built-By: Pierre-Marie Dhaussy
+Specification-Vendor: The Apache Software Foundation
+Tool: Bnd-1.15.0
+Bundle-Name: Apache James Webmail Mailbox
+Created-By: Apache Maven Bundle Plugin
+Implementation-Vendor: The Apache Software Foundation
+Bundle-Vendor: The Apache Software Foundation
+Implementation-Vendor-Id: org.apache.james
+Build-Jdk: 1.6.0_24
+Bundle-Version: 0.2.0.M2-SNAPSHOT
+Bnd-LastModified: 1305450645616
+Specification-Title: Apache James Webmail Mailbox
+Bundle-ManifestVersion: 2
+Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.html
+Bundle-Description: Apache James Mailbox
+Specification-Version: 0.2-M2-SNAPSHOT
+Embed-Dependency: *;scope=runtime
+Import-Package: javax.mail;version="[1.4,2)",javax.mail.util;version="
+ [1.4,2)",org.apache.commons.lang.time;version="[2.4,3)",org.apache.ja
+ mes.mime4j;version="[0.6,1)",org.apache.james.mime4j.descriptor;versi
+ on="[0.6,1)",org.apache.james.mime4j.field.datetime;version="[0.6,1)"
+ ,org.apache.james.mime4j.field.datetime.parser;version="[0.6,1)",org.
+ apache.james.mime4j.message;version="[0.6,1)",org.apache.james.mime4j
+ .parser;version="[0.6,1)",org.apache.lucene.analysis,org.apache.lucen
+ e.analysis.ngram,org.apache.lucene.document,org.apache.lucene.index,o
+ rg.apache.lucene.search,org.apache.lucene.store,org.slf4j;version="[1
+ .6,2)"
+Bundle-SymbolicName: org.apache.james.apache-james-mailbox-webmail
+Bundle-DocURL: http://www.apache.org
+
