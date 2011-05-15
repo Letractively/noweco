@@ -3,8 +3,13 @@
  */
 package org.apache.james.mailbox.webmail.processor;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.james.mailbox.webmail.WebmailConstants;
+
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author Pierre-Marie Dhaussy
@@ -22,6 +27,11 @@ public class WebmailProcessorFactory {
     private static final Map<String, WebmailProcessor> PROCESSORS = new HashMap<String, WebmailProcessor>();
 
     /**
+     * 
+     */
+    private static final XStream XSTREAM = new XStream();
+
+    /**
      * Return the unique instance of the singleton
      * 
      * @return the instance of {@link WebmailProcessorFactory}
@@ -34,20 +44,26 @@ public class WebmailProcessorFactory {
      * Singleton infer private constructor
      */
     private WebmailProcessorFactory() {
-        // nothing to do
+        XSTREAM.processAnnotations(WebmailProfile.class);
     }
 
     /**
-     * Return webmail configuration name
+     * Return webmail profile
      * 
-     * @param p_Profil webmail profile
-     * @return configuration
+     * @param p_Profil webmail profile name
+     * @return webmail profile
      */
-    private WebmailProcessorConfiguration createConfiguration(final String profile) {
+    private WebmailProfile loadProfile(final String profileName) {
+        String profilePath = "./" + WebmailConstants.PROFILE_DIRECTORY + profileName + ".xml";
+        File profileFile = new File(profilePath);
+        if (!profileFile.exists()) {
+            // TODO throw Some exception
+            System.out.println("Profile file not exists");
+        }
         /*
          * Load configuration bean with XStream;
          */
-        return null;
+        return (WebmailProfile) XSTREAM.fromXML(profileFile.getPath());
     }
 
     /**
@@ -56,18 +72,19 @@ public class WebmailProcessorFactory {
      * @param session webmail session
      * @return a processor
      */
-    private WebmailProcessor createProcessor(final String profile) {
+    private WebmailProcessor createProcessor(final String profileName) {
         /*
          * TODO load configuration with WebmailProcessorConfigurationFactory
          */
-        WebmailProcessorConfiguration configuration = createConfiguration(profile);
+        WebmailProfile profile = loadProfile(profileName);
 
         /*
          * TODO load appropriate processor
          */
         WebmailProcessor processor = null;
         try {
-            processor = (WebmailProcessor) Class.forName(configuration.getProcessorClassName()).newInstance();
+            processor = (WebmailProcessor) Class.forName(profile.getProcessor()).newInstance();
+            processor.setProfile(profile);
         } catch (InstantiationException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -82,13 +99,13 @@ public class WebmailProcessorFactory {
     }
 
     /**
-     * @param profile
+     * @param profileName
      * @return
      */
-    public WebmailProcessor getProcessor(final String profile) {
-        if (!PROCESSORS.containsKey(profile)) {
-            PROCESSORS.put(profile, createProcessor(profile));
+    public WebmailProcessor getProcessor(final String profileName) {
+        if (!PROCESSORS.containsKey(profileName)) {
+            PROCESSORS.put(profileName, createProcessor(profileName));
         }
-        return PROCESSORS.get(profile);
+        return PROCESSORS.get(profileName);
     }
 }

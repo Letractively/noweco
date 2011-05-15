@@ -13,14 +13,10 @@ import org.apache.james.mailbox.store.user.SubscriptionMapper;
  * 
  */
 public interface WebmailProcessor extends Authenticator, MailboxMapper<Integer>, MessageMapper<Integer>, SubscriptionMapper {
-
     /**
-     * @return
+     * Set the processor profile
+     * 
+     * @param profile the profile
      */
-    WebmailProcessorConfiguration getConfiguration();
-
-    /**
-     * @param configuration
-     */
-    void setConfiguration(WebmailProcessorConfiguration configuration);
+    void setProfile(WebmailProfile profile);
 }

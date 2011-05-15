@@ -21,27 +21,43 @@ import org.apache.james.mailbox.store.mail.model.Property;
 public class WebmailMessage extends AbstractMessage<Integer> {
 
     private long uid;
+
     private Mailbox<Integer> mailbox;
+
     protected boolean answered;
+
     protected boolean deleted;
+
     protected boolean draft;
+
     protected boolean flagged;
+
     protected boolean recent;
+
     protected boolean seen;
 
     // Document
     private InputStream bodyContent;
+
     private int bodyStartOctet;
+
     private InputStream fullContent;
+
     private long fullContentOctets;
+
     private List<Header> headers;
+
     private String mediaType;
+
     private List<Property> properties;
+
     private String subType;
+
     private Long textualLineCount;
 
     // MailboxMembership
     private Date internalDate;
+
     private long size;
 
     private boolean modified = false;
@@ -51,7 +67,7 @@ public class WebmailMessage extends AbstractMessage<Integer> {
      * 
      * @see org.apache.james.mailbox.store.mail.model.MailboxMembership#setFlags( javax.mail.Flags)
      */
-    public void setFlags(Flags flags) {
+    public void setFlags(final Flags flags) {
         if (flags != null) {
             answered = flags.contains(Flags.Flag.ANSWERED);
             deleted = flags.contains(Flags.Flag.DELETED);
@@ -72,7 +88,7 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     /**
      * @param uid the uid to set
      */
-    public void setUid(long uid) {
+    public void setUid(final long uid) {
         this.uid = uid;
     }
 
@@ -86,7 +102,7 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     /**
      * @param mailbox the mailbox to set
      */
-    public void setMailbox(Mailbox<Integer> mailbox) {
+    public void setMailbox(final Mailbox<Integer> mailbox) {
         this.mailbox = mailbox;
     }
 
@@ -109,7 +125,7 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     /**
      * @param answered the answered to set
      */
-    public void setAnswered(boolean answered) {
+    public void setAnswered(final boolean answered) {
         this.answered = answered;
     }
 
@@ -123,7 +139,7 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     /**
      * @param deleted the deleted to set
      */
-    public void setDeleted(boolean deleted) {
+    public void setDeleted(final boolean deleted) {
         this.deleted = deleted;
     }
 
@@ -137,7 +153,7 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     /**
      * @param draft the draft to set
      */
-    public void setDraft(boolean draft) {
+    public void setDraft(final boolean draft) {
         this.draft = draft;
     }
 
@@ -151,7 +167,7 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     /**
      * @param flagged the flagged to set
      */
-    public void setFlagged(boolean flagged) {
+    public void setFlagged(final boolean flagged) {
         this.flagged = flagged;
     }
 
@@ -165,7 +181,7 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     /**
      * @param recent the recent to set
      */
-    public void setRecent(boolean recent) {
+    public void setRecent(final boolean recent) {
         this.recent = recent;
     }
 
@@ -179,7 +195,7 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     /**
      * @param seen the seen to set
      */
-    public void setSeen(boolean seen) {
+    public void setSeen(final boolean seen) {
         this.seen = seen;
     }
 
@@ -193,13 +209,14 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     /**
      * @param bodyContent the bodyContent to set
      */
-    public void setBodyContent(InputStream bodyContent) {
+    public void setBodyContent(final InputStream bodyContent) {
         this.bodyContent = bodyContent;
     }
 
     /**
      * @return the bodyStartOctet
      */
+    @Override
     public int getBodyStartOctet() {
         return bodyStartOctet;
     }
@@ -207,7 +224,7 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     /**
      * @param bodyStartOctet the bodyStartOctet to set
      */
-    public void setBodyStartOctet(int bodyStartOctet) {
+    public void setBodyStartOctet(final int bodyStartOctet) {
         this.bodyStartOctet = bodyStartOctet;
     }
 
@@ -221,7 +238,7 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     /**
      * @param fullContent the fullContent to set
      */
-    public void setFullContent(InputStream fullContent) {
+    public void setFullContent(final InputStream fullContent) {
         this.fullContent = fullContent;
     }
 
@@ -235,7 +252,7 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     /**
      * @param fullContentOctets the fullContentOctets to set
      */
-    public void setFullContentOctets(long fullContentOctets) {
+    public void setFullContentOctets(final long fullContentOctets) {
         this.fullContentOctets = fullContentOctets;
     }
 
@@ -249,7 +266,7 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     /**
      * @param headers the headers to set
      */
-    public void setHeaders(List<Header> headers) {
+    public void setHeaders(final List<Header> headers) {
         this.headers = headers;
     }
 
@@ -263,7 +280,7 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     /**
      * @param mediaType the mediaType to set
      */
-    public void setMediaType(String mediaType) {
+    public void setMediaType(final String mediaType) {
         this.mediaType = mediaType;
     }
 
@@ -277,7 +294,7 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     /**
      * @param properties the properties to set
      */
-    public void setProperties(List<Property> properties) {
+    public void setProperties(final List<Property> properties) {
         this.properties = properties;
     }
 
@@ -291,7 +308,7 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     /**
      * @param subType the subType to set
      */
-    public void setSubType(String subType) {
+    public void setSubType(final String subType) {
         this.subType = subType;
     }
 
@@ -305,7 +322,7 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     /**
      * @param textualLineCount the textualLineCount to set
      */
-    public void setTextualLineCount(Long textualLineCount) {
+    public void setTextualLineCount(final Long textualLineCount) {
         this.textualLineCount = textualLineCount;
     }
 
@@ -319,7 +336,7 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     /**
      * @param internalDate the internalDate to set
      */
-    public void setInternalDate(Date internalDate) {
+    public void setInternalDate(final Date internalDate) {
         this.internalDate = internalDate;
     }
 
@@ -333,7 +350,7 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     /**
      * @param size the size to set
      */
-    public void setSize(long size) {
+    public void setSize(final long size) {
         this.size = size;
     }
 
@@ -347,7 +364,7 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     /**
      * @param modified the modified to set
      */
-    public void setModified(boolean modified) {
+    public void setModified(final boolean modified) {
         this.modified = modified;
     }
 }

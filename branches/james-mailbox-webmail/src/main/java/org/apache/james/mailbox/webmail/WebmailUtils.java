@@ -19,22 +19,22 @@ public final class WebmailUtils {
     }
 
     public static String getLogin(final String userid) {
-        return userid.substring(0, userid.indexOf(Character.getNumericValue(WebmailConstants.USERNAME_PROFILE_SEPARATOR)) - 1);
+        return userid.substring(0, userid.indexOf(Character.getNumericValue(WebmailConstants.LOGIN_PROFILE_SEPARATOR)) - 1);
     }
 
     /**
      * @param userid
      * @return
      */
-    public static String getProfile(final String userid) {
-        return userid.substring(userid.indexOf(Character.getNumericValue(WebmailConstants.USERNAME_PROFILE_SEPARATOR)) + 1);
+    public static String getProfileName(final String userid) {
+        return userid.substring(userid.indexOf(Character.getNumericValue(WebmailConstants.LOGIN_PROFILE_SEPARATOR)) + 1);
     }
 
     /**
      * @param session webmail session
      * @return
      */
-    public static String getProfile(final MailboxSession session) {
-        return getProfile(session.getUser().getUserName());
+    public static String getProfileName(final MailboxSession session) {
+        return getProfileName(session.getUser().getUserName());
     }
 }

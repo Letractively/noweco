@@ -22,7 +22,12 @@ public final class WebmailConstants {
     public static final char ARBITRARY_FOLDER_SEPARATOR = '/';
 
     /**
-     * userid : username@profil
+     * userid : login@profil
      */
-    public static final char USERNAME_PROFILE_SEPARATOR = '@';
+    public static final char LOGIN_PROFILE_SEPARATOR = '@';
+
+    /**
+     * Folder where profiles are stored
+     */
+    public static final String PROFILE_DIRECTORY = "profiles/";
 }

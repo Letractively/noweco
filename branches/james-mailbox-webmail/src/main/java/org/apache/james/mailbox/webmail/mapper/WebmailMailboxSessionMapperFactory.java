@@ -20,9 +20,9 @@ import org.apache.james.mailbox.webmail.processor.WebmailProcessorFactory;
 public class WebmailMailboxSessionMapperFactory extends MailboxSessionMapperFactory<Integer> {
 
     /**
-     * 
+     * Factory
      */
-    private static final WebmailProcessorFactory processorRegistry = WebmailProcessorFactory.getInstance();
+    private static final WebmailProcessorFactory processorFactory = WebmailProcessorFactory.getInstance();
 
     /*
      * (non-Javadoc)
@@ -31,7 +31,7 @@ public class WebmailMailboxSessionMapperFactory extends MailboxSessionMapperFact
      */
     @Override
     protected MailboxMapper<Integer> createMailboxMapper(final MailboxSession session) throws MailboxException {
-        return new WebmailMailboxMapper(processorRegistry.getProcessor(WebmailUtils.getProfile(session)));
+        return new WebmailMailboxMapper(processorFactory.getProcessor(WebmailUtils.getProfileName(session)));
     }
 
     /*
@@ -41,7 +41,7 @@ public class WebmailMailboxSessionMapperFactory extends MailboxSessionMapperFact
      */
     @Override
     protected MessageMapper<Integer> createMessageMapper(final MailboxSession session) throws MailboxException {
-        return new WebmailMessageMapper(processorRegistry.getProcessor(WebmailUtils.getProfile(session)));
+        return new WebmailMessageMapper(processorFactory.getProcessor(WebmailUtils.getProfileName(session)));
     }
 
     /*
@@ -51,6 +51,6 @@ public class WebmailMailboxSessionMapperFactory extends MailboxSessionMapperFact
      */
     @Override
     protected SubscriptionMapper createSubscriptionMapper(final MailboxSession session) throws SubscriptionException {
-        return new WebmailSubscriptionMapper(processorRegistry.getProcessor(WebmailUtils.getProfile(session)));
+        return new WebmailSubscriptionMapper(processorFactory.getProcessor(WebmailUtils.getProfileName(session)));
     }
 }
