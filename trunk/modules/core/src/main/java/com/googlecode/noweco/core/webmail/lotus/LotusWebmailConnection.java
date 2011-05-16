@@ -18,11 +18,15 @@ package com.googlecode.noweco.core.webmail.lotus;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -32,6 +36,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.params.ClientPNames;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
@@ -65,11 +70,39 @@ public class LotusWebmailConnection implements WebmailConnection {
 
     private static final Pattern MAIN_PAGE_PATTERN = Pattern.compile("location.replace\\(\"([^\"]*?&AutoFramed)\"\\);");
 
+    private static final Pattern LANGUAGE_PATTERN = Pattern.compile("(\\w+)(?:-(\\w+))?");
+
+    @SuppressWarnings("unchecked")
     public LotusWebmailConnection(final HttpClient httpclient, final HttpHost host, final String prefix) throws IOException {
         this.prefix = prefix;
         HttpGet httpGet;
         HttpResponse rsp;
         HttpEntity entity;
+
+        String baseName = getClass().getPackage().getName().replace('.', '/') + "/lotus";
+        ResourceBundle bundleBrowser = ResourceBundle.getBundle(baseName, new Locale("fr"));
+
+        for (Header header : (Collection<Header>) httpclient.getParams().getParameter(ClientPNames.DEFAULT_HEADERS)) {
+            if (header.getName().equals("Accept-Language")) {
+                Matcher matcher = LANGUAGE_PATTERN.matcher(header.getValue());
+                if (matcher.find()) {
+                    String region = matcher.group(2);
+                    if (region != null && region.length() != 0) {
+                        bundleBrowser = ResourceBundle.getBundle(baseName, new Locale(matcher.group(1), region));
+                    } else {
+                        bundleBrowser = ResourceBundle.getBundle(baseName, new Locale(matcher.group(1)));
+                    }
+                }
+            }
+        }
+
+        ResourceBundle bundleEnglish = ResourceBundle.getBundle(baseName, new Locale("en"));
+
+        String deletePattern = "(?:" + Pattern.quote(bundleEnglish.getString("Delete")) + "|" + Pattern.quote(bundleBrowser.getString("Delete")) + ")";
+        String emptyTrashPattern = "(?:" + Pattern.quote(bundleEnglish.getString("EmptyTrash")) + "|" + Pattern.quote(bundleBrowser.getString("EmptyTrash")) + ")";
+
+        deleteDeletePattern = Pattern.compile("_doClick\\('([^/]*/\\$V\\d+ACTIONS/[^']*)'[^>]*>" + deletePattern + "\\\\" + deletePattern);
+        deleteEmptyTrashPattern = Pattern.compile("_doClick\\('([^/]*/\\$V\\d+ACTIONS/[^']*)'[^>]*>" + deletePattern + "\\\\" + emptyTrashPattern);
 
         httpGet = new HttpGet(prefix + "/($Inbox)?OpenView");
 
@@ -244,9 +277,9 @@ public class LotusWebmailConnection implements WebmailConnection {
 
     private static final Pattern TEMP_RAND_NUM_PATTERN = Pattern.compile("<input name=\"tmpRandNum\"[^>]*value=\"([^\"]*)\">");
 
-    private static final Pattern DELETE_DELETE_PATTERN = Pattern.compile("_doClick\\('([^/]*/\\$V5ACTIONS/4\\.7C1.)'");
+    private Pattern deleteDeletePattern;
 
-    private static final Pattern DELETE_GARBAGE_PATTERN = Pattern.compile("_doClick\\('([^/]*/\\$V5ACTIONS/4\\.7C5.)'");
+    private Pattern deleteEmptyTrashPattern;
 
     // private static final Pattern CLEAR_GARBAGE_PATTERN =
     // Pattern.compile("_doClick\\('([^/]*/\\$V5ACTIONS/0\\.FFC)'");
@@ -262,7 +295,7 @@ public class LotusWebmailConnection implements WebmailConnection {
 
             toDelete.clear();
 
-            Matcher matcherDelete = DELETE_DELETE_PATTERN.matcher(pageContent);
+            Matcher matcherDelete = deleteDeletePattern.matcher(pageContent);
             if (!matcherDelete.find()) {
                 throw new IOException("No DELETE/DELETE find");
             }
@@ -304,7 +337,7 @@ public class LotusWebmailConnection implements WebmailConnection {
 
         String pageContent = loadPageContent(1);
 
-        Matcher matcherDeleteGarbage = DELETE_GARBAGE_PATTERN.matcher(pageContent);
+        Matcher matcherDeleteGarbage = deleteEmptyTrashPattern.matcher(pageContent);
         if (!matcherDeleteGarbage.find()) {
             throw new IOException("No DELETE/EMPTY_TRASH find");
         }
