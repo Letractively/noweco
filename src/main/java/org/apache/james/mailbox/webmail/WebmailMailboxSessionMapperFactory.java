@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.apache.james.mailbox.webmail.mapper;
+package org.apache.james.mailbox.webmail;
 
 import org.apache.james.mailbox.MailboxException;
 import org.apache.james.mailbox.MailboxSession;
@@ -10,8 +10,10 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
-import org.apache.james.mailbox.webmail.WebmailUtils;
+import org.apache.james.mailbox.webmail.mail.WebmailMailboxMapper;
+import org.apache.james.mailbox.webmail.mail.WebmailMessageMapper;
 import org.apache.james.mailbox.webmail.processor.WebmailProcessorFactory;
+import org.apache.james.mailbox.webmail.user.WebmailSubscriptionMapper;
 
 /**
  * @author Pierre-Marie Dhaussy

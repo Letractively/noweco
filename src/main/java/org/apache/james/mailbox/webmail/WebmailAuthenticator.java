@@ -1,10 +1,9 @@
 /**
  * 
  */
-package org.apache.james.mailbox.webmail.mapper;
+package org.apache.james.mailbox.webmail;
 
 import org.apache.james.mailbox.store.Authenticator;
-import org.apache.james.mailbox.webmail.WebmailUtils;
 import org.apache.james.mailbox.webmail.processor.WebmailProcessor;
 import org.apache.james.mailbox.webmail.processor.WebmailProcessorFactory;
 
@@ -12,7 +11,7 @@ import org.apache.james.mailbox.webmail.processor.WebmailProcessorFactory;
  * @author Pierre-Marie Dhaussy
  * 
  */
-public class AuthenticatorMapper implements Authenticator {
+public class WebmailAuthenticator implements Authenticator {
 
     /**
      * 

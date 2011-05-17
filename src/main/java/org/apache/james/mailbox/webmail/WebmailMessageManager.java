@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.apache.james.mailbox.webmail.manager;
+package org.apache.james.mailbox.webmail;
 
 import java.io.InputStream;
 import java.util.Date;
@@ -18,8 +18,8 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.mail.model.PropertyBuilder;
 import org.apache.james.mailbox.util.MailboxEventDispatcher;
-import org.apache.james.mailbox.webmail.model.WebmailHeader;
-import org.apache.james.mailbox.webmail.model.WebmailMessage;
+import org.apache.james.mailbox.webmail.mail.model.WebmailHeader;
+import org.apache.james.mailbox.webmail.mail.model.WebmailMessage;
 
 /**
  * @author Pierre-Marie Dhaussy

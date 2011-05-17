@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.apache.james.mailbox.webmail.mapper;
+package org.apache.james.mailbox.webmail.mail;
 
 import java.util.List;
 
