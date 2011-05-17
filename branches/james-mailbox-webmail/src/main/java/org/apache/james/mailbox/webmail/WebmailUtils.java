@@ -3,6 +3,9 @@
  */
 package org.apache.james.mailbox.webmail;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.james.mailbox.MailboxSession;
 
 /**
@@ -12,6 +15,16 @@ import org.apache.james.mailbox.MailboxSession;
 public final class WebmailUtils {
 
     /**
+     * 
+     */
+    private static final String REGEXP = "([^@]+)@([^@]+)";
+
+    /**
+     * 
+     */
+    private static final Pattern PATTERN = Pattern.compile(REGEXP);
+
+    /**
      * Constructor
      */
     private WebmailUtils() {
@@ -19,7 +32,12 @@ public final class WebmailUtils {
     }
 
     public static String getLogin(final String userid) {
-        return userid.substring(0, userid.indexOf(Character.getNumericValue(WebmailConstants.LOGIN_PROFILE_SEPARATOR)) - 1);
+        String login = null;
+        Matcher matcher = PATTERN.matcher(userid);
+        if (matcher.matches()) {
+            login = matcher.group(1);
+        }
+        return login;
     }
 
     /**
@@ -27,7 +45,12 @@ public final class WebmailUtils {
      * @return
      */
     public static String getProfileName(final String userid) {
-        return userid.substring(userid.indexOf(Character.getNumericValue(WebmailConstants.LOGIN_PROFILE_SEPARATOR)) + 1);
+        String profileName = null;
+        Matcher matcher = PATTERN.matcher(userid);
+        if (matcher.matches()) {
+            profileName = matcher.group(2);
+        }
+        return profileName;
     }
 
     /**

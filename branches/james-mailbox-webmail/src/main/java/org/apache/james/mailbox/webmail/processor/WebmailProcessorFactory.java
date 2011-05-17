@@ -44,7 +44,7 @@ public class WebmailProcessorFactory {
      * Singleton infer private constructor
      */
     private WebmailProcessorFactory() {
-        XSTREAM.processAnnotations(WebmailProfile.class);
+        //
     }
 
     /**
@@ -56,14 +56,16 @@ public class WebmailProcessorFactory {
     private WebmailProfile loadProfile(final String profileName) {
         String profilePath = "./" + WebmailConstants.PROFILE_DIRECTORY + profileName + ".xml";
         File profileFile = new File(profilePath);
+
         if (!profileFile.exists()) {
             // TODO throw Some exception
-            System.out.println("Profile file not exists");
+            System.out.println("Profile file [" + profileFile.getAbsolutePath() + "] not exists");
         }
         /*
          * Load configuration bean with XStream;
          */
-        return (WebmailProfile) XSTREAM.fromXML(profileFile.getPath());
+        XSTREAM.processAnnotations(WebmailProfile.class);
+        return (WebmailProfile) XSTREAM.fromXML(profileFile.getAbsolutePath());
     }
 
     /**

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.apache.james.mailbox.webmail.model;
+package org.apache.james.mailbox.webmail.user.model;
 
 import org.apache.james.mailbox.store.user.model.Subscription;
 

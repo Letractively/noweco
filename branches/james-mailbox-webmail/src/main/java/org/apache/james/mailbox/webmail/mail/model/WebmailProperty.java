@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.apache.james.mailbox.webmail.model;
+package org.apache.james.mailbox.webmail.mail.model;
 
 import org.apache.james.mailbox.store.mail.model.AbstractComparableProperty;
 import org.apache.james.mailbox.store.mail.model.Property;

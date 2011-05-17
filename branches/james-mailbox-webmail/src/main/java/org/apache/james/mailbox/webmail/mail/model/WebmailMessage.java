@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.apache.james.mailbox.webmail.model;
+package org.apache.james.mailbox.webmail.mail.model;
 
 import java.io.InputStream;
 import java.util.Date;

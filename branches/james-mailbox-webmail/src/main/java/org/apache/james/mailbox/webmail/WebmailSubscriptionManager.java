@@ -1,13 +1,13 @@
 /**
  * 
  */
-package org.apache.james.mailbox.webmail.manager;
+package org.apache.james.mailbox.webmail;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
 import org.apache.james.mailbox.store.user.model.Subscription;
-import org.apache.james.mailbox.webmail.model.WebmailSubscription;
+import org.apache.james.mailbox.webmail.user.model.WebmailSubscription;
 
 /**
  * @author Pierre-Marie Dhaussy
