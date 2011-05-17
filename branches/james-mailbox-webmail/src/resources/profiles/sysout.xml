@@ -1,0 +1,5 @@
+<profile>
+	<name>Sysout</name>
+	<description>tralala</description>
+	<processor>org.apache.james.mailbox.webmail.processor.third.SysoutProcessor</processor>
+</profile>
