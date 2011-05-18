@@ -14,18 +14,32 @@ import org.apache.james.mailbox.webmail.processor.WebmailProcessorFactory;
 public class WebmailAuthenticator implements Authenticator {
 
     /**
-     * 
+     * Factory
      */
-    private static final WebmailProcessorFactory processorRegistry = WebmailProcessorFactory.getInstance();
+    private WebmailProcessorFactory processorFactory = null;
 
-    /*
-     * (non-Javadoc)
+    /**
+     * Constructor
      * 
-     * @see org.apache.james.mailbox.store.Authenticator#isAuthentic(java.lang.String, java.lang.CharSequence)
+     * @param processorFactory factory
      */
-    public boolean isAuthentic(final String userid, final CharSequence passwd) {
-        WebmailProcessor processor = processorRegistry.getProcessor(WebmailUtils.getProfileName(userid));
-        return processor.isAuthentic(userid, passwd);
+    public WebmailAuthenticator(final WebmailProcessorFactory processorFactory) {
+        this.processorFactory = processorFactory;
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.apache.james.mailbox.store.Authenticator#isAuthentic(java.lang.String,
+     *      java.lang.CharSequence)
+     */
+    public boolean isAuthentic(final String userid, final CharSequence passwd) {
+        try {
+            WebmailProcessor processor = processorFactory.getProcessor(WebmailUtils.getProfileName(userid));
+            return processor.isAuthentic(userid, passwd);
+        } catch (WebmailException e) {
+            // FIXME ?
+            return false;
+        }
+    }
 }

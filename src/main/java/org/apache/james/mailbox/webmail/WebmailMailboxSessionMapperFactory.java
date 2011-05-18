@@ -24,35 +24,57 @@ public class WebmailMailboxSessionMapperFactory extends MailboxSessionMapperFact
     /**
      * Factory
      */
-    private static final WebmailProcessorFactory processorFactory = WebmailProcessorFactory.getInstance();
+    private WebmailProcessorFactory processorFactory = null;
 
-    /*
-     * (non-Javadoc)
+    /**
+     * Constructor
+     * 
+     * @param processorFactory factory
+     */
+    public WebmailMailboxSessionMapperFactory(final WebmailProcessorFactory processorFactory) {
+        this.processorFactory = processorFactory;
+    }
+
+    /**
+     * {@inheritDoc}
      * 
      * @see org.apache.james.mailbox.store.MailboxSessionMapperFactory#createMailboxMapper(org.apache.james.mailbox.MailboxSession)
      */
     @Override
     protected MailboxMapper<Integer> createMailboxMapper(final MailboxSession session) throws MailboxException {
-        return new WebmailMailboxMapper(processorFactory.getProcessor(WebmailUtils.getProfileName(session)));
+        try {
+            return new WebmailMailboxMapper(processorFactory.getProcessor(WebmailUtils.getProfileName(session)));
+        } catch (WebmailException e) {
+            throw new MailboxException("Unable to retrieve processor", e);
+        }
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * {@inheritDoc}
      * 
      * @see org.apache.james.mailbox.store.MailboxSessionMapperFactory#createMessageMapper(org.apache.james.mailbox.MailboxSession)
      */
     @Override
     protected MessageMapper<Integer> createMessageMapper(final MailboxSession session) throws MailboxException {
-        return new WebmailMessageMapper(processorFactory.getProcessor(WebmailUtils.getProfileName(session)));
+        try {
+            return new WebmailMessageMapper(processorFactory.getProcessor(WebmailUtils.getProfileName(session)));
+        } catch (WebmailException e) {
+            throw new MailboxException("Unable to retrieve processor", e);
+        }
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * {@inheritDoc}
      * 
-     * @see org.apache.james.mailbox.store.MailboxSessionMapperFactory#createSubscriptionMapper(org.apache.james.mailbox.MailboxSession)
+     * @see org.apache.james.mailbox.store.MailboxSessionMapperFactory#
+     *      createSubscriptionMapper(org.apache.james.mailbox.MailboxSession)
      */
     @Override
     protected SubscriptionMapper createSubscriptionMapper(final MailboxSession session) throws SubscriptionException {
-        return new WebmailSubscriptionMapper(processorFactory.getProcessor(WebmailUtils.getProfileName(session)));
+        try {
+            return new WebmailSubscriptionMapper(processorFactory.getProcessor(WebmailUtils.getProfileName(session)));
+        } catch (WebmailException e) {
+            throw new SubscriptionException(e);
+        }
     }
 }

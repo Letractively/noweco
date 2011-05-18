@@ -22,10 +22,11 @@ public class WebmailSubscriptionManager extends StoreSubscriptionManager {
         super(mapperFactory);
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * {@inheritDoc}
      * 
-     * @see org.apache.james.mailbox.store.StoreSubscriptionManager#createSubscription(org.apache.james.mailbox.MailboxSession, java.lang.String)
+     * @see org.apache.james.mailbox.store.StoreSubscriptionManager#createSubscription(org.apache.james.mailbox.MailboxSession,
+     *      java.lang.String)
      */
     @Override
     protected Subscription createSubscription(final MailboxSession session, final String mailbox) {
