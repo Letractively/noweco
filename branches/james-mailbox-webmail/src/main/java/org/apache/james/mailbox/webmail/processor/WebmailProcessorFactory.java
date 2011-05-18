@@ -4,10 +4,13 @@
 package org.apache.james.mailbox.webmail.processor;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.james.mailbox.webmail.WebmailConstants;
+import org.apache.james.mailbox.webmail.WebmailException;
 
 import com.thoughtworks.xstream.XStream;
 
@@ -17,12 +20,7 @@ import com.thoughtworks.xstream.XStream;
  */
 public class WebmailProcessorFactory {
     /**
-     * The unique instance of the singleton
-     */
-    private static final WebmailProcessorFactory INSTANCE = new WebmailProcessorFactory();
-
-    /**
-     * Profile profile => Processor
+     * profile name => Processor
      */
     private static final Map<String, WebmailProcessor> PROCESSORS = new HashMap<String, WebmailProcessor>();
 
@@ -32,19 +30,20 @@ public class WebmailProcessorFactory {
     private static final XStream XSTREAM = new XStream();
 
     /**
-     * Return the unique instance of the singleton
      * 
-     * @return the instance of {@link WebmailProcessorFactory}
      */
-    public static WebmailProcessorFactory getInstance() {
-        return INSTANCE;
-    }
+    private String profileFilesPath = "./";
 
     /**
-     * Singleton infer private constructor
+     * Constructor
+     * 
+     * @param profileFilesPath path to profile files directory
      */
-    private WebmailProcessorFactory() {
-        //
+    public WebmailProcessorFactory(final String profileFilesPath) {
+        this.profileFilesPath = profileFilesPath;
+        if (!this.profileFilesPath.endsWith("/")) {
+            this.profileFilesPath += "/";
+        }
     }
 
     /**
@@ -52,20 +51,26 @@ public class WebmailProcessorFactory {
      * 
      * @param p_Profil webmail profile name
      * @return webmail profile
+     * @throws WebmailException
      */
-    private WebmailProfile loadProfile(final String profileName) {
-        String profilePath = "./" + WebmailConstants.PROFILE_DIRECTORY + profileName + ".xml";
+    private WebmailProfile loadProfile(final String profileName) throws WebmailException {
+        WebmailProfile profile = null;
+
+        String profilePath = profileFilesPath + profileName + ".xml";
         File profileFile = new File(profilePath);
 
-        if (!profileFile.exists()) {
-            // TODO throw Some exception
-            System.out.println("Profile file [" + profileFile.getAbsolutePath() + "] not exists");
+        try {
+            InputStream profileStream = new FileInputStream(profileFile);
+            /*
+             * Load configuration bean with XStream;
+             */
+            XSTREAM.processAnnotations(WebmailProfile.class);
+            profile = (WebmailProfile) XSTREAM.fromXML(profileStream);
+        } catch (FileNotFoundException e) {
+            throw new WebmailException("Profile file [" + profileFile.getAbsolutePath() + "] not exists", e);
         }
-        /*
-         * Load configuration bean with XStream;
-         */
-        XSTREAM.processAnnotations(WebmailProfile.class);
-        return (WebmailProfile) XSTREAM.fromXML(profileFile.getAbsolutePath());
+
+        return profile;
     }
 
     /**
@@ -73,38 +78,36 @@ public class WebmailProcessorFactory {
      * 
      * @param session webmail session
      * @return a processor
+     * @throws WebmailException
      */
-    private WebmailProcessor createProcessor(final String profileName) {
-        /*
-         * TODO load configuration with WebmailProcessorConfigurationFactory
-         */
+    private WebmailProcessor createProcessor(final String profileName) throws WebmailException {
         WebmailProfile profile = loadProfile(profileName);
 
-        /*
-         * TODO load appropriate processor
-         */
+        Class<?> processorClass = null;
+        try {
+            processorClass = Class.forName(profile.getProcessor());
+        } catch (ClassNotFoundException e) {
+            throw new WebmailException("Class [" + profile.getProcessor() + "] not exists", e);
+        }
+
         WebmailProcessor processor = null;
         try {
-            processor = (WebmailProcessor) Class.forName(profile.getProcessor()).newInstance();
-            processor.setProfile(profile);
-        } catch (InstantiationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            processor = (WebmailProcessor) processorClass.newInstance();
+
+        } catch (Exception e) {
+            throw new WebmailException("Class [" + profile.getProcessor() + "] not exists", e);
         }
+
+        processor.setProfile(profile);
         return processor;
     }
 
     /**
      * @param profileName
      * @return
+     * @throws WebmailException
      */
-    public WebmailProcessor getProcessor(final String profileName) {
+    public WebmailProcessor getProcessor(final String profileName) throws WebmailException {
         if (!PROCESSORS.containsKey(profileName)) {
             PROCESSORS.put(profileName, createProcessor(profileName));
         }

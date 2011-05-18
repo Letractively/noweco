@@ -32,11 +32,13 @@ public class WebmailMessageManager extends StoreMessageManager<Integer> {
         super(mapperFactory, uidProvider, dispatcher, mailbox);
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * {@inheritDoc}
      * 
-     * @see org.apache.james.mailbox.store.StoreMessageManager#createMessage(long, java.util.Date, int, int, java.io.InputStream, javax.mail.Flags, java.util.List,
-     * org.apache.james.mailbox.store.mail.model.PropertyBuilder)
+     * @see org.apache.james.mailbox.store.StoreMessageManager#createMessage(long,
+     *      java.util.Date, int, int, java.io.InputStream, javax.mail.Flags,
+     *      java.util.List,
+     *      org.apache.james.mailbox.store.mail.model.PropertyBuilder)
      */
     @Override
     protected Message<Integer> createMessage(final long uid, final Date internalDate, final int size, final int bodyStartOctet, final InputStream documentIn, final Flags flags,
@@ -53,10 +55,11 @@ public class WebmailMessageManager extends StoreMessageManager<Integer> {
         return message;
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * {@inheritDoc}
      * 
-     * @see org.apache.james.mailbox.store.StoreMessageManager#createHeader(int, java.lang.String, java.lang.String)
+     * @see org.apache.james.mailbox.store.StoreMessageManager#createHeader(int,
+     *      java.lang.String, java.lang.String)
      */
     @Override
     protected Header createHeader(final int lineNumber, final String fieldName, final String value) {

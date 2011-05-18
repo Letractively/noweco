@@ -45,14 +45,14 @@ public class WebmailMailboxManager extends StoreMailboxManager<Integer> {
         this(mailboxSessionMapperFactory, authenticator, new WebmailUidProvider(), new JVMMailboxPathLocker());
     }
 
-    /*
-     * (non-Javadoc)
-     * @see
-     * org.apache.james.mailbox.store.StoreMailboxManager#createMessageManager
-     * (org.apache.james.mailbox.store.mail.UidProvider,
-     * org.apache.james.mailbox.util.MailboxEventDispatcher,
-     * org.apache.james.mailbox.store.mail.model.Mailbox,
-     * org.apache.james.mailbox.MailboxSession)
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.apache.james.mailbox.store.StoreMailboxManager#createMessageManager
+     *      (org.apache.james.mailbox.store.mail.UidProvider,
+     *      org.apache.james.mailbox.util.MailboxEventDispatcher,
+     *      org.apache.james.mailbox.store.mail.model.Mailbox,
+     *      org.apache.james.mailbox.MailboxSession)
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -61,12 +61,12 @@ public class WebmailMailboxManager extends StoreMailboxManager<Integer> {
         return new WebmailMessageManager((MessageMapperFactory<Integer>) mailboxSessionMapperFactory, uidProvider, dispatcher, mailbox);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see
-     * org.apache.james.mailbox.store.StoreMailboxManager#doCreateMailbox(org
-     * .apache.james.mailbox.MailboxPath,
-     * org.apache.james.mailbox.MailboxSession)
+    /**
+     * {@inheritDoc}
+     * 
+     * @see org.apache.james.mailbox.store.StoreMailboxManager#doCreateMailbox(org
+     *      .apache.james.mailbox.MailboxPath,
+     *      org.apache.james.mailbox.MailboxSession)
      */
     @Override
     protected Mailbox<Integer> doCreateMailbox(final MailboxPath mailboxPath, final MailboxSession session) throws MailboxException {
