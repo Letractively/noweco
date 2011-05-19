@@ -28,56 +28,56 @@ import org.apache.james.mailbox.webmail.user.model.WebmailSubscription;
  * 
  */
 public class TestProcessor extends WebmailAbstractProcessor {
-	
-	/**
+
+    /**
 	 * 
 	 */
-	WebmailMailbox mailbox = null;
-	
-	/**
+    WebmailMailbox mailbox = null;
+
+    /**
 	 * 
 	 */
-	List<Mailbox<Integer>> mailboxesList = new ArrayList<Mailbox<Integer>>();
-	
-	/**
+    List<Mailbox<Integer>> mailboxesList = new ArrayList<Mailbox<Integer>>();
+
+    /**
 	 * 
 	 */
-	WebmailMessage message = null;
-	
-	/**
+    WebmailMessage message = null;
+
+    /**
 	 * 
 	 */
-	List<Message<Integer>> messageList = new ArrayList<Message<Integer>>();
-	
-	/**
+    List<Message<Integer>> messageList = new ArrayList<Message<Integer>>();
+
+    /**
 	 * 
 	 */
-	WebmailSubscription subscription = null;
-	
-	/**
+    WebmailSubscription subscription = null;
+
+    /**
 	 * 
 	 */
-	List<Subscription> subscriptionsList = new ArrayList<Subscription>();
-	
-	/**
-	 * Constructor
-	 */
-	public TestProcessor() {
-		mailbox = new WebmailMailbox(null, null, 0);
-		mailbox.setName("INBOX");
-		mailboxesList.add(mailbox);
-		
-		message = new WebmailMessage();
-		message.setUid(0);
-		
-		subscription = new WebmailSubscription("test", mailbox.getName());
-	}
-	
-	/*
-	 * Log tools
-	 */
-	
-	private String log(final Mailbox<Integer> mailbox) {
+    List<Subscription> subscriptionsList = new ArrayList<Subscription>();
+
+    /**
+     * Constructor
+     */
+    public TestProcessor() {
+        mailbox = new WebmailMailbox(null, null, 0);
+        mailbox.setName("INBOX");
+        mailboxesList.add(mailbox);
+
+        message = new WebmailMessage();
+        message.setUid(0);
+
+        subscription = new WebmailSubscription("test", mailbox.getName());
+    }
+
+    /*
+     * Log tools
+     */
+
+    private String log(final Mailbox<Integer> mailbox) {
         return mailbox.toString();
     }
 
@@ -89,12 +89,30 @@ public class TestProcessor extends WebmailAbstractProcessor {
         return message.toString();
     }
 
+    @SuppressWarnings("unchecked")
+    private String log(final Object... objects) {
+        StringBuilder log = new StringBuilder();
+        for (Object object : objects) {
+            if (object instanceof Mailbox) {
+                log.append(log((Mailbox<Integer>) object));
+            } else if (object instanceof MailboxPath) {
+                log.append(log((MailboxPath) object));
+            } else if (object instanceof Message) {
+                log.append(log((Message<Integer>) object));
+            } else {
+                log.append(object);
+            }
+            log.append(",");
+        }
+        return log.toString();
+    }
+
     /*
      * AUTHENTICATION
      */
 
     public boolean isAuthentic(final String userid, final CharSequence passwd) {
-        System.out.println("TestProcessor.isAuthentic(" + new Object[] { userid, passwd } + ")");
+        System.out.println("TestProcessor.isAuthentic(" + log(userid, passwd) + ")");
         return !passwd.equals("fail");
     }
 
@@ -121,7 +139,7 @@ public class TestProcessor extends WebmailAbstractProcessor {
     }
 
     public boolean hasChildren(final Mailbox<Integer> mailbox, final char delimiter) throws MailboxException, MailboxNotFoundException {
-        System.out.println("TestProcessor.hasChildren(" + new Object[] { log(mailbox), delimiter } + ")");
+        System.out.println("TestProcessor.hasChildren(" + log(mailbox, delimiter) + ")");
         return false;
     }
 
@@ -135,11 +153,11 @@ public class TestProcessor extends WebmailAbstractProcessor {
      */
 
     public void findInMailbox(final Mailbox<Integer> mailbox, final MessageRange set, final MailboxMembershipCallback<Integer> callback) throws MailboxException {
-        System.out.println("TestProcessor.findInMailbox(" + new Object[] { log(mailbox), set, callback } + ")");
+        System.out.println("TestProcessor.findInMailbox(" + log(mailbox, set, callback) + ")");
     }
 
     public Iterator<Long> expungeMarkedForDeletionInMailbox(final Mailbox<Integer> mailbox, final MessageRange set) throws MailboxException {
-        System.out.println("TestProcessor.expungeMarkedForDeletionInMailbox(" + new Object[] { log(mailbox), set } + ")");
+        System.out.println("TestProcessor.expungeMarkedForDeletionInMailbox(" + log(mailbox, set) + ")");
         return null;
     }
 
@@ -154,7 +172,7 @@ public class TestProcessor extends WebmailAbstractProcessor {
     }
 
     public void delete(final Mailbox<Integer> mailbox, final Message<Integer> message) throws MailboxException {
-        System.out.println("TestProcessor.delete(" + new Object[] { log(mailbox), log(message) } + ")");
+        System.out.println("TestProcessor.delete(" + log(mailbox, message) + ")");
     }
 
     public Long findFirstUnseenMessageUid(final Mailbox<Integer> mailbox) throws MailboxException {
@@ -168,17 +186,17 @@ public class TestProcessor extends WebmailAbstractProcessor {
     }
 
     public long add(final Mailbox<Integer> mailbox, final Message<Integer> message) throws MailboxException {
-        System.out.println("TestProcessor.add(" + new Object[] { log(mailbox), log(message) } + ")");
+        System.out.println("TestProcessor.add(" + log(mailbox, message) + ")");
         return 0;
     }
 
     public Iterator<UpdatedFlags> updateFlags(final Mailbox<Integer> mailbox, final Flags flags, final boolean value, final boolean replace, final MessageRange set) throws MailboxException {
-        System.out.println("TestProcessor.updateFlags(" + new Object[] { log(mailbox), flags, value, replace, set } + ")");
+        System.out.println("TestProcessor.updateFlags(" + log(mailbox, flags, value, replace, set) + ")");
         return null;
     }
 
     public long copy(final Mailbox<Integer> mailbox, final long uid, final Message<Integer> original) throws MailboxException {
-        System.out.println("TestProcessor.copy(" + new Object[] { log(mailbox), uid, original } + ")");
+        System.out.println("TestProcessor.copy(" + log(mailbox, uid, original) + ")");
         return 0;
     }
 
@@ -187,7 +205,7 @@ public class TestProcessor extends WebmailAbstractProcessor {
      */
 
     public Subscription findMailboxSubscriptionForUser(final String user, final String mailbox) throws SubscriptionException {
-        System.out.println("TestProcessor.findMailboxSubscriptionForUser(" + new Object[] { user, mailbox } + ")");
+        System.out.println("TestProcessor.findMailboxSubscriptionForUser(" + log(user, mailbox) + ")");
         return subscription;
     }
 
