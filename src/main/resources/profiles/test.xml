@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<profile>
+	<name>Test</name>
+	<description>This processor can be use to test mailbox-webmail, or to define sequence diagrame of James.</description>
+	<processor>org.apache.james.mailbox.webmail.processor.third.TestProcessor</processor>
+</profile>
