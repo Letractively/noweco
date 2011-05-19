@@ -11,8 +11,14 @@ import org.apache.james.mailbox.store.user.model.Subscription;
  */
 public class WebmailSubscription implements Subscription {
 
+    /**
+     * 
+     */
     private final String user;
 
+    /**
+     * 
+     */
     private final String mailbox;
 
     public WebmailSubscription(final String user, final String mailbox) {
