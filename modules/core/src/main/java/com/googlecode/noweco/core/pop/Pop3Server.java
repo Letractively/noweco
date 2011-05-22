@@ -94,12 +94,15 @@ public class Pop3Server implements Runnable {
     public void accept(final Socket socket) {
         try {
             Pop3Connection command = new Pop3Connection(pop3Manager, socket);
-            connections.add(command);
-            executor.execute(command);
+            try {
+                executor.execute(command);
+                connections.add(command);
+            } catch (RejectedExecutionException e) {
+                LOGGER.warn("No thread available", e);
+                socket.close();
+            }
         } catch (IOException e) {
             LOGGER.info("Cannot create connection", e);
-        } catch (RejectedExecutionException e) {
-            LOGGER.info("No thread available", e);
         }
         Iterator<Pop3Connection> iterator = connections.iterator();
         while (iterator.hasNext()) {

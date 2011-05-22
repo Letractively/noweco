@@ -3,6 +3,8 @@ Use
 ---------------------
 
 Run noweco.bat
+Closing the windows will stop noweco, you can also run
+$ noweco.bat stop
 
 ---------------------
 Debug
@@ -16,4 +18,5 @@ $ noweco.bat
 And to disable debug
 $ ^CTRL-C
 $ set NOWECO_DEBUG=
+$ noweco.bat stop
 $ noweco.bat

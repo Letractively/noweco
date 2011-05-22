@@ -80,7 +80,7 @@ public class LotusWebmailConnection implements WebmailConnection {
         HttpEntity entity;
 
         String baseName = getClass().getPackage().getName().replace('.', '/') + "/lotus";
-        ResourceBundle bundleBrowser = ResourceBundle.getBundle(baseName, new Locale("fr"));
+        ResourceBundle bundleBrowser = null;
 
         for (Header header : (Collection<Header>) httpclient.getParams().getParameter(ClientPNames.DEFAULT_HEADERS)) {
             if (header.getName().equals("Accept-Language")) {
@@ -98,8 +98,14 @@ public class LotusWebmailConnection implements WebmailConnection {
 
         ResourceBundle bundleEnglish = ResourceBundle.getBundle(baseName, new Locale("en"));
 
-        String deletePattern = "(?:" + Pattern.quote(bundleEnglish.getString("Delete")) + "|" + Pattern.quote(bundleBrowser.getString("Delete")) + ")";
-        String emptyTrashPattern = "(?:" + Pattern.quote(bundleEnglish.getString("EmptyTrash")) + "|" + Pattern.quote(bundleBrowser.getString("EmptyTrash")) + ")";
+        String deletePattern = "(?:" + Pattern.quote(bundleEnglish.getString("Delete"));
+        if (bundleBrowser != null) {
+            deletePattern = deletePattern + "|" + Pattern.quote(bundleBrowser.getString("Delete")) + ")";
+        }
+        String emptyTrashPattern = "(?:" + Pattern.quote(bundleEnglish.getString("EmptyTrash"));
+        if (bundleBrowser != null) {
+            emptyTrashPattern = emptyTrashPattern + "|" + Pattern.quote(bundleBrowser.getString("EmptyTrash")) + ")";
+        }
 
         deleteDeletePattern = Pattern.compile("_doClick\\('([^/]*/\\$V\\d+ACTIONS/[^']*)'[^>]*>" + deletePattern + "\\\\" + deletePattern);
         deleteEmptyTrashPattern = Pattern.compile("_doClick\\('([^/]*/\\$V\\d+ACTIONS/[^']*)'[^>]*>" + deletePattern + "\\\\" + emptyTrashPattern);
