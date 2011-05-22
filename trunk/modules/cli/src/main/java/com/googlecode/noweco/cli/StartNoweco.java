@@ -20,7 +20,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.net.URL;
+import java.rmi.registry.LocateRegistry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +30,11 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import javax.management.remote.JMXConnectorServer;
+import javax.management.remote.JMXConnectorServerFactory;
+import javax.management.remote.JMXServiceURL;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -55,22 +62,22 @@ import com.googlecode.noweco.core.webmail.portal.PortalConnector;
  *
  * @author Gael Lalire
  */
-public final class NowecoCLI {
+public final class StartNoweco {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NowecoCLI.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(StartNoweco.class);
 
-    private NowecoCLI() {
+    private StartNoweco() {
     }
 
     @SuppressWarnings("unchecked")
     public static void main(final String[] args) {
-        File homeFile = new File(args[0]);
+        File homeFile = new File(System.getProperty("noweco.home"));
         Unmarshaller unMarshaller = null;
         try {
             JAXBContext jc = JAXBContext.newInstance(ObjectFactory.class.getPackage().getName());
             unMarshaller = jc.createUnmarshaller();
 
-            URL xsdURL = NowecoCLI.class.getResource("settings.xsd");
+            URL xsdURL = StartNoweco.class.getResource("settings.xsd");
             SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
             Schema schema = schemaFactory.newSchema(xsdURL);
             unMarshaller.setSchema(schema);
@@ -105,7 +112,7 @@ public final class NowecoCLI {
             String webmailClassName = webmail.getClazz();
             Class<?> webmailClass = null;
             try {
-                webmailClass = NowecoCLI.class.getClassLoader().loadClass(webmailClassName);
+                webmailClass = StartNoweco.class.getClassLoader().loadClass(webmailClassName);
             } catch (ClassNotFoundException e) {
                 LOGGER.error("Class {} not found", webmailClassName);
                 System.exit(1);
@@ -135,7 +142,7 @@ public final class NowecoCLI {
             String authentClassName = webmail.getAuthent().getClazz();
             Class<?> authentClass = null;
             try {
-                authentClass = NowecoCLI.class.getClassLoader().loadClass(authentClassName);
+                authentClass = StartNoweco.class.getClassLoader().loadClass(authentClassName);
             } catch (ClassNotFoundException e) {
                 LOGGER.error("Class {} not found", authentClassName);
                 System.exit(1);
@@ -166,25 +173,39 @@ public final class NowecoCLI {
             dispatchedPop3Managers.add(new DispatchedPop3Manager(pop3Manager, map.get(pop3Manager), Pattern.compile(user.getMatches())));
         }
 
-        final DispatcherPop3Manager pop3Manager = new DispatcherPop3Manager(dispatchedPop3Managers);
-        final Pop3Server pop3Server = new Pop3Server(pop3Manager, Executors.newFixedThreadPool(3));
-
+        int localPort = settings.getRegistryPort();
+        JMXConnectorServer newJMXConnectorServer = null;
+        Admin admin = new Admin();
         try {
-            pop3Server.start();
-        } catch (IOException e) {
-            LOGGER.error("Unable to start Noweco", e);
+            LocateRegistry.createRegistry(localPort);
+            MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+            ObjectName objectName = new ObjectName(AdminMBean.class.getPackage().getName() + ":type=" + AdminMBean.class.getSimpleName());
+            mbs.registerMBean(admin, objectName);
+            JMXServiceURL jmxServiceURL = new JMXServiceURL("service:jmx:rmi://127.0.0.1:" + localPort + "/jndi/rmi://127.0.0.1:" + localPort + "/jmxrmi");
+            newJMXConnectorServer = JMXConnectorServerFactory.newJMXConnectorServer(jmxServiceURL, null, mbs);
+            newJMXConnectorServer.start();
+        } catch (Exception e) {
+            LOGGER.error("Unable to start Noweco Admin", e);
             System.exit(1);
         }
 
-        LOGGER.info("Noweco started");
+        final DispatcherPop3Manager pop3Manager = new DispatcherPop3Manager(dispatchedPop3Managers);
+        final Pop3Server pop3Server = new Pop3Server(pop3Manager, Executors.newCachedThreadPool());
+        final JMXConnectorServer jmxConnectorServer = newJMXConnectorServer;
 
-        Runtime.getRuntime().addShutdownHook(new Thread() {
+        Runnable stopAction = new Runnable() {
 
-            @Override
-            public void run() {
+            private boolean stopped = false;
+
+            public synchronized void run() {
+                if (stopped) {
+                    return;
+                }
+                stopped = true;
                 try {
                     pop3Server.stop();
                     pop3Manager.release();
+                    jmxConnectorServer.stop();
                 } catch (IOException e) {
                     LOGGER.info("Noweco stop issue", e);
                 } catch (InterruptedException e) {
@@ -193,8 +214,19 @@ public final class NowecoCLI {
                     LOGGER.info("Noweco shutdown");
                 }
             }
+        };
 
-        });
+        try {
+            pop3Server.start();
+        } catch (IOException e) {
+            LOGGER.error("Unable to start Noweco", e);
+            System.exit(1);
+        }
+
+        admin.setStopAction(stopAction);
+        Runtime.getRuntime().addShutdownHook(new Thread(stopAction));
+
+        LOGGER.info("Noweco started");
 
     }
 }
