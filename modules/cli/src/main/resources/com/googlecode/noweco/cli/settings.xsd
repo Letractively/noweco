@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" xmlns:tns="http://noweco.googlecode.com/SETTINGS" xmlns="http://noweco.googlecode.com/SETTINGS" targetNamespace="http://noweco.googlecode.com/SETTINGS"
-  version="1.1.0">
+  version="1.2.0">
   <xs:element name="settings" type="Settings">
     <xs:annotation>
       <xs:documentation source="version">1.0.0</xs:documentation>
@@ -24,8 +24,16 @@
   <xs:complexType name="Settings">
     <xs:sequence>
       <xs:element name="registryPort" type="xs:int" />
+      <xs:element name="jmx" type="JMX" />
       <xs:element name="pop3Managers" type="Pop3Managers" />
       <xs:element name="popAccounts" type="PopAccounts" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="JMX">
+    <xs:sequence>
+      <xs:element name="user" type="xs:string" />
+      <xs:element name="password" type="xs:string" />
     </xs:sequence>
   </xs:complexType>
 

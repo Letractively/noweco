@@ -55,6 +55,10 @@ public class CachedWebmailConnection implements WebmailConnection, Serializable 
 
     private String password;
 
+    public void setPassword(final String password) {
+        this.password = password;
+    }
+
     public CachedWebmailConnection(final WebmailConnection delegate, final String password) {
         this.password = password;
         this.delegate = delegate;

@@ -61,23 +61,42 @@ public class LotusMessage implements Message {
         if (content == null) {
             content = webmail.getContent(id);
             int indexOfHeaderEnd = content.indexOf("\r\n\r\n");
-            if (indexOfHeaderEnd == -1) {
-                indexOfHeaderEnd = content.indexOf("\n\n");
-                indexOfHeaderEnd++;
+            int indexOfHeaderEndUnix = content.indexOf("\n\n");
+            if (indexOfHeaderEnd == -1 && indexOfHeaderEndUnix == -1) {
+                indexOfHeaderEnd = content.length();
             } else {
-                indexOfHeaderEnd += 2;
+                if (indexOfHeaderEnd == -1) {
+                    indexOfHeaderEnd = indexOfHeaderEndUnix + 1;
+                } else if (indexOfHeaderEndUnix == -1) {
+                    indexOfHeaderEnd += 2;
+                } else {
+                    if (indexOfHeaderEndUnix < indexOfHeaderEnd) {
+                        indexOfHeaderEnd = indexOfHeaderEndUnix + 1;
+                    } else {
+                        indexOfHeaderEnd += 2;
+                    }
+                }
             }
             String header = content.substring(0, indexOfHeaderEnd);
             StringBuilder newHeader = new StringBuilder();
 
             BufferedReader bufferedReader = new BufferedReader(new StringReader(header));
             String line = bufferedReader.readLine();
+
+            String dateLine = null;
+            boolean receiveHeader = false;
             while (line != null && line.length() != 0) {
+                if (line.startsWith("Received:")) {
+                    receiveHeader = true;
+                }
                 if (line.startsWith(DATE_PREFIX)) {
                     try {
-                        newHeader.append(LotusDateTransformer.convertNotesToRfc822(line));
+                        dateLine = LotusDateTransformer.convertNotesToRfc822(line);
+                        LOGGER.debug("Convert Date header : {} for {}", dateLine, id);
+                        newHeader.append(dateLine);
                         newHeader.append('\n');
                     } catch (ParseException e) {
+                        dateLine = line;
                         LOGGER.trace("Not a lotus date", e);
                         newHeader.append(line);
                         newHeader.append('\n');
@@ -87,6 +106,11 @@ public class LotusMessage implements Message {
                     newHeader.append('\n');
                 }
                 line = bufferedReader.readLine();
+            }
+            if (!receiveHeader && dateLine != null) {
+                String receivedHeader = "Received: by noweco; " + dateLine.substring(DATE_PREFIX.length()) + "\n";
+                LOGGER.debug("Insert generated Received header : {} for {}", receivedHeader, id);
+                newHeader.insert(0, receivedHeader);
             }
             headers = newHeader.toString();
             content = headers + content.substring(indexOfHeaderEnd);

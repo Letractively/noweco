@@ -103,7 +103,6 @@ public class Pop3Connection implements Runnable {
             writeOK("Server ready.");
             mainloop: while (!socket.isClosed()) {
                 String command = read();
-                LOGGER.debug("Receive: {}", command);
                 switch (state) {
                 case AUTHORIZATION:
                     if (isCommand(Command.QUIT, command)) {
@@ -391,6 +390,7 @@ public class Pop3Connection implements Runnable {
     public String read() throws PopSocketException {
         try {
             String line = reader.readLine();
+            LOGGER.debug("Receive: {}", line);
             if (line == null) {
                 throw new PopSocketException(new IOException("Client ends connection"));
             }
