@@ -1,5 +1,9 @@
-<settings xmlns="http://noweco.googlecode.com/SETTINGS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://noweco.googlecode.com/SETTINGS http://noweco.googlecode.com/svn/xsd/settings-1.1.0.xsd">
+<settings xmlns="http://noweco.googlecode.com/SETTINGS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://noweco.googlecode.com/SETTINGS http://noweco.googlecode.com/svn/xsd/settings-1.2.0.xsd">
   <registryPort>1984</registryPort>
+  <jmx>
+    <user>noweco</user>
+    <password>noweco</password>
+  </jmx>
   <pop3Managers>
 <!--     <webmail id="horde.bull.net" class="com.googlecode.noweco.core.webmail.horde.HordeWebmail"> -->
 <!--       <authent class="com.googlecode.noweco.core.webmail.portal.BullWebmailFrecPortalConnector" /> -->

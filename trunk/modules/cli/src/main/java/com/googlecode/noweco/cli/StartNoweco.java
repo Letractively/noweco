@@ -24,6 +24,7 @@ import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.rmi.registry.LocateRegistry;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,9 +33,12 @@ import java.util.regex.Pattern;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
+import javax.management.remote.JMXAuthenticator;
 import javax.management.remote.JMXConnectorServer;
 import javax.management.remote.JMXConnectorServerFactory;
+import javax.management.remote.JMXPrincipal;
 import javax.management.remote.JMXServiceURL;
+import javax.security.auth.Subject;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -45,6 +49,7 @@ import javax.xml.validation.SchemaFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.noweco.cli.settings.JMX;
 import com.googlecode.noweco.cli.settings.ObjectFactory;
 import com.googlecode.noweco.cli.settings.Proxy;
 import com.googlecode.noweco.cli.settings.Settings;
@@ -175,6 +180,7 @@ public final class StartNoweco {
 
         int localPort = settings.getRegistryPort();
         JMXConnectorServer newJMXConnectorServer = null;
+        final JMX jmx = settings.getJmx();
         Admin admin = new Admin();
         try {
             LocateRegistry.createRegistry(localPort);
@@ -182,7 +188,29 @@ public final class StartNoweco {
             ObjectName objectName = new ObjectName(AdminMBean.class.getPackage().getName() + ":type=" + AdminMBean.class.getSimpleName());
             mbs.registerMBean(admin, objectName);
             JMXServiceURL jmxServiceURL = new JMXServiceURL("service:jmx:rmi://127.0.0.1:" + localPort + "/jndi/rmi://127.0.0.1:" + localPort + "/jmxrmi");
-            newJMXConnectorServer = JMXConnectorServerFactory.newJMXConnectorServer(jmxServiceURL, null, mbs);
+            Map<String, Object> env = new HashMap<String, Object>();
+            env.put(JMXConnectorServer.AUTHENTICATOR, new JMXAuthenticator() {
+
+                public Subject authenticate(final Object credentials) {
+                    if (!(credentials instanceof String[])) {
+                        if (credentials == null) {
+                            throw new SecurityException("Credentials required");
+                        }
+                        throw new SecurityException("Credentials should be String[]");
+                    }
+                    final String[] aCredentials = (String[]) credentials;
+                    if (aCredentials.length != 2) {
+                        throw new SecurityException("Credentials should have 2 elements");
+                    }
+                    String username = aCredentials[0];
+                    String password = aCredentials[1];
+                    if (jmx.getUser().equals(username) && jmx.getPassword().equals(password)) {
+                        return new Subject(false, Collections.singleton(new JMXPrincipal(username)), Collections.EMPTY_SET, Collections.EMPTY_SET);
+                    }
+                    throw new SecurityException("Invalid credentials");
+                }
+            });
+            newJMXConnectorServer = JMXConnectorServerFactory.newJMXConnectorServer(jmxServiceURL, env, mbs);
             newJMXConnectorServer.start();
         } catch (Exception e) {
             LOGGER.error("Unable to start Noweco Admin", e);

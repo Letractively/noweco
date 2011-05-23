@@ -32,7 +32,6 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.params.ClientParamBean;
-import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
@@ -85,17 +84,15 @@ public class BullWebmailPortalConnector implements PortalConnector {
             throw new IOException("Unable to connect to bull portail, status code : " + statusCode);
         }
 
-        if (LOGGER.isDebugEnabled()) {
-            for (Cookie c : httpclient.getCookieStore().getCookies()) {
-                LOGGER.debug("STEP 1 Authent Cookie : {}", c);
-            }
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("STEP 1 Authent Cookie : {}", httpclient.getCookieStore().getCookies());
         }
 
         // free result resources
         HttpEntity entity = rsp.getEntity();
         String firstEntity = EntityUtils.toString(entity);
         if (entity != null) {
-            LOGGER.debug("STEP 1 Entity : {}", firstEntity);
+            LOGGER.trace("STEP 1 Entity : {}", firstEntity);
             EntityUtils.consume(entity);
         }
 
@@ -136,20 +133,20 @@ public class BullWebmailPortalConnector implements PortalConnector {
             throw new IOException("Unable to connect to bull portail, status code : " + statusCode);
         }
 
-        if (LOGGER.isDebugEnabled()) {
-            for (Cookie c : httpclient.getCookieStore().getCookies()) {
-                LOGGER.debug("STEP 2 Apps Cookie : {}", c);
-            }
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.debug("STEP 2 Apps Cookie : {}", httpclient.getCookieStore().getCookies());
         }
 
         // free result resources
         entity = rsp.getEntity();
         if (entity != null) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("STEP 2 Entity : {}", EntityUtils.toString(entity));
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("STEP 2 Entity : {}", EntityUtils.toString(entity));
             }
             EntityUtils.consume(entity);
         }
+
+        // STEP 3 : telemail
 
         HttpGet httpGet = new HttpGet("https://telemail.bull.fr:443/HomePage.nsf");
         rsp = httpclient.execute(httpGet);
@@ -157,9 +154,7 @@ public class BullWebmailPortalConnector implements PortalConnector {
         entity = rsp.getEntity();
         String secondEntity = EntityUtils.toString(entity);
         if (entity != null) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(secondEntity);
-            }
+            LOGGER.trace("STEP 3 Entity : {}", secondEntity);
             EntityUtils.consume(entity);
         }
 

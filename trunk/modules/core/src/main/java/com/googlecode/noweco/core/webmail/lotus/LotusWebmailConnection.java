@@ -117,9 +117,7 @@ public class LotusWebmailConnection implements WebmailConnection {
         entity = rsp.getEntity();
         String string = EntityUtils.toString(entity);
         if (entity != null) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(string);
-            }
+            LOGGER.trace("inbox content : {}", string);
             EntityUtils.consume(entity);
         }
 
@@ -128,24 +126,6 @@ public class LotusWebmailConnection implements WebmailConnection {
             throw new IOException("Unable to parse main page");
         }
         pagePrefix = matcher.group(1);
-
-        // httpGet = new HttpGet(prefix + "/($Trash)/?OpenView");
-        // rsp = httpclient.execute(host, httpGet);
-        //
-        // entity = rsp.getEntity();
-        // string = EntityUtils.toString(entity);
-        // if (entity != null) {
-        // if (LOGGER.isDebugEnabled()) {
-        // LOGGER.debug(string);
-        // }
-        // EntityUtils.consume(entity);
-        // }
-        //
-        // matcher = MAIN_PAGE_PATTERN.matcher(string);
-        // if (!matcher.find()) {
-        // throw new IOException("Unable to parse garbage page");
-        // }
-        // garbagePrefix = matcher.group(1);
 
         this.httpclient = httpclient;
         this.host = host;
@@ -267,7 +247,7 @@ public class LotusWebmailConnection implements WebmailConnection {
         HttpEntity entity = rsp.getEntity();
         String pageContent = EntityUtils.toString(entity);
         if (entity != null) {
-            LOGGER.debug(pageContent);
+            LOGGER.trace("page {} content : {}", index, pageContent);
             EntityUtils.consume(entity);
         }
 
@@ -286,9 +266,6 @@ public class LotusWebmailConnection implements WebmailConnection {
     private Pattern deleteDeletePattern;
 
     private Pattern deleteEmptyTrashPattern;
-
-    // private static final Pattern CLEAR_GARBAGE_PATTERN =
-    // Pattern.compile("_doClick\\('([^/]*/\\$V5ACTIONS/0\\.FFC)'");
 
     public List<String> delete(final List<String> messageUids) throws IOException {
         List<String> deleted = new ArrayList<String>();
@@ -363,38 +340,6 @@ public class LotusWebmailConnection implements WebmailConnection {
         httpPost.setEntity(new UrlEncodedFormEntity(nvps, HTTP.UTF_8));
         HttpResponse rsp = httpclient.execute(host, httpPost);
         EntityUtils.consume(rsp.getEntity());
-
-        // clear garbage
-
-        // HttpGet httpGet = new HttpGet(garbagePrefix);
-        // HttpResponse rsp = httpclient.execute(host, httpGet);
-        //
-        // HttpEntity entity = rsp.getEntity();
-        // String pageContent = EntityUtils.toString(entity);
-        // if (entity != null) {
-        // if (LOGGER.isDebugEnabled()) {
-        // LOGGER.debug(pageContent);
-        // }
-        // EntityUtils.consume(entity);
-        // }
-        //
-        // Matcher matcherGarbage = CLEAR_GARBAGE_PATTERN.matcher(pageContent);
-        // if (!matcherGarbage.find()) {
-        // throw new IOException("No Garbage/Clear find");
-        // }
-        //
-        // HttpPost httpPost = new HttpPost(garbagePrefix);
-        // List<NameValuePair> nvps = new ArrayList<NameValuePair>();
-        // nvps.add(new BasicNameValuePair("__Click", matcherGarbage.group(1)));
-        // Matcher matcherRandNum = TEMP_RAND_NUM_PATTERN.matcher(pageContent);
-        // if (!matcherRandNum.find()) {
-        // throw new IOException("No rand num find");
-        // }
-        // nvps.add(new BasicNameValuePair("tmpRandNum",
-        // matcherRandNum.group(1)));
-        // httpPost.setEntity(new UrlEncodedFormEntity(nvps, HTTP.UTF_8));
-        // rsp = httpclient.execute(host, httpPost);
-        // EntityUtils.consume(rsp.getEntity());
 
         return deleted;
     }

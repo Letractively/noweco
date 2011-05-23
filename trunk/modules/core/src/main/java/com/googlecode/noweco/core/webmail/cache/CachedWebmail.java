@@ -73,14 +73,17 @@ public class CachedWebmail implements Webmail {
             WebmailConnection connect = webmail.connect(user, password);
             cachedWebmailConnection = restoredWebmailConnectionByUser.get(user);
             if (cachedWebmailConnection != null) {
+                cachedWebmailConnection.setPassword(password);
                 cachedWebmailConnection.setDelegate(connect);
             } else {
                 cachedWebmailConnection = new CachedWebmailConnection(connect, password);
             }
             cachedWebmailConnectionByUser.put(user, cachedWebmailConnection);
         } else {
+            WebmailConnection newPasswordWebmailConnection = null;
             if (!cachedWebmailConnection.getPassword().equals(password)) {
-                throw new IOException("Bad password");
+                newPasswordWebmailConnection = webmail.connect(user, password);
+                cachedWebmailConnection.setPassword(password);
             }
             Iterator<Page> pages = cachedWebmailConnection.getPages();
             try {
@@ -88,9 +91,13 @@ public class CachedWebmail implements Webmail {
                     pages.next().getMessages();
                 }
             } catch (IOException e) {
-                LOGGER.info("Try to reconnect", e);
-                WebmailConnection connect = webmail.connect(user, password);
-                cachedWebmailConnection.setDelegate(connect);
+                if (newPasswordWebmailConnection != null) {
+                    cachedWebmailConnection.setDelegate(newPasswordWebmailConnection);
+                } else {
+                    LOGGER.info("Try to reconnect", e);
+                    WebmailConnection connect = webmail.connect(user, password);
+                    cachedWebmailConnection.setDelegate(connect);
+                }
             }
         }
         return cachedWebmailConnection;

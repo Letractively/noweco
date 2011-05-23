@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.net.URL;
+import java.util.Collections;
 
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
@@ -36,6 +37,7 @@ import javax.xml.validation.SchemaFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.noweco.cli.settings.JMX;
 import com.googlecode.noweco.cli.settings.ObjectFactory;
 import com.googlecode.noweco.cli.settings.Settings;
 
@@ -78,10 +80,11 @@ public final class StopNoweco {
         }
 
         Settings settings = settingsElement.getValue();
+        final JMX jmx = settings.getJmx();
 
         try {
             JMXServiceURL jmxServiceURL = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://127.0.0.1:" + settings.getRegistryPort() + "/jmxrmi");
-            JMXConnector connect = JMXConnectorFactory.connect(jmxServiceURL);
+            JMXConnector connect = JMXConnectorFactory.connect(jmxServiceURL, Collections.singletonMap(JMXConnector.CREDENTIALS, new String[] {jmx.getUser(), jmx.getPassword()}));
             MBeanServerConnection connection = connect.getMBeanServerConnection();
             ObjectName objectName = new ObjectName(AdminMBean.class.getPackage().getName() + ":type=" + AdminMBean.class.getSimpleName());
             connection.invoke(objectName, "stop", null, new String[0]);
