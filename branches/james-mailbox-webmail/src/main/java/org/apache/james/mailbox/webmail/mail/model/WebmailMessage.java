@@ -3,6 +3,7 @@
  */
 package org.apache.james.mailbox.webmail.mail.model;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
@@ -20,30 +21,21 @@ import org.apache.james.mailbox.store.mail.model.Property;
  */
 public class WebmailMessage extends AbstractMessage<Integer> {
 
+    /*
+     * 
+     */
+
     private long uid;
 
     private Mailbox<Integer> mailbox;
 
-    protected boolean answered;
+    /*
+     * 
+     */
 
-    protected boolean deleted;
+    private Date internalDate;
 
-    protected boolean draft;
-
-    protected boolean flagged;
-
-    protected boolean recent;
-
-    protected boolean seen;
-
-    // Document
-    private InputStream bodyContent;
-
-    private int bodyStartOctet;
-
-    private InputStream fullContent;
-
-    private long fullContentOctets;
+    private String subType;
 
     private List<Header> headers;
 
@@ -51,21 +43,41 @@ public class WebmailMessage extends AbstractMessage<Integer> {
 
     private List<Property> properties;
 
-    private String subType;
-
-    private Long textualLineCount;
-
-    // MailboxMembership
-    private Date internalDate;
-
-    private long size;
+    /*
+     * 
+     */
 
     private boolean modified = false;
 
+    private boolean answered = false;
+
+    private boolean deleted = false;
+
+    private boolean draft = false;
+
+    private boolean flagged = false;
+
+    private boolean recent = false;
+
+    private boolean seen = false;
+
+    /*
+     * 
+     */
+
+    private byte[] bodyContent;
+
+    private byte[] fullContent;
+
+    private Long textualLineCount;
+
+    private long size;
+
     /*
      * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.store.mail.model.MailboxMembership#setFlags( javax.mail.Flags)
+     * @see
+     * org.apache.james.mailbox.store.mail.model.MailboxMembership#setFlags(
+     * javax.mail.Flags)
      */
     public void setFlags(final Flags flags) {
         if (flags != null) {
@@ -79,7 +91,9 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     }
 
     /**
-     * @return the uid
+     * {@inheritDoc}
+     * 
+     * @see org.apache.james.mailbox.store.mail.model.Message#getUid()
      */
     public long getUid() {
         return uid;
@@ -106,8 +120,8 @@ public class WebmailMessage extends AbstractMessage<Integer> {
         this.mailbox = mailbox;
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * {@inheritDoc}
      * 
      * @see org.apache.james.mailbox.store.mail.model.Message#getMailboxId()
      */
@@ -116,7 +130,9 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     }
 
     /**
-     * @return the answered
+     * {@inheritDoc}
+     * 
+     * @see org.apache.james.mailbox.store.mail.model.Message#isAnswered()
      */
     public boolean isAnswered() {
         return answered;
@@ -130,7 +146,9 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     }
 
     /**
-     * @return the deleted
+     * {@inheritDoc}
+     * 
+     * @see org.apache.james.mailbox.store.mail.model.Message#isDeleted()
      */
     public boolean isDeleted() {
         return deleted;
@@ -144,7 +162,9 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     }
 
     /**
-     * @return the draft
+     * {@inheritDoc}
+     * 
+     * @see org.apache.james.mailbox.store.mail.model.Message#isDraft()
      */
     public boolean isDraft() {
         return draft;
@@ -158,7 +178,9 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     }
 
     /**
-     * @return the flagged
+     * {@inheritDoc}
+     * 
+     * @see org.apache.james.mailbox.store.mail.model.Message#isFlagged()
      */
     public boolean isFlagged() {
         return flagged;
@@ -172,7 +194,9 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     }
 
     /**
-     * @return the recent
+     * {@inheritDoc}
+     * 
+     * @see org.apache.james.mailbox.store.mail.model.Message#isRecent()
      */
     public boolean isRecent() {
         return recent;
@@ -186,7 +210,9 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     }
 
     /**
-     * @return the seen
+     * {@inheritDoc}
+     * 
+     * @see org.apache.james.mailbox.store.mail.model.Message#isSeen()
      */
     public boolean isSeen() {
         return seen;
@@ -200,60 +226,62 @@ public class WebmailMessage extends AbstractMessage<Integer> {
     }
 
     /**
-     * @return the bodyContent
+     * {@inheritDoc}
+     * 
+     * @see org.apache.james.mailbox.store.mail.model.Message#getBodyContent()
      */
     public InputStream getBodyContent() {
-        return bodyContent;
+        return new ByteArrayInputStream(bodyContent);
     }
 
     /**
      * @param bodyContent the bodyContent to set
      */
     public void setBodyContent(final InputStream bodyContent) {
-        this.bodyContent = bodyContent;
+        // FIXME
+        // this.bodyContent = bodyContent;
     }
 
     /**
-     * @return the bodyStartOctet
+     * {@inheritDoc}
+     * 
+     * @see org.apache.james.mailbox.store.mail.model.AbstractMessage#getBodyStartOctet()
      */
     @Override
     public int getBodyStartOctet() {
-        return bodyStartOctet;
+        return fullContent.length - bodyContent.length;
     }
 
     /**
-     * @param bodyStartOctet the bodyStartOctet to set
+     * @param bodyStartOctet
      */
     public void setBodyStartOctet(final int bodyStartOctet) {
-        this.bodyStartOctet = bodyStartOctet;
+        // FIXME
     }
 
     /**
-     * @return the fullContent
+     * {@inheritDoc}
+     * 
+     * @see org.apache.james.mailbox.store.mail.model.Message#getFullContent()
      */
     public InputStream getFullContent() {
-        return fullContent;
+        return new ByteArrayInputStream(fullContent);
     }
 
-    /**
-     * @param fullContent the fullContent to set
-     */
-    public void setFullContent(final InputStream fullContent) {
-        this.fullContent = fullContent;
-    }
+    // /**
+    // * @param fullContent the fullContent to set
+    // */
+    // public void setFullContent(final InputStream fullContent) {
+    // this.fullContent = fullContent;
+    // }
 
     /**
-     * @return the fullContentOctets
+     * {@inheritDoc}
+     * 
+     * @see org.apache.james.mailbox.store.mail.model.Message#getFullContentOctets()
      */
     public long getFullContentOctets() {
-        return fullContentOctets;
-    }
-
-    /**
-     * @param fullContentOctets the fullContentOctets to set
-     */
-    public void setFullContentOctets(final long fullContentOctets) {
-        this.fullContentOctets = fullContentOctets;
+        return fullContent.length;
     }
 
     /**

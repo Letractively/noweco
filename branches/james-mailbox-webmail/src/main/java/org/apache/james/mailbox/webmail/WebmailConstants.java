@@ -7,6 +7,10 @@ package org.apache.james.mailbox.webmail;
  * @author Pierre-Marie Dhaussy
  * 
  */
+/**
+ * @author Pierre-Marie Dhaussy
+ * 
+ */
 public final class WebmailConstants {
 
     /**
@@ -27,7 +31,7 @@ public final class WebmailConstants {
     public static final char LOGIN_PROFILE_SEPARATOR = '@';
 
     /**
-     * Folder where profiles are stored
+     * New line characters
      */
-    public static final String PROFILE_DIRECTORY = "profiles/";
+    public static final char[] NEW_LINE = { 0x0D, 0x0A };
 }

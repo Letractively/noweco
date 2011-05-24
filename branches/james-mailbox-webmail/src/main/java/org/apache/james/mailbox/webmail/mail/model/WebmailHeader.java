@@ -26,6 +26,24 @@ public class WebmailHeader extends AbstractComparableHeader {
     private String value = null;
 
     /**
+     * Constructor
+     */
+    public WebmailHeader() {
+        // Default constructor
+    }
+
+    public WebmailHeader(final String fieldName, final String value) {
+        this.fieldName = fieldName;
+        this.value = value;
+    }
+
+    public WebmailHeader(final int lineNumber, final String fieldName, final String value) {
+        this.lineNumber = lineNumber;
+        this.fieldName = fieldName;
+        this.value = value;
+    }
+
+    /**
      * @param lineNumber the lineNumber to set
      */
     public void setLineNumber(final int lineNumber) {
@@ -48,7 +66,6 @@ public class WebmailHeader extends AbstractComparableHeader {
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.apache.james.mailbox.store.mail.model.Header#getFieldName()
      */
     public String getFieldName() {
@@ -57,7 +74,6 @@ public class WebmailHeader extends AbstractComparableHeader {
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.apache.james.mailbox.store.mail.model.Header#getLineNumber()
      */
     public int getLineNumber() {
@@ -66,7 +82,6 @@ public class WebmailHeader extends AbstractComparableHeader {
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.apache.james.mailbox.store.mail.model.Header#getValue()
      */
     public String getValue() {

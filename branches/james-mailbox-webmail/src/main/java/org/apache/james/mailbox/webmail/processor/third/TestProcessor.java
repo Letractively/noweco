@@ -20,6 +20,7 @@ import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.user.model.Subscription;
 import org.apache.james.mailbox.webmail.mail.model.WebmailMailbox;
 import org.apache.james.mailbox.webmail.mail.model.WebmailMessage;
+import org.apache.james.mailbox.webmail.mail.model.WebmailMessageFactory;
 import org.apache.james.mailbox.webmail.processor.WebmailAbstractProcessor;
 import org.apache.james.mailbox.webmail.user.model.WebmailSubscription;
 
@@ -67,8 +68,7 @@ public class TestProcessor extends WebmailAbstractProcessor {
         mailbox.setName("INBOX");
         mailboxesList.add(mailbox);
 
-        message = new WebmailMessage();
-        message.setUid(0);
+        message = WebmailMessageFactory.createMessage("test@test", "test@test", "test mail subject", "test mail content");
 
         subscription = new WebmailSubscription("test", mailbox.getName());
     }
@@ -158,7 +158,7 @@ public class TestProcessor extends WebmailAbstractProcessor {
 
     public Iterator<Long> expungeMarkedForDeletionInMailbox(final Mailbox<Integer> mailbox, final MessageRange set) throws MailboxException {
         System.out.println("TestProcessor.expungeMarkedForDeletionInMailbox(" + log(mailbox, set) + ")");
-        return null;
+        return new ArrayList<Long>().iterator();
     }
 
     public long countMessagesInMailbox(final Mailbox<Integer> mailbox) throws MailboxException {
