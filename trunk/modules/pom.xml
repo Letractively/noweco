@@ -12,6 +12,7 @@
     <defaultGoal>install</defaultGoal>
   </build>
   <modules>
+    <module>calendar</module>
     <module>cli</module>
     <module>core</module>
   </modules>

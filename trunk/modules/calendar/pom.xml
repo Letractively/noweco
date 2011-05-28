@@ -5,9 +5,9 @@
     <version>1.1.1-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>noweco.modules.core</artifactId>
+  <artifactId>noweco.modules.calendar</artifactId>
   <packaging>jar</packaging>
-  <name>Noweco :: Modules :: Core</name>
+  <name>Noweco :: Modules :: Calendar</name>
   <build>
     <defaultGoal>install</defaultGoal>
     <plugins>
@@ -23,16 +23,21 @@
         </executions>
       </plugin>
       <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>jaxb2-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>xjc</goal>
+            </goals>
+          </execution>
+        </executions>
         <configuration>
-          <forkMode>once</forkMode>
-          <systemPropertyVariables>
-            <NOWECO_LOTUS_USERNAME>${lotus.userName}</NOWECO_LOTUS_USERNAME>
-            <NOWECO_LOTUS_PASSWORD>${lotus.password}</NOWECO_LOTUS_PASSWORD>
-            <NOWECO_LOTUS_URL>${lotus.url}</NOWECO_LOTUS_URL>
-            <NOWECO_PROXY_HOST>${proxy.host}</NOWECO_PROXY_HOST>
-            <NOWECO_PROXY_PORT>${proxy.port}</NOWECO_PROXY_PORT>
-          </systemPropertyVariables>
+          <schemaDirectory>${basedir}/src/main/resources</schemaDirectory>
+          <schemaFiles>com/googlecode/noweco/calendar/caldav.xsd</schemaFiles>
+          <packageName>com.googlecode.noweco.calendar.caldav</packageName>
+          <!-- schema is not valid : anyURI cannot be "DAV:" -->
+          <nv>true</nv>
         </configuration>
       </plugin>
     </plugins>
@@ -45,31 +50,38 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpmime</artifactId>
+      <scope>test</scope>
     </dependency>
-<!--     <dependency> -->
-<!--       <groupId>${project.groupId}</groupId> -->
-<!--       <artifactId>noweco.modules.calendar</artifactId> -->
-<!--       <version>${project.version}</version> -->
-<!--     </dependency> -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>javax.mail</groupId>
-      <artifactId>mail</artifactId>
-      <version>1.4</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mortbay.jetty</groupId>
+      <artifactId>jetty</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
     </dependency>
   </dependencies>
 </project>
