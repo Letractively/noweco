@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:caldav="urn:ietf:params:xml:ns:caldav" targetNamespace="urn:ietf:params:xml:ns:caldav" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:dav="DAV:"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml" elementFormDefault="qualified">
+
+  <xsd:import namespace="DAV:" schemaLocation="webdav.xsd" />
+
+  <element name="comp">
+    <complexType>
+      <xsd:attribute name="name" use="required" />
+    </complexType>
+  </element>
+
+
+  <element name="supported-calendar-component-set">
+    <complexType>
+      <xsd:sequence minOccurs="0" maxOccurs="unbounded">
+        <element ref="caldav:comp" />
+      </xsd:sequence>
+    </complexType>
+  </element>
+
+  <element name="calendar-home-set">
+    <complexType>
+      <xsd:sequence minOccurs="0">
+        <element ref="dav:href" />
+      </xsd:sequence>
+    </complexType>
+  </element>
+
+  <element name="calendar-data" type="string" />
+
+  <element name="calendar-multiget">
+    <complexType>
+      <xsd:all>
+        <element minOccurs="0" ref="dav:prop" />
+        <element minOccurs="0" ref="dav:href" />
+      </xsd:all>
+    </complexType>
+  </element>
+
+
+  <element name="calendar">
+    <complexType>
+      <xsd:sequence />
+    </complexType>
+  </element>
+
+
+</schema>
