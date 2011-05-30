@@ -67,8 +67,10 @@ public class Pop3Server implements Runnable {
         Thread thread = this.thread;
         this.thread = null;
         serverSocket.close();
-        for (Pop3Connection connection : connections) {
-            connection.stop();
+        synchronized (connections) {
+            for (Pop3Connection connection : connections) {
+                connection.stop();
+            }
         }
         thread.join();
     }
@@ -87,6 +89,8 @@ public class Pop3Server implements Runnable {
                 } else {
                     LOGGER.error("Exception on POP3Server", e);
                 }
+            } catch (RuntimeException e) {
+                LOGGER.error("Uncatched exception", e);
             }
         }
     }
@@ -96,7 +100,9 @@ public class Pop3Server implements Runnable {
             Pop3Connection command = new Pop3Connection(pop3Manager, socket);
             try {
                 executor.execute(command);
-                connections.add(command);
+                synchronized (connections) {
+                    connections.add(command);
+                }
             } catch (RejectedExecutionException e) {
                 LOGGER.warn("No thread available", e);
                 socket.close();
@@ -104,10 +110,12 @@ public class Pop3Server implements Runnable {
         } catch (IOException e) {
             LOGGER.info("Cannot create connection", e);
         }
-        Iterator<Pop3Connection> iterator = connections.iterator();
-        while (iterator.hasNext()) {
-            if (iterator.next().isFinished()) {
-                iterator.remove();
+        synchronized (connections) {
+            Iterator<Pop3Connection> iterator = connections.iterator();
+            while (iterator.hasNext()) {
+                if (iterator.next().isFinished()) {
+                    iterator.remove();
+                }
             }
         }
     }

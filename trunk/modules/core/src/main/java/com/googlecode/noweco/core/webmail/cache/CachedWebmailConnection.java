@@ -20,9 +20,11 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +44,8 @@ public class CachedWebmailConnection implements WebmailConnection, Serializable 
     private static final long serialVersionUID = 7636772578295623800L;
 
     private Map<String, CachedMessage> messagesByUID = new HashMap<String, CachedMessage>();
+
+    private Set<String> deleteFailed = new HashSet<String>();
 
     public Map<String, CachedMessage> getMessagesByUID() {
         return messagesByUID;
@@ -84,18 +88,19 @@ public class CachedWebmailConnection implements WebmailConnection, Serializable 
         synchronized (messagesByUID) {
             for (Message message : messages) {
                 String uniqueID = message.getUniqueID();
-                CachedMessage cachedMessage = messagesByUID.get(uniqueID);
-                if (cachedMessage == null) {
-                    cachedMessage = new CachedMessage(message);
-                    LOGGER.info("Add {} to cache", uniqueID);
-                    messagesByUID.put(uniqueID, cachedMessage);
-                } else {
-                    cachedMessage.setDelegate(message);
+                if (!deleteFailed.contains(uniqueID)) {
+                    CachedMessage cachedMessage = messagesByUID.get(uniqueID);
+                    if (cachedMessage == null) {
+                        cachedMessage = new CachedMessage(message);
+                        LOGGER.info("Add {} to cache", uniqueID);
+                        messagesByUID.put(uniqueID, cachedMessage);
+                    } else {
+                        cachedMessage.setDelegate(message);
+                    }
+                    result.add(cachedMessage);
                 }
-                result.add(cachedMessage);
             }
         }
-
         return result;
     }
 
@@ -108,7 +113,29 @@ public class CachedWebmailConnection implements WebmailConnection, Serializable 
     }
 
     public List<String> delete(final List<String> messageUids) throws IOException {
-        return delegate.delete(messageUids);
+        try {
+            List<String> delegateMessageUids;
+            synchronized (messagesByUID) {
+                if (deleteFailed.size() != 0) {
+                    Set<String> uids = new HashSet<String>(messageUids);
+                    uids.addAll(deleteFailed);
+                    delegateMessageUids = new ArrayList<String>(uids);
+                } else {
+                    delegateMessageUids = messageUids;
+                }
+            }
+            List<String> deletedUid = delegate.delete(delegateMessageUids);
+            synchronized (messagesByUID) {
+                deleteFailed.clear();
+            }
+            return deletedUid;
+        } catch (IOException e) {
+            synchronized (messagesByUID) {
+                deleteFailed.addAll(messageUids);
+            }
+            LOGGER.warn("Delete failed, however message deletion is keeped in cache for next deletion try", e);
+            return messageUids;
+        }
     }
 
 }

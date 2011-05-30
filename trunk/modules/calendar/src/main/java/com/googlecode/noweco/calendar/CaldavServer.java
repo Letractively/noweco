@@ -59,7 +59,7 @@ public class CaldavServer {
         try {
             server.start();
         } catch (Exception e) {
-            throw new IOException("Unable to start jetty server", e);
+            throw new CalendarException("Unable to start jetty server", e);
         }
     }
 

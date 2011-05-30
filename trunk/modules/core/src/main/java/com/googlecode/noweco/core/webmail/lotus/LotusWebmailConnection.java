@@ -64,8 +64,6 @@ public class LotusWebmailConnection implements WebmailConnection {
 
     private String pagePrefix;
 
-    // private String garbagePrefix;
-
     private static final String MIME_SUFFIX = "/?OpenDocument&Form=l_MailMessageHeader&PresetFields=FullMessage;1";
 
     private static final Pattern MAIN_PAGE_PATTERN = Pattern.compile("location.replace\\(\"([^\"]*?&AutoFramed)\"\\);");

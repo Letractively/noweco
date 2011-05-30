@@ -14,34 +14,20 @@
  * limitations under the License.
  */
 
-package com.googlecode.noweco.core.test.pop;
+package com.googlecode.noweco.calendar;
 
 import java.io.IOException;
-import java.util.concurrent.Executors;
-
-import org.junit.Ignore;
-import org.junit.Test;
-
-import com.googlecode.noweco.core.pop.Pop3Server;
 
 /**
  * @author Gael Lalire
  */
-public class TestPop3Server {
+public class CalendarException extends IOException {
 
-    @Test
-    @Ignore
-    public void test() throws IOException, InterruptedException {
-        Pop3Server pop3Server = new Pop3Server(new FakePop3Manager(), Executors.newCachedThreadPool()) {
-            @Override
-            public int getPop3Port() {
-                return 1100;
-            }
-        };
-        pop3Server.start();
-        synchronized (this) {
-            wait();
-        }
+    private static final long serialVersionUID = -2552816172239629657L;
+
+    public CalendarException(final String s, final Throwable throwable) {
+        super(s);
+        initCause(throwable);
     }
 
 }
