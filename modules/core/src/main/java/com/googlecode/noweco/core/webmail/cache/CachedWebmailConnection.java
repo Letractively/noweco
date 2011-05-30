@@ -126,9 +126,16 @@ public class CachedWebmailConnection implements WebmailConnection, Serializable 
             }
             List<String> deletedUid = delegate.delete(delegateMessageUids);
             synchronized (messagesByUID) {
-                deleteFailed.clear();
+                deleteFailed.removeAll(delegateMessageUids);
             }
-            return deletedUid;
+            List<String> result;
+            if (delegateMessageUids != messageUids) {
+                result = new ArrayList<String>(messageUids);
+                result.retainAll(deletedUid);
+            } else {
+                result = deletedUid;
+            }
+            return result;
         } catch (IOException e) {
             synchronized (messagesByUID) {
                 deleteFailed.addAll(messageUids);
