@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${noweco.home}/logs/noweco.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <!-- one month of logs -->
+      <maxHistory>30</maxHistory>
+    </rollingPolicy>
+    <encoder>
+      <pattern>%d %level [%thread] %logger - %msg%n</pattern>
+    </encoder>
+  </appender>
+  
+  <logger name="org.apache.http" level="OFF" />
+
+  <logger name="com.googlecode.noweco.cli" level="INFO" />
+  <logger name="com.googlecode.noweco.core" level="INFO" />
+  <logger name="com.googlecode.noweco.core.webmail.cache" level="ERROR" />
+
+  <root level="TRACE">
+    <appender-ref ref="FILE" />
+  </root>
+</configuration>
