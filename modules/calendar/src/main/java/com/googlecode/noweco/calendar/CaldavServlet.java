@@ -155,7 +155,7 @@ public class CaldavServlet extends HttpServlet {
             marshaller.setProperty("jaxb.formatted.output", true);
             return marshaller;
         } catch (JAXBException e) {
-            throw new IOException("Unable to create marshaller", e);
+            throw new CalendarException("Unable to create marshaller", e);
         }
     }
 
@@ -163,7 +163,7 @@ public class CaldavServlet extends HttpServlet {
         try {
             return JAXB_CONTEXT.createUnmarshaller();
         } catch (JAXBException e) {
-            throw new IOException("Unable to create marshaller", e);
+            throw new CalendarException("Unable to create marshaller", e);
         }
     }
 
@@ -206,7 +206,7 @@ public class CaldavServlet extends HttpServlet {
         try {
             xmlRequest = unMarshaller.unmarshal(req.getReader());
         } catch (JAXBException e) {
-            throw new IOException("Unable to parse request", e);
+            throw new CalendarException("Unable to parse request", e);
         }
         if (LOGGER.isTraceEnabled()) {
             try {
@@ -266,7 +266,7 @@ public class CaldavServlet extends HttpServlet {
                 httpWriter.write(string);
             }
         } catch (JAXBException e) {
-            throw new IOException("Unable to format response", e);
+            throw new CalendarException("Unable to format response", e);
         }
         httpWriter.close();
     }
@@ -416,7 +416,7 @@ public class CaldavServlet extends HttpServlet {
         try {
             propfind = (Propfind) unMarshaller.unmarshal(req.getReader());
         } catch (JAXBException e) {
-            throw new IOException("Unable to parse request", e);
+            throw new CalendarException("Unable to parse request", e);
         }
         if (LOGGER.isTraceEnabled()) {
             try {
@@ -456,7 +456,7 @@ public class CaldavServlet extends HttpServlet {
                 httpWriter.write(string);
             }
         } catch (JAXBException e) {
-            throw new IOException("Unable to format response", e);
+            throw new CalendarException("Unable to format response", e);
         }
         httpWriter.close();
     }
