@@ -94,85 +94,123 @@ public class Pop3Connection implements Runnable {
     };
 
     public void run() {
-        this.thread = Thread.currentThread();
         try {
-            Pop3Account pop3Account = null;
-            List<? extends Message> messages = null;
-            boolean[] markForDeletion = null;
-            State state = State.AUTHORIZATION;
-            writeOK("Server ready.");
-            mainloop: while (!socket.isClosed()) {
-                String command = read();
-                switch (state) {
-                case AUTHORIZATION:
-                    if (isCommand(Command.QUIT, command)) {
-                        writeOK("Bye");
-                        break mainloop;
-                    }
-                    if (!isCommand(Command.USER, command)) {
-                        writeErr("USER or QUIT command expected");
-                        continue mainloop;
-                    }
-                    String username = command.substring(Command.USER.name().length() + 1);
-                    writeOK("Wait for password");
-                    command = read();
-                    if (isCommand(Command.QUIT, command)) {
-                        writeOK("Bye");
-                        break mainloop;
-                    }
-                    if (!isCommand(Command.PASS, command)) {
-                        writeErr("PASS or QUIT command expected");
-                        continue mainloop;
-                    }
-                    String password = command.substring(Command.PASS.name().length() + 1);
-                    LOGGER.info("Authent {} user", username);
-                    try {
-                        pop3Account = pop3Manager.authent(username, password);
-                        LOGGER.info("Authent OK");
-                        try {
-                            messages = pop3Account.getMessages();
-                            markForDeletion = new boolean[messages.size()];
-                            state = State.TRANSACTION;
-                            writeOK("Authentified");
-                        } catch (IOException e) {
-                            LOGGER.error("Unable to list", e);
-                            writeErr("Authent OK, but unable to list");
+            this.thread = Thread.currentThread();
+            try {
+                Pop3Account pop3Account = null;
+                List<? extends Message> messages = null;
+                boolean[] markForDeletion = null;
+                State state = State.AUTHORIZATION;
+                writeOK("Server ready.");
+                mainloop: while (!socket.isClosed()) {
+                    String command = read();
+                    switch (state) {
+                    case AUTHORIZATION:
+                        if (isCommand(Command.QUIT, command)) {
+                            writeOK("Bye");
+                            break mainloop;
                         }
-                    } catch (IOException e) {
-                        LOGGER.info("Authent KO", e);
-                        writeErr("Unable to authent");
-                    }
-                    continue mainloop;
-                case TRANSACTION:
-                    if (isCommand(Command.QUIT, command)) {
-                        state = State.UPDATE;
-                        break mainloop;
-                    } else if (isCommand(Command.STAT, command)) {
-                        try {
-                            int size = 0;
-                            int count = 0;
-                            int pos = 0;
-                            for (Message message : messages) {
-                                if (!markForDeletion[pos]) {
-                                    size += message.getSize();
-                                    count++;
-                                }
-                                pos++;
-                            }
-                            writeOK(count + " " + size);
-                        } catch (IOException e) {
-                            LOGGER.error("Unable to stat", e);
-                            writeErr("Size fetch issue");
+                        if (!isCommand(Command.USER, command)) {
+                            writeErr("USER or QUIT command expected");
+                            continue mainloop;
                         }
-                    } else if (isCommand(Command.LIST, command)) {
-                        String arg = command.substring(Command.LIST.name().length()).trim();
-                        if (arg.length() == 0) {
+                        String username = command.substring(Command.USER.name().length() + 1);
+                        writeOK("Wait for password");
+                        command = read();
+                        if (isCommand(Command.QUIT, command)) {
+                            writeOK("Bye");
+                            break mainloop;
+                        }
+                        if (!isCommand(Command.PASS, command)) {
+                            writeErr("PASS or QUIT command expected");
+                            continue mainloop;
+                        }
+                        String password = command.substring(Command.PASS.name().length() + 1);
+                        LOGGER.info("Authent {} user", username);
+                        try {
+                            pop3Account = pop3Manager.authent(username, password);
+                            LOGGER.info("Authent OK");
                             try {
+                                messages = pop3Account.getMessages();
+                                markForDeletion = new boolean[messages.size()];
+                                state = State.TRANSACTION;
+                                writeOK("Authentified");
+                            } catch (IOException e) {
+                                LOGGER.error("Unable to list", e);
+                                writeErr("Authent OK, but unable to list");
+                            }
+                        } catch (IOException e) {
+                            LOGGER.info("Authent KO", e);
+                            writeErr("Unable to authent");
+                        }
+                        continue mainloop;
+                    case TRANSACTION:
+                        if (isCommand(Command.QUIT, command)) {
+                            state = State.UPDATE;
+                            break mainloop;
+                        } else if (isCommand(Command.STAT, command)) {
+                            try {
+                                int size = 0;
+                                int count = 0;
+                                int pos = 0;
+                                for (Message message : messages) {
+                                    if (!markForDeletion[pos]) {
+                                        size += message.getSize();
+                                        count++;
+                                    }
+                                    pos++;
+                                }
+                                writeOK(count + " " + size);
+                            } catch (IOException e) {
+                                LOGGER.error("Unable to stat", e);
+                                writeErr("Size fetch issue");
+                            }
+                        } else if (isCommand(Command.LIST, command)) {
+                            String arg = command.substring(Command.LIST.name().length()).trim();
+                            if (arg.length() == 0) {
+                                try {
+                                    List<String> lines = new ArrayList<String>();
+                                    int pos = 0;
+                                    for (Message message : messages) {
+                                        if (!markForDeletion[pos]) {
+                                            lines.add((pos + 1) + " " + message.getSize());
+                                        }
+                                        pos++;
+                                    }
+                                    writeOK("Begin to list");
+                                    for (String line : lines) {
+                                        writeLine(line);
+                                    }
+                                    writeEndOfLines();
+                                } catch (IOException e) {
+                                    LOGGER.error("Unable to list", e);
+                                    writeErr("Size fetch issue");
+                                }
+                            } else {
+                                try {
+                                    int id = Integer.parseInt(arg);
+                                    int pos = id - 1;
+                                    if (pos < 0 || pos >= messages.size() || markForDeletion[pos]) {
+                                        writeErr("Message with " + id + " id not found");
+                                    } else {
+                                        writeOK(id + " " + messages.get(pos).getSize());
+                                    }
+                                } catch (IOException e) {
+                                    LOGGER.error("Unable to list", e);
+                                    writeErr("Size fetch issue");
+                                } catch (NumberFormatException e) {
+                                    LOGGER.error("Unable to list", e);
+                                    writeErr("LIST param must be an integer");
+                                }
+                            }
+                        } else if (isCommand(Command.UIDL, command)) {
+                            String arg = command.substring(Command.UIDL.name().length()).trim();
+                            if (arg.length() == 0) {
                                 List<String> lines = new ArrayList<String>();
                                 int pos = 0;
                                 for (Message message : messages) {
                                     if (!markForDeletion[pos]) {
-                                        lines.add((pos + 1) + " " + message.getSize());
+                                        lines.add((pos + 1) + " " + message.getUID());
                                     }
                                     pos++;
                                 }
@@ -181,199 +219,165 @@ public class Pop3Connection implements Runnable {
                                     writeLine(line);
                                 }
                                 writeEndOfLines();
-                            } catch (IOException e) {
-                                LOGGER.error("Unable to list", e);
-                                writeErr("Size fetch issue");
-                            }
-                        } else {
-                            try {
-                                int id = Integer.parseInt(arg);
-                                int pos = id - 1;
-                                if (pos < 0 || pos >= messages.size() || markForDeletion[pos]) {
-                                    writeErr("Message with " + id + " id not found");
-                                } else {
-                                    writeOK(id + " " + messages.get(pos).getSize());
-                                }
-                            } catch (IOException e) {
-                                LOGGER.error("Unable to list", e);
-                                writeErr("Size fetch issue");
-                            } catch (NumberFormatException e) {
-                                LOGGER.error("Unable to list", e);
-                                writeErr("LIST param must be an integer");
-                            }
-                        }
-                    } else if (isCommand(Command.UIDL, command)) {
-                        String arg = command.substring(Command.UIDL.name().length()).trim();
-                        if (arg.length() == 0) {
-                            List<String> lines = new ArrayList<String>();
-                            int pos = 0;
-                            for (Message message : messages) {
-                                if (!markForDeletion[pos]) {
-                                    lines.add((pos + 1) + " " + message.getUID());
-                                }
-                                pos++;
-                            }
-                            writeOK("Begin to list");
-                            for (String line : lines) {
-                                writeLine(line);
-                            }
-                            writeEndOfLines();
-                        } else {
-                            try {
-                                int id = Integer.parseInt(arg);
-                                int pos = id - 1;
-                                if (pos < 0 || pos >= messages.size() || markForDeletion[pos]) {
-                                    writeErr("Message with " + id + " id not found");
-                                } else {
-                                    writeOK(id + " " + messages.get(pos).getUID());
-                                }
-                            } catch (NumberFormatException e) {
-                                LOGGER.error("Unable to uid list", e);
-                                writeErr("UIDL param must be an integer");
-                            }
-                        }
-                    } else if (isCommand(Command.NOOP, command)) {
-                        writeOK(null);
-                    } else if (isCommand(Command.RSET, command)) {
-                        // avoid message deletion
-                        Arrays.fill(markForDeletion, false);
-                        writeOK(null);
-                    } else if (isCommand(Command.DELE, command)) {
-                        String arg = command.substring(Command.DELE.name().length()).trim();
-                        try {
-                            int id = Integer.parseInt(arg);
-                            int pos = id - 1;
-                            if (pos < 0 || pos >= messages.size() || markForDeletion[pos]) {
-                                writeErr("Message with " + id + " id not found");
                             } else {
-                                markForDeletion[pos] = true;
-                                writeOK("Message deleted");
-                            }
-                        } catch (NumberFormatException e) {
-                            writeErr("DELE param must be an integer");
-                        }
-                    } else if (isCommand(Command.TOP, command)) {
-                        String args = command.substring(Command.TOP.name().length()).trim();
-                        try {
-                            String[] split = args.split(" ");
-                            int id = Integer.parseInt(split[0]);
-                            int contentLines = Integer.parseInt(split[1]);
-                            int pos = id - 1;
-                            if (pos < 0 || pos >= messages.size() || markForDeletion[pos]) {
-                                writeErr("Message with " + id + " id not found");
-                            } else {
-                                Message message = messages.get(pos);
-
-                                writeOK("Begin headers content");
                                 try {
-                                    BufferedReader bufferedReader;
-                                    if (contentLines <= 0) {
-                                        bufferedReader = new BufferedReader(message.getHeaders());
+                                    int id = Integer.parseInt(arg);
+                                    int pos = id - 1;
+                                    if (pos < 0 || pos >= messages.size() || markForDeletion[pos]) {
+                                        writeErr("Message with " + id + " id not found");
                                     } else {
-                                        bufferedReader = new BufferedReader(message.getContent());
+                                        writeOK(id + " " + messages.get(pos).getUID());
                                     }
-                                    String line = bufferedReader.readLine();
-                                    while (line != null && line.length() != 0) {
-                                        writeLine(line);
-                                        line = bufferedReader.readLine();
-                                    }
-                                    writeLine("");
-                                    if (contentLines != 0 && line != null) {
-                                        line = bufferedReader.readLine();
-                                        while (line != null && contentLines > 0) {
+                                } catch (NumberFormatException e) {
+                                    LOGGER.error("Unable to uid list", e);
+                                    writeErr("UIDL param must be an integer");
+                                }
+                            }
+                        } else if (isCommand(Command.NOOP, command)) {
+                            writeOK(null);
+                        } else if (isCommand(Command.RSET, command)) {
+                            // avoid message deletion
+                            Arrays.fill(markForDeletion, false);
+                            writeOK(null);
+                        } else if (isCommand(Command.DELE, command)) {
+                            String arg = command.substring(Command.DELE.name().length()).trim();
+                            try {
+                                int id = Integer.parseInt(arg);
+                                int pos = id - 1;
+                                if (pos < 0 || pos >= messages.size() || markForDeletion[pos]) {
+                                    writeErr("Message with " + id + " id not found");
+                                } else {
+                                    markForDeletion[pos] = true;
+                                    writeOK("Message deleted");
+                                }
+                            } catch (NumberFormatException e) {
+                                writeErr("DELE param must be an integer");
+                            }
+                        } else if (isCommand(Command.TOP, command)) {
+                            String args = command.substring(Command.TOP.name().length()).trim();
+                            try {
+                                String[] split = args.split(" ");
+                                int id = Integer.parseInt(split[0]);
+                                int contentLines = Integer.parseInt(split[1]);
+                                int pos = id - 1;
+                                if (pos < 0 || pos >= messages.size() || markForDeletion[pos]) {
+                                    writeErr("Message with " + id + " id not found");
+                                } else {
+                                    Message message = messages.get(pos);
+
+                                    writeOK("Begin headers content");
+                                    try {
+                                        BufferedReader bufferedReader;
+                                        if (contentLines <= 0) {
+                                            bufferedReader = new BufferedReader(message.getHeaders());
+                                        } else {
+                                            bufferedReader = new BufferedReader(message.getContent());
+                                        }
+                                        String line = bufferedReader.readLine();
+                                        while (line != null && line.length() != 0) {
                                             writeLine(line);
                                             line = bufferedReader.readLine();
-                                            contentLines--;
                                         }
+                                        writeLine("");
+                                        if (contentLines != 0 && line != null) {
+                                            line = bufferedReader.readLine();
+                                            while (line != null && contentLines > 0) {
+                                                writeLine(line);
+                                                line = bufferedReader.readLine();
+                                                contentLines--;
+                                            }
+                                        }
+                                        writeEndOfLines();
+                                    } catch (IOException e) {
+                                        LOGGER.error("Unable to read message", e);
+                                        throw new PopSocketException(e);
                                     }
-                                    writeEndOfLines();
-                                } catch (IOException e) {
-                                    LOGGER.error("Unable to read message", e);
-                                    throw new PopSocketException(e);
                                 }
+                            } catch (NumberFormatException e) {
+                                writeErr("DELE param must be an integer");
                             }
-                        } catch (NumberFormatException e) {
-                            writeErr("DELE param must be an integer");
-                        }
-                    } else if (isCommand(Command.RETR, command)) {
-                        String arg = command.substring(Command.RETR.name().length()).trim();
-                        try {
-                            int id = Integer.parseInt(arg);
-                            int pos = id - 1;
-                            if (pos < 0 || pos >= messages.size() || markForDeletion[pos]) {
-                                writeErr("Message with " + id + " id not found");
-                            } else {
-                                Message message = messages.get(pos);
-                                writeOK("Begin message content");
-                                LOGGER.info("Send content of {}", message.getUID());
-                                try {
-                                    BufferedReader bufferedReader = new BufferedReader(message.getContent());
-                                    String line = bufferedReader.readLine();
-                                    while (line != null) {
-                                        writeLine(line);
-                                        line = bufferedReader.readLine();
+                        } else if (isCommand(Command.RETR, command)) {
+                            String arg = command.substring(Command.RETR.name().length()).trim();
+                            try {
+                                int id = Integer.parseInt(arg);
+                                int pos = id - 1;
+                                if (pos < 0 || pos >= messages.size() || markForDeletion[pos]) {
+                                    writeErr("Message with " + id + " id not found");
+                                } else {
+                                    Message message = messages.get(pos);
+                                    writeOK("Begin message content");
+                                    LOGGER.info("Send content of {}", message.getUID());
+                                    try {
+                                        BufferedReader bufferedReader = new BufferedReader(message.getContent());
+                                        String line = bufferedReader.readLine();
+                                        while (line != null) {
+                                            writeLine(line);
+                                            line = bufferedReader.readLine();
+                                        }
+                                        writeEndOfLines();
+                                    } catch (IOException e) {
+                                        LOGGER.error("Unable to read message", e);
+                                        throw new PopSocketException(e);
                                     }
-                                    writeEndOfLines();
-                                } catch (IOException e) {
-                                    LOGGER.error("Unable to read message", e);
-                                    throw new PopSocketException(e);
                                 }
+                            } catch (NumberFormatException e) {
+                                writeErr("DELE param must be an integer");
                             }
-                        } catch (NumberFormatException e) {
-                            writeErr("DELE param must be an integer");
+                        } else {
+                            writeErr("Unsupported command");
                         }
-                    } else {
-                        writeErr("Unsupported command");
-                    }
 
-                    break;
-                default:
-                    break;
+                        break;
+                    default:
+                        break;
+                    }
                 }
-            }
-            if (state == State.UPDATE) {
-                try {
-                    List<String> uids = new ArrayList<String>();
-                    int pos = 0;
-                    for (Message message : messages) {
-                        if (markForDeletion[pos]) {
-                            uids.add(message.getUID());
+                if (state == State.UPDATE) {
+                    try {
+                        List<String> uids = new ArrayList<String>();
+                        int pos = 0;
+                        for (Message message : messages) {
+                            if (markForDeletion[pos]) {
+                                uids.add(message.getUID());
+                            }
+                            pos++;
                         }
-                        pos++;
+                        if (uids.size() != 0) {
+                            LOGGER.info("Suppress messages : {}", uids);
+                            pop3Account.delete(uids);
+                        }
+                        writeOK("Updated");
+                    } catch (IOException e) {
+                        LOGGER.error("Unable to update", e);
+                        writeErr("Update of one message failed");
                     }
-                    if (uids.size() != 0) {
-                        LOGGER.info("Suppress messages : {}", uids);
-                        pop3Account.delete(uids);
-                    }
-                    writeOK("Updated");
-                } catch (IOException e) {
-                    LOGGER.error("Unable to update", e);
-                    writeErr("Update of one message failed");
+                    LOGGER.info("Transaction committed");
                 }
-                LOGGER.info("Transaction committed");
+            } catch (PopSocketException e) {
+                LOGGER.error("Client connection failed", e);
+            } finally {
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    LOGGER.error("Unable to close outputStream", e);
+                }
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    LOGGER.error("Unable to close reader", e);
+                }
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    LOGGER.error("Unable to close socket", e);
+                }
+                synchronized (mutex) {
+                    finished = true;
+                    mutex.notifyAll();
+                }
             }
-        } catch (PopSocketException e) {
-            LOGGER.error("Client connection failed", e);
-        } finally {
-            try {
-                outputStream.close();
-            } catch (IOException e) {
-                LOGGER.error("Unable to close outputStream", e);
-            }
-            try {
-                reader.close();
-            } catch (IOException e) {
-                LOGGER.error("Unable to close reader", e);
-            }
-            try {
-                socket.close();
-            } catch (IOException e) {
-                LOGGER.error("Unable to close socket", e);
-            }
-            synchronized (mutex) {
-                finished = true;
-                mutex.notifyAll();
-            }
+        } catch (RuntimeException e) {
+            LOGGER.error("Uncatched exception", e);
         }
     }
 

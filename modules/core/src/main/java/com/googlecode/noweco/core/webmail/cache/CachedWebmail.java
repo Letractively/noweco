@@ -68,7 +68,10 @@ public class CachedWebmail implements Webmail {
     }
 
     public CachedWebmailConnection connect(final String user, final String password) throws IOException {
-        CachedWebmailConnection cachedWebmailConnection = cachedWebmailConnectionByUser.get(user);
+        CachedWebmailConnection cachedWebmailConnection;
+        synchronized (cachedWebmailConnectionByUser) {
+            cachedWebmailConnection = cachedWebmailConnectionByUser.get(user);
+        }
         if (cachedWebmailConnection == null) {
             WebmailConnection connect = webmail.connect(user, password);
             cachedWebmailConnection = restoredWebmailConnectionByUser.get(user);
@@ -78,7 +81,9 @@ public class CachedWebmail implements Webmail {
             } else {
                 cachedWebmailConnection = new CachedWebmailConnection(connect, password);
             }
-            cachedWebmailConnectionByUser.put(user, cachedWebmailConnection);
+            synchronized (cachedWebmailConnectionByUser) {
+                cachedWebmailConnectionByUser.put(user, cachedWebmailConnection);
+            }
         } else {
             WebmailConnection newPasswordWebmailConnection = null;
             if (!cachedWebmailConnection.getPassword().equals(password)) {
@@ -104,8 +109,10 @@ public class CachedWebmail implements Webmail {
     }
 
     public void release() {
-        for (CachedWebmailConnection cachedWebmailConnection : cachedWebmailConnectionByUser.values()) {
-            cachedWebmailConnection.release();
+        synchronized (cachedWebmailConnectionByUser) {
+            for (CachedWebmailConnection cachedWebmailConnection : cachedWebmailConnectionByUser.values()) {
+                cachedWebmailConnection.release();
+            }
         }
         try {
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(data));

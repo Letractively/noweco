@@ -26,6 +26,7 @@ import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 
@@ -41,7 +42,7 @@ public final class UnsecureHttpClientFactory {
     }
 
     public DefaultHttpClient createUnsecureHttpClient(final HttpHost proxy) {
-        DefaultHttpClient httpclient = new DefaultHttpClient();
+        DefaultHttpClient httpclient = new DefaultHttpClient(new ThreadSafeClientConnManager());
         SchemeRegistry schemeRegistry = httpclient.getConnectionManager().getSchemeRegistry();
         schemeRegistry.unregister("https");
         try {

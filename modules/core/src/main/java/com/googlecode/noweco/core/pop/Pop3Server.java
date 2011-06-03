@@ -80,18 +80,20 @@ public class Pop3Server implements Runnable {
     }
 
     public void run() {
-        while (!serverSocket.isClosed()) {
-            try {
-                accept(serverSocket.accept());
-            } catch (IOException e) {
-                if (thread == null) {
-                    LOGGER.trace("POP3Server stopped", e);
-                } else {
-                    LOGGER.error("Exception on POP3Server", e);
+        try {
+            while (!serverSocket.isClosed()) {
+                try {
+                    accept(serverSocket.accept());
+                } catch (IOException e) {
+                    if (thread == null) {
+                        LOGGER.trace("POP3Server stopped", e);
+                    } else {
+                        LOGGER.error("Exception on POP3Server", e);
+                    }
                 }
-            } catch (RuntimeException e) {
-                LOGGER.error("Uncatched exception", e);
             }
+        } catch (RuntimeException e) {
+            LOGGER.error("Uncatched exception", e);
         }
     }
 
