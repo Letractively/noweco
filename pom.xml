@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.googlecode.noweco</groupId>
   <artifactId>noweco</artifactId>
-  <version>1.2.1</version>
+  <version>1.2.2-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Noweco</name>
   <description>Lotus notes Web Connector</description>
@@ -259,8 +259,8 @@
     <!-- </site> -->
   </distributionManagement>
   <scm>
-    <connection>scm:svn:http://noweco.googlecode.com/svn/tags/noweco-1.2.1</connection>
-    <developerConnection>scm:svn:https://noweco.googlecode.com/svn/tags/noweco-1.2.1</developerConnection>
+    <connection>scm:svn:http://noweco.googlecode.com/svn/trunk</connection>
+    <developerConnection>scm:svn:https://noweco.googlecode.com/svn/trunk</developerConnection>
   </scm>
   <reporting>
     <plugins>
