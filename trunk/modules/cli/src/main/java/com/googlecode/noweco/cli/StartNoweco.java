@@ -76,185 +76,192 @@ public final class StartNoweco {
 
     @SuppressWarnings("unchecked")
     public static void main(final String[] args) {
-        File homeFile = new File(System.getProperty("noweco.home"));
-        Unmarshaller unMarshaller = null;
         try {
-            JAXBContext jc = JAXBContext.newInstance(ObjectFactory.class.getPackage().getName());
-            unMarshaller = jc.createUnmarshaller();
-
-            URL xsdURL = StartNoweco.class.getResource("settings.xsd");
-            SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
-            Schema schema = schemaFactory.newSchema(xsdURL);
-            unMarshaller.setSchema(schema);
-        } catch (Exception e) {
-            LOGGER.error("Unable to initialize settings parser", e);
-            System.exit(1);
-        }
-
-        JAXBElement<Settings> settingsElement = null;
-        try {
-            settingsElement = (JAXBElement<Settings>) unMarshaller.unmarshal(new FileInputStream(new File(homeFile, "settings.xml")));
-        } catch (FileNotFoundException e) {
-            LOGGER.error("Settings file not found");
-            System.exit(1);
-        } catch (JAXBException e) {
-            LOGGER.error("Settings file is not valid", e);
-            System.exit(1);
-        }
-
-        Settings settings = settingsElement.getValue();
-
-        LOGGER.info("Starting Noweco");
-
-        File data = new File(homeFile, "data");
-        if (!data.exists()) {
-            data.mkdir();
-        }
-
-        Map<String, Pop3Manager> map = new HashMap<String, Pop3Manager>();
-
-        for (Webmail webmail : settings.getPop3Managers().getWebmail()) {
-            String webmailClassName = webmail.getClazz();
-            Class<?> webmailClass = null;
+            File homeFile = new File(System.getProperty("noweco.home"));
+            Unmarshaller unMarshaller = null;
             try {
-                webmailClass = StartNoweco.class.getClassLoader().loadClass(webmailClassName);
-            } catch (ClassNotFoundException e) {
-                LOGGER.error("Class {} not found", webmailClassName);
+                JAXBContext jc = JAXBContext.newInstance(ObjectFactory.class.getPackage().getName());
+                unMarshaller = jc.createUnmarshaller();
+
+                URL xsdURL = StartNoweco.class.getResource("settings.xsd");
+                SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
+                Schema schema = schemaFactory.newSchema(xsdURL);
+                unMarshaller.setSchema(schema);
+            } catch (Exception e) {
+                LOGGER.error("Unable to initialize settings parser", e);
                 System.exit(1);
             }
-            if (!com.googlecode.noweco.core.webmail.Webmail.class.isAssignableFrom(webmailClass)) {
-                LOGGER.error("{} is not a subclass of Pop3Manager", webmailClassName);
-                System.exit(1);
-            }
-            com.googlecode.noweco.core.webmail.Webmail webmailInstance = null;
+
+            JAXBElement<Settings> settingsElement = null;
             try {
-                webmailInstance = (com.googlecode.noweco.core.webmail.Webmail) webmailClass.newInstance();
-            } catch (InstantiationException e) {
-                LOGGER.error("InstantiationException", e);
+                settingsElement = (JAXBElement<Settings>) unMarshaller.unmarshal(new FileInputStream(new File(homeFile, "settings.xml")));
+            } catch (FileNotFoundException e) {
+                LOGGER.error("Settings file not found");
                 System.exit(1);
-            } catch (IllegalAccessException e) {
-                LOGGER.error("IllegalAccessException", e);
-                System.exit(1);
-            }
-            String id = webmail.getId();
-            webmailInstance = new CachedWebmail(webmailInstance, new File(data, id + ".data"));
-            Pop3Manager pop3Manager = new WebmailPop3Manager(webmailInstance);
-
-            Proxy proxy = webmail.getProxy();
-            if (proxy != null) {
-                webmailInstance.setProxy(proxy.getHost(), proxy.getPort());
-            }
-            String authentClassName = webmail.getAuthent().getClazz();
-            Class<?> authentClass = null;
-            try {
-                authentClass = StartNoweco.class.getClassLoader().loadClass(authentClassName);
-            } catch (ClassNotFoundException e) {
-                LOGGER.error("Class {} not found", authentClassName);
+            } catch (JAXBException e) {
+                LOGGER.error("Settings file is not valid", e);
                 System.exit(1);
             }
-            if (!PortalConnector.class.isAssignableFrom(authentClass)) {
-                LOGGER.error("{} is not a subclass of PortalConnector", authentClassName);
-                System.exit(1);
+
+            Settings settings = settingsElement.getValue();
+
+            LOGGER.info("Starting Noweco");
+
+            File data = new File(homeFile, "data");
+            if (!data.exists()) {
+                data.mkdir();
             }
-            PortalConnector portalConnector = null;
-            try {
-                portalConnector = (PortalConnector) authentClass.newInstance();
-            } catch (InstantiationException e) {
-                LOGGER.error("InstantiationException", e);
-                System.exit(1);
-            } catch (IllegalAccessException e) {
-                LOGGER.error("IllegalAccessException", e);
-                System.exit(1);
-            }
-            webmailInstance.setAuthent(portalConnector);
 
-            map.put(id, pop3Manager);
-        }
+            Map<String, Pop3Manager> map = new HashMap<String, Pop3Manager>();
 
-        List<DispatchedPop3Manager> dispatchedPop3Managers = new ArrayList<DispatchedPop3Manager>();
-
-        for (User user : settings.getPopAccounts().getUser()) {
-            String pop3Manager = user.getPop3Manager();
-            dispatchedPop3Managers.add(new DispatchedPop3Manager(pop3Manager, map.get(pop3Manager), Pattern.compile(user.getMatches())));
-        }
-
-        int localPort = settings.getRegistryPort();
-        JMXConnectorServer newJMXConnectorServer = null;
-        final JMX jmx = settings.getJmx();
-        Admin admin = new Admin();
-        try {
-            LocateRegistry.createRegistry(localPort);
-            MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-            ObjectName objectName = new ObjectName(AdminMBean.class.getPackage().getName() + ":type=" + AdminMBean.class.getSimpleName());
-            mbs.registerMBean(admin, objectName);
-            JMXServiceURL jmxServiceURL = new JMXServiceURL("service:jmx:rmi://127.0.0.1:" + localPort + "/jndi/rmi://127.0.0.1:" + localPort + "/jmxrmi");
-            Map<String, Object> env = new HashMap<String, Object>();
-            env.put(JMXConnectorServer.AUTHENTICATOR, new JMXAuthenticator() {
-
-                public Subject authenticate(final Object credentials) {
-                    if (!(credentials instanceof String[])) {
-                        if (credentials == null) {
-                            throw new SecurityException("Credentials required");
-                        }
-                        throw new SecurityException("Credentials should be String[]");
-                    }
-                    final String[] aCredentials = (String[]) credentials;
-                    if (aCredentials.length != 2) {
-                        throw new SecurityException("Credentials should have 2 elements");
-                    }
-                    String username = aCredentials[0];
-                    String password = aCredentials[1];
-                    if (jmx.getUser().equals(username) && jmx.getPassword().equals(password)) {
-                        return new Subject(false, Collections.singleton(new JMXPrincipal(username)), Collections.EMPTY_SET, Collections.EMPTY_SET);
-                    }
-                    throw new SecurityException("Invalid credentials");
-                }
-            });
-            newJMXConnectorServer = JMXConnectorServerFactory.newJMXConnectorServer(jmxServiceURL, env, mbs);
-            newJMXConnectorServer.start();
-        } catch (Exception e) {
-            LOGGER.error("Unable to start Noweco Admin", e);
-            System.exit(1);
-        }
-
-        final DispatcherPop3Manager pop3Manager = new DispatcherPop3Manager(dispatchedPop3Managers);
-        final Pop3Server pop3Server = new Pop3Server(pop3Manager, Executors.newCachedThreadPool());
-        final JMXConnectorServer jmxConnectorServer = newJMXConnectorServer;
-
-        Runnable stopAction = new Runnable() {
-
-            private boolean stopped = false;
-
-            public synchronized void run() {
-                if (stopped) {
-                    return;
-                }
-                stopped = true;
+            for (Webmail webmail : settings.getPop3Managers().getWebmail()) {
+                String webmailClassName = webmail.getClazz();
+                Class<?> webmailClass = null;
                 try {
-                    pop3Server.stop();
-                    pop3Manager.release();
-                    jmxConnectorServer.stop();
-                } catch (IOException e) {
-                    LOGGER.info("Noweco stop issue", e);
-                } catch (InterruptedException e) {
-                    // unreachable
-                } finally {
-                    LOGGER.info("Noweco shutdown");
+                    webmailClass = StartNoweco.class.getClassLoader().loadClass(webmailClassName);
+                } catch (ClassNotFoundException e) {
+                    LOGGER.error("Class {} not found", webmailClassName);
+                    System.exit(1);
                 }
+                if (!com.googlecode.noweco.core.webmail.Webmail.class.isAssignableFrom(webmailClass)) {
+                    LOGGER.error("{} is not a subclass of Pop3Manager", webmailClassName);
+                    System.exit(1);
+                }
+                com.googlecode.noweco.core.webmail.Webmail webmailInstance = null;
+                try {
+                    webmailInstance = (com.googlecode.noweco.core.webmail.Webmail) webmailClass.newInstance();
+                } catch (InstantiationException e) {
+                    LOGGER.error("InstantiationException", e);
+                    System.exit(1);
+                } catch (IllegalAccessException e) {
+                    LOGGER.error("IllegalAccessException", e);
+                    System.exit(1);
+                }
+                String id = webmail.getId();
+                webmailInstance = new CachedWebmail(webmailInstance, new File(data, id + ".data"));
+                Pop3Manager pop3Manager = new WebmailPop3Manager(webmailInstance);
+
+                Proxy proxy = webmail.getProxy();
+                if (proxy != null) {
+                    webmailInstance.setProxy(proxy.getHost(), proxy.getPort());
+                }
+                String authentClassName = webmail.getAuthent().getClazz();
+                Class<?> authentClass = null;
+                try {
+                    authentClass = StartNoweco.class.getClassLoader().loadClass(authentClassName);
+                } catch (ClassNotFoundException e) {
+                    LOGGER.error("Class {} not found", authentClassName);
+                    System.exit(1);
+                }
+                if (!PortalConnector.class.isAssignableFrom(authentClass)) {
+                    LOGGER.error("{} is not a subclass of PortalConnector", authentClassName);
+                    System.exit(1);
+                }
+                PortalConnector portalConnector = null;
+                try {
+                    portalConnector = (PortalConnector) authentClass.newInstance();
+                } catch (InstantiationException e) {
+                    LOGGER.error("InstantiationException", e);
+                    System.exit(1);
+                } catch (IllegalAccessException e) {
+                    LOGGER.error("IllegalAccessException", e);
+                    System.exit(1);
+                }
+                webmailInstance.setAuthent(portalConnector);
+
+                map.put(id, pop3Manager);
             }
-        };
 
-        try {
-            pop3Server.start();
-        } catch (IOException e) {
-            LOGGER.error("Unable to start Noweco", e);
-            System.exit(1);
+            List<DispatchedPop3Manager> dispatchedPop3Managers = new ArrayList<DispatchedPop3Manager>();
+
+            for (User user : settings.getPopAccounts().getUser()) {
+                String pop3Manager = user.getPop3Manager();
+                dispatchedPop3Managers.add(new DispatchedPop3Manager(pop3Manager, map.get(pop3Manager), Pattern.compile(user.getMatches())));
+            }
+
+            int localPort = settings.getRegistryPort();
+            JMXConnectorServer newJMXConnectorServer = null;
+            final JMX jmx = settings.getJmx();
+            Admin admin = new Admin();
+            try {
+                LocateRegistry.createRegistry(localPort);
+                MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+                ObjectName objectName = new ObjectName(AdminMBean.class.getPackage().getName() + ":type=" + AdminMBean.class.getSimpleName());
+                mbs.registerMBean(admin, objectName);
+                JMXServiceURL jmxServiceURL = new JMXServiceURL("service:jmx:rmi://127.0.0.1:" + localPort + "/jndi/rmi://127.0.0.1:" + localPort + "/jmxrmi");
+                Map<String, Object> env = new HashMap<String, Object>();
+                env.put(JMXConnectorServer.AUTHENTICATOR, new JMXAuthenticator() {
+
+                    public Subject authenticate(final Object credentials) {
+                        if (!(credentials instanceof String[])) {
+                            if (credentials == null) {
+                                throw new SecurityException("Credentials required");
+                            }
+                            throw new SecurityException("Credentials should be String[]");
+                        }
+                        final String[] aCredentials = (String[]) credentials;
+                        if (aCredentials.length != 2) {
+                            throw new SecurityException("Credentials should have 2 elements");
+                        }
+                        String username = aCredentials[0];
+                        String password = aCredentials[1];
+                        if (jmx.getUser().equals(username) && jmx.getPassword().equals(password)) {
+                            return new Subject(false, Collections.singleton(new JMXPrincipal(username)), Collections.EMPTY_SET, Collections.EMPTY_SET);
+                        }
+                        throw new SecurityException("Invalid credentials");
+                    }
+                });
+                newJMXConnectorServer = JMXConnectorServerFactory.newJMXConnectorServer(jmxServiceURL, env, mbs);
+                newJMXConnectorServer.start();
+            } catch (Exception e) {
+                LOGGER.error("Unable to start Noweco Admin", e);
+                System.exit(1);
+            }
+
+            final DispatcherPop3Manager pop3Manager = new DispatcherPop3Manager(dispatchedPop3Managers);
+            final Pop3Server pop3Server = new Pop3Server(pop3Manager, Executors.newCachedThreadPool());
+            final JMXConnectorServer jmxConnectorServer = newJMXConnectorServer;
+
+            Runnable stopAction = new Runnable() {
+
+                private boolean stopped = false;
+
+                public synchronized void run() {
+                    try {
+                        if (stopped) {
+                            return;
+                        }
+                        stopped = true;
+                        try {
+                            pop3Server.stop();
+                            pop3Manager.release();
+                            jmxConnectorServer.stop();
+                        } catch (IOException e) {
+                            LOGGER.info("Noweco stop issue", e);
+                        } catch (InterruptedException e) {
+                            // unreachable
+                        } finally {
+                            LOGGER.info("Noweco shutdown");
+                        }
+                    } catch (RuntimeException e) {
+                        LOGGER.error("Uncatched exception", e);
+                    }
+                }
+            };
+
+            try {
+                pop3Server.start();
+            } catch (IOException e) {
+                LOGGER.error("Unable to start Noweco", e);
+                System.exit(1);
+            }
+
+            admin.setStopAction(stopAction);
+            Runtime.getRuntime().addShutdownHook(new Thread(stopAction));
+
+            LOGGER.info("Noweco started");
+        } catch (RuntimeException e) {
+            LOGGER.error("Uncatched exception", e);
         }
-
-        admin.setStopAction(stopAction);
-        Runtime.getRuntime().addShutdownHook(new Thread(stopAction));
-
-        LOGGER.info("Noweco started");
-
     }
 }
