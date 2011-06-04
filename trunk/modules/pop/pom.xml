@@ -5,9 +5,9 @@
     <version>1.2.2-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>noweco.modules.core</artifactId>
+  <artifactId>noweco.modules.pop</artifactId>
   <packaging>jar</packaging>
-  <name>Noweco :: Modules :: Core</name>
+  <name>Noweco :: Modules :: POP</name>
   <build>
     <defaultGoal>install</defaultGoal>
     <plugins>
@@ -29,21 +29,6 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>noweco.modules.pop</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>noweco.modules.webmail</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <!-- <dependency> -->
-    <!-- <groupId>${project.groupId}</groupId> -->
-    <!-- <artifactId>noweco.modules.calendar</artifactId> -->
-    <!-- <version>${project.version}</version> -->
-    <!-- </dependency> -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

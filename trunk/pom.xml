@@ -146,7 +146,7 @@
     <httpcomponents.version>4.1.1</httpcomponents.version>
     <lotus.userName>${env.NOWECO_LOTUS_USERNAME}</lotus.userName>
     <lotus.password>${env.NOWECO_LOTUS_PASSWORD}</lotus.password>
-    <lotus.url>${env.NOWECO_LOTUS_URL}</lotus.url>
+    <lotus.portal>${env.NOWECO_LOTUS_PORTAL}</lotus.portal>
     <proxy.host>${env.NOWECO_PROXY_HOST}</proxy.host>
     <proxy.port>${env.NOWECO_PROXY_PORT}</proxy.port>
   </properties>
@@ -154,9 +154,7 @@
     <profile>
       <id>inside-bull</id>
       <properties>
-        <lotus.url>TODO:REPLACE_BY_URL</lotus.url>
-        <proxy.host>ldprox.bull.fr</proxy.host>
-        <proxy.port>80</proxy.port>
+        <lotus.portal>com.googlecode.noweco.webmail.portal.bull.BullWebmailPortalConnector</lotus.portal>
       </properties>
     </profile>
   </profiles>
