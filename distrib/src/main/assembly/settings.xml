@@ -5,11 +5,8 @@
     <password>noweco</password>
   </jmx>
   <pop3Managers>
-<!--     <webmail id="horde.bull.net" class="com.googlecode.noweco.core.webmail.horde.HordeWebmail"> -->
-<!--       <authent class="com.googlecode.noweco.core.webmail.portal.BullWebmailFrecPortalConnector" /> -->
-<!--     </webmail> -->
-    <webmail id="notes.bull.net" class="com.googlecode.noweco.core.webmail.lotus.LotusWebmail">
-      <authent class="com.googlecode.noweco.core.webmail.portal.BullWebmailPortalConnector" />
+    <webmail id="notes.bull.net" class="com.googlecode.noweco.webmail.lotus.LotusWebmail">
+      <authent class="com.googlecode.noweco.webmail.portal.bull.BullWebmailPortalConnector" />
     </webmail>
   </pop3Managers>
   <popAccounts>

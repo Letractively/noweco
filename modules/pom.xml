@@ -12,8 +12,10 @@
     <defaultGoal>install</defaultGoal>
   </build>
   <modules>
+    <module>webmail</module>
+    <module>pop</module>
     <module>calendar</module>
-    <module>cli</module>
     <module>core</module>
+    <module>cli</module>
   </modules>
 </project>

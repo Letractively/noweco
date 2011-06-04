@@ -15,7 +15,9 @@
 
   <logger name="com.googlecode.noweco.cli" level="INFO" />
   <logger name="com.googlecode.noweco.core" level="INFO" />
-  <logger name="com.googlecode.noweco.core.webmail.cache" level="WARN" />
+  <logger name="com.googlecode.noweco.pop" level="INFO" />
+  <logger name="com.googlecode.noweco.webmail" level="INFO" />
+  <logger name="com.googlecode.noweco.webmail.cache" level="WARN" />
 
   <root level="TRACE">
     <appender-ref ref="FILE" />

@@ -55,13 +55,13 @@ import com.googlecode.noweco.cli.settings.Proxy;
 import com.googlecode.noweco.cli.settings.Settings;
 import com.googlecode.noweco.cli.settings.User;
 import com.googlecode.noweco.cli.settings.Webmail;
-import com.googlecode.noweco.core.pop.Pop3Server;
-import com.googlecode.noweco.core.pop.spi.Pop3Manager;
-import com.googlecode.noweco.core.seam.DispatchedPop3Manager;
-import com.googlecode.noweco.core.seam.DispatcherPop3Manager;
-import com.googlecode.noweco.core.seam.WebmailPop3Manager;
-import com.googlecode.noweco.core.webmail.cache.CachedWebmail;
-import com.googlecode.noweco.core.webmail.portal.PortalConnector;
+import com.googlecode.noweco.core.DispatchedPop3Manager;
+import com.googlecode.noweco.core.DispatcherPop3Manager;
+import com.googlecode.noweco.core.WebmailPop3Manager;
+import com.googlecode.noweco.pop.Pop3Server;
+import com.googlecode.noweco.pop.spi.Pop3Manager;
+import com.googlecode.noweco.webmail.cache.CachedWebmail;
+import com.googlecode.noweco.webmail.portal.PortalConnector;
 
 /**
  *
@@ -123,13 +123,13 @@ public final class StartNoweco {
                     LOGGER.error("Class {} not found", webmailClassName);
                     System.exit(1);
                 }
-                if (!com.googlecode.noweco.core.webmail.Webmail.class.isAssignableFrom(webmailClass)) {
+                if (!com.googlecode.noweco.webmail.Webmail.class.isAssignableFrom(webmailClass)) {
                     LOGGER.error("{} is not a subclass of Pop3Manager", webmailClassName);
                     System.exit(1);
                 }
-                com.googlecode.noweco.core.webmail.Webmail webmailInstance = null;
+                com.googlecode.noweco.webmail.Webmail webmailInstance = null;
                 try {
-                    webmailInstance = (com.googlecode.noweco.core.webmail.Webmail) webmailClass.newInstance();
+                    webmailInstance = (com.googlecode.noweco.webmail.Webmail) webmailClass.newInstance();
                 } catch (InstantiationException e) {
                     LOGGER.error("InstantiationException", e);
                     System.exit(1);
