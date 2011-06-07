@@ -21,6 +21,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -139,6 +140,8 @@ public class Pop3Connection implements Runnable {
                                 LOGGER.error("Unable to list", e);
                                 writeErr("Authent OK, but unable to list");
                             }
+                        } catch (UnknownHostException e) {
+                            throw new PopSocketException("disconnected", e);
                         } catch (IOException e) {
                             LOGGER.info("Authent KO", e);
                             writeErr("Unable to authent");

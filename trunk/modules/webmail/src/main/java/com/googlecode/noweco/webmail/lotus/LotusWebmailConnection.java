@@ -31,6 +31,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -146,8 +147,13 @@ public class LotusWebmailConnection implements WebmailConnection {
     }
 
     public String getContent(final String id) throws IOException {
+        LOGGER.debug("Fetch '{}' content", id);
         HttpGet httpGet = new HttpGet(prefix + "/($Inbox)/" + id + MIME_SUFFIX);
         HttpResponse response = httpclient.execute(host, httpGet);
+        StatusLine statusLine = response.getStatusLine();
+        if (statusLine.getStatusCode() != 200) {
+            throw new IOException("Unable to get message content : " + statusLine.getReasonPhrase());
+        }
         HttpEntity entity = response.getEntity();
         String content = EntityUtils.toString(entity);
         if (entity != null) {
@@ -231,7 +237,7 @@ public class LotusWebmailConnection implements WebmailConnection {
 
             @Override
             public void appendMessage(final String messageId, final int messageSize) {
-                messages.add(new LotusMessage(LotusWebmailConnection.this, messageId, messageSize));
+                messages.add(new LotusMessage(LotusWebmailConnection.this, messageId));
             }
         };
 

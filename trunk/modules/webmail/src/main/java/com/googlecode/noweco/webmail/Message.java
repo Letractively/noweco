@@ -26,8 +26,16 @@ public interface Message {
 
     String getUniqueID();
 
+    /**
+     * @return getContent().length
+     * @throws IOException
+     */
     int getSize() throws IOException;
 
+    /**
+     * @return getContent().substring(0, indexOf(2 * end of line))
+     * @throws IOException
+     */
     String getHeader() throws IOException;
 
     String getContent() throws IOException;
