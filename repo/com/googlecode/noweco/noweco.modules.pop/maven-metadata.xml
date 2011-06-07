@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>com.googlecode.noweco</groupId>
+  <artifactId>noweco.modules.pop</artifactId>
+  <version>1.2.2</version>
+  <versioning>
+    <release>1.2.2</release>
+    <versions>
+      <version>1.2.2</version>
+    </versions>
+    <lastUpdated>20110607200920</lastUpdated>
+  </versioning>
+</metadata>
