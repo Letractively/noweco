@@ -26,6 +26,10 @@ public class PopSocketException extends Exception {
 
     private static final long serialVersionUID = -2486751912349485990L;
 
+    public PopSocketException(final String message, final IOException cause) {
+        super(message, cause);
+    }
+
     public PopSocketException(final IOException cause) {
         super("Pop socket issue", cause);
     }

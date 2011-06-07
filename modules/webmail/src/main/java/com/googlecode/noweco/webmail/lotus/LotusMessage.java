@@ -36,95 +36,77 @@ public class LotusMessage implements Message {
 
     private String id;
 
-    private int size;
-
-    private String headers;
-
-    private String content;
-
     private LotusWebmailConnection webmail;
 
-    public LotusMessage(final LotusWebmailConnection webmail, final String id, final int size) {
+    public LotusMessage(final LotusWebmailConnection webmail, final String id) {
         this.webmail = webmail;
         this.id = id;
-        this.size = size;
-        content = null;
     }
 
-    public int getSize() {
-        return size;
+    public int getSize() throws IOException {
+        // HEAD method on the web page do not work, because the message may be
+        // transformed
+        return fetch().length();
     }
 
     private static final String DATE_PREFIX = "Date:";
 
-    private synchronized void fetch() throws IOException {
-        if (content == null) {
-            content = webmail.getContent(id);
-            int indexOfHeaderEnd = content.indexOf("\r\n\r\n");
-            int indexOfHeaderEndUnix = content.indexOf("\n\n");
-            if (indexOfHeaderEnd == -1 && indexOfHeaderEndUnix == -1) {
-                indexOfHeaderEnd = content.length();
+    private static final String NEW_LINE = "\r\n";
+
+    private String fetch() throws IOException {
+        StringBuilder content = new StringBuilder();
+
+        BufferedReader bufferedReader = new BufferedReader(new StringReader(webmail.getContent(id)));
+        String line = bufferedReader.readLine();
+
+        String dateLine = null;
+        boolean receiveHeader = false;
+        while (line != null && line.length() != 0) {
+            if (line.startsWith("Received:")) {
+                receiveHeader = true;
+            }
+            if (line.startsWith(DATE_PREFIX)) {
+                try {
+                    dateLine = LotusDateTransformer.convertNotesToRfc822(line);
+                    LOGGER.debug("Convert Date header : {} for {}", dateLine, id);
+                    content.append(dateLine);
+                    content.append(NEW_LINE);
+                } catch (ParseException e) {
+                    dateLine = line;
+                    LOGGER.trace("Not a lotus date", e);
+                    content.append(line);
+                    content.append(NEW_LINE);
+                }
             } else {
-                if (indexOfHeaderEnd == -1) {
-                    indexOfHeaderEnd = indexOfHeaderEndUnix + 1;
-                } else if (indexOfHeaderEndUnix == -1) {
-                    indexOfHeaderEnd += 2;
-                } else {
-                    if (indexOfHeaderEndUnix < indexOfHeaderEnd) {
-                        indexOfHeaderEnd = indexOfHeaderEndUnix + 1;
-                    } else {
-                        indexOfHeaderEnd += 2;
-                    }
-                }
+                content.append(line);
+                content.append(NEW_LINE);
             }
-            String header = content.substring(0, indexOfHeaderEnd);
-            StringBuilder newHeader = new StringBuilder();
-
-            BufferedReader bufferedReader = new BufferedReader(new StringReader(header));
-            String line = bufferedReader.readLine();
-
-            String dateLine = null;
-            boolean receiveHeader = false;
-            while (line != null && line.length() != 0) {
-                if (line.startsWith("Received:")) {
-                    receiveHeader = true;
-                }
-                if (line.startsWith(DATE_PREFIX)) {
-                    try {
-                        dateLine = LotusDateTransformer.convertNotesToRfc822(line);
-                        LOGGER.debug("Convert Date header : {} for {}", dateLine, id);
-                        newHeader.append(dateLine);
-                        newHeader.append('\n');
-                    } catch (ParseException e) {
-                        dateLine = line;
-                        LOGGER.trace("Not a lotus date", e);
-                        newHeader.append(line);
-                        newHeader.append('\n');
-                    }
-                } else {
-                    newHeader.append(line);
-                    newHeader.append('\n');
-                }
-                line = bufferedReader.readLine();
-            }
-            if (!receiveHeader && dateLine != null) {
-                String receivedHeader = "Received: by noweco; " + dateLine.substring(DATE_PREFIX.length()) + "\n";
-                LOGGER.debug("Insert generated Received header : {} for {}", receivedHeader, id);
-                newHeader.insert(0, receivedHeader);
-            }
-            headers = newHeader.toString();
-            content = headers + content.substring(indexOfHeaderEnd);
+            line = bufferedReader.readLine();
         }
+        if (!receiveHeader && dateLine != null) {
+            String receivedHeader = "Received: by noweco; " + dateLine.substring(DATE_PREFIX.length()) + NEW_LINE;
+            LOGGER.debug("Insert generated Received header : {} for {}", receivedHeader, id);
+            content.insert(0, receivedHeader);
+        }
+        while (line != null) {
+            content.append(line);
+            content.append(NEW_LINE);
+            line = bufferedReader.readLine();
+        }
+        return content.toString();
     }
 
     public String getHeader() throws IOException {
-        fetch();
-        return headers;
+        String fetch = fetch();
+        int index = fetch.indexOf(NEW_LINE + NEW_LINE);
+        if (index == -1) {
+            index = fetch.length();
+        }
+        return fetch.substring(0, index);
     }
 
     public String getContent() throws IOException {
-        fetch();
-        return content;
+        return fetch();
     }
 
     @Override

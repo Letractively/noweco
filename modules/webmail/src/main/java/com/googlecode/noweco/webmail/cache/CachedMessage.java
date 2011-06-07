@@ -21,6 +21,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.googlecode.noweco.webmail.Message;
 
@@ -42,7 +44,7 @@ public class CachedMessage implements Message, Serializable {
 
     private Integer size;
 
-    private String header;
+    private Integer headerIndex;
 
     private transient SoftReference<String> content;
 
@@ -55,30 +57,47 @@ public class CachedMessage implements Message, Serializable {
         return uniqueID;
     }
 
-    public int getSize() throws IOException {
-        if (size == null) {
-            size = delegate.getSize();
-        }
-        return size.intValue();
-    }
+    private static final Pattern END_OF_HEADERS = Pattern.compile("(?:\r\n|\n){2}");
 
-    public String getHeader() throws IOException {
-        if (header == null) {
-            header = delegate.getHeader();
-        }
-        return header;
-    }
-
-    public String getContent() throws IOException {
+    private String fill() throws IOException {
         String result = null;
         if (content != null) {
             result = content.get();
         }
         if (result == null) {
+            // TODO serialize content just before it is GC, and restore it here
             result = delegate.getContent();
+        } else {
+            return result;
+        }
+        if (content == null) {
+            content = new SoftReference<String>(result);
+            size = result.length();
+            Matcher matcher = END_OF_HEADERS.matcher(result);
+            if (matcher.find()) {
+                headerIndex = matcher.start();
+            } else {
+                headerIndex = size;
+            }
+        } else {
             content = new SoftReference<String>(result);
         }
         return result;
+    }
+
+    public synchronized int getSize() throws IOException {
+        if (size == null) {
+            fill();
+        }
+        return size.intValue();
+    }
+
+    public synchronized String getHeader() throws IOException {
+        return fill().substring(0, headerIndex);
+    }
+
+    public synchronized String getContent() throws IOException {
+        return fill();
     }
 
     private void writeObject(final ObjectOutputStream out) throws IOException {
