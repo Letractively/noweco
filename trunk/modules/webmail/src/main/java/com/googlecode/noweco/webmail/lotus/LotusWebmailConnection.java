@@ -147,7 +147,7 @@ public class LotusWebmailConnection implements WebmailConnection {
     }
 
     public String getContent(final String id) throws IOException {
-        LOGGER.debug("Fetch '{}' content", id);
+        LOGGER.info("Fetch '{}' content", id);
         HttpGet httpGet = new HttpGet(prefix + "/($Inbox)/" + id + MIME_SUFFIX);
         HttpResponse response = httpclient.execute(host, httpGet);
         StatusLine statusLine = response.getStatusLine();
