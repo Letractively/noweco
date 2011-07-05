@@ -10,6 +10,7 @@
       <directory>${basedir}/src/main/assembly</directory>
       <outputDirectory>/</outputDirectory>
       <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
       <includes>
         <include>*</include>
       </includes>
