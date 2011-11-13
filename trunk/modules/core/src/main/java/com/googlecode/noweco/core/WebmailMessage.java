@@ -17,8 +17,7 @@
 package com.googlecode.noweco.core;
 
 import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
+import java.io.InputStream;
 
 import com.googlecode.noweco.pop.spi.Message;
 
@@ -41,16 +40,12 @@ public class WebmailMessage implements Message {
         return id;
     }
 
-    public int getSize() throws IOException {
+    public long getSize() throws IOException {
         return webmailMessage.getSize();
     }
 
-    public Reader getContent() throws IOException {
-        return new StringReader(webmailMessage.getContent());
-    }
-
-    public Reader getHeaders() throws IOException {
-        return new StringReader(webmailMessage.getHeader());
+    public InputStream getContent() throws IOException {
+        return webmailMessage.getContent();
     }
 
     public String getUID() {

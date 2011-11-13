@@ -18,7 +18,9 @@ package com.googlecode.noweco.core.webmail.test.cache;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
@@ -45,18 +47,14 @@ public class TestCachedMessage {
                 return "123";
             }
 
-            public int getSize() throws IOException {
+            public long getSize() throws IOException {
                 return 0;
             }
 
-            public String getHeader() throws IOException {
-                return "";
+            public InputStream getContent() throws IOException {
+                return new ByteArrayInputStream(content.getBytes());
             }
-
-            public String getContent() throws IOException {
-                return content;
-            }
-        });
+        }, File.createTempFile("test", ".test"));
         Assert.assertTrue(cachedMessage.getContent().equals(content));
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ObjectOutputStream objectOutputStream = new ObjectOutputStream(out);

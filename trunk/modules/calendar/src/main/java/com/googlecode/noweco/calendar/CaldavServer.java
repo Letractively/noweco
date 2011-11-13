@@ -47,7 +47,7 @@ public class CaldavServer {
         Connector connector = new SocketConnector();
         connector.setPort(getHttpPort());
         SslSocketConnector sslConnector = new SslSocketConnector();
-        sslConnector.setKeystore(getClass().getResource("noweco.keystore").toString());
+        sslConnector.setKeystore(CaldavServer.class.getResource("noweco.keystore").toString());
         sslConnector.setPassword("noweco");
         sslConnector.setKeyPassword("noweco");
         sslConnector.setPort(getHttpsPort());

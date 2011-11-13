@@ -17,6 +17,7 @@
 package com.googlecode.noweco.webmail;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  *
@@ -30,14 +31,8 @@ public interface Message {
      * @return getContent().length
      * @throws IOException
      */
-    int getSize() throws IOException;
+    long getSize() throws IOException;
 
-    /**
-     * @return getContent().substring(0, indexOf(2 * end of line))
-     * @throws IOException
-     */
-    String getHeader() throws IOException;
-
-    String getContent() throws IOException;
+    InputStream getContent() throws IOException;
 
 }

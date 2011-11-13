@@ -14,21 +14,33 @@
  * limitations under the License.
  */
 
-package com.googlecode.noweco.pop.spi;
+package com.googlecode.noweco.webmail.cache;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
- *
  * @author Gael Lalire
  */
-public interface Message {
+public interface ByteBuffer {
 
-    long getSize() throws IOException;
+    long getLength();
 
-    InputStream getContent() throws IOException;
+    // write methods
 
-    String getUID();
+    void setLength(long length) throws IOException;
+
+    void write(final byte c) throws IOException;
+
+    void write(final byte[] buff, final int off, final int len) throws IOException;
+
+    void write(final byte[] buff) throws IOException;
+
+    // read methods
+
+    int read(final long readPosition) throws IOException;
+
+    int read(final long readPosition, final byte[] buff, final int offset, final int length) throws IOException;
+
+    int read(final long readPosition, final byte[] buff) throws IOException;
 
 }

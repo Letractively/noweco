@@ -92,8 +92,8 @@ public class Pop3Server implements Runnable {
                     }
                 }
             }
-        } catch (RuntimeException e) {
-            LOGGER.error("Uncatched exception", e);
+        } catch (Throwable e) {
+            LOGGER.error("Uncatched throwable", e);
         }
     }
 

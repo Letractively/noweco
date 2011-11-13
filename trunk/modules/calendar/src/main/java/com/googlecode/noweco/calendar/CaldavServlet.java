@@ -76,8 +76,7 @@ public class CaldavServlet extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(CaldavServlet.class);
 
     /**
-     * <tt>207 Multi-Status</tt>.
-     * (WebDAV - RFC 2518) or <tt>207 Partial Update
+     * <tt>207 Multi-Status</tt>. (WebDAV - RFC 2518) or <tt>207 Partial Update
      * OK</tt> (HTTP/1.1 - draft-ietf-http-v11-spec-rev-01?)
      */
     public static final int SC_MULTI_STATUS = 207;
@@ -188,12 +187,16 @@ public class CaldavServlet extends HttpServlet {
             return;
         }
 
-        if (METHOD_PROPFIND.equals(method)) {
-            doPropfind(req, resp);
-        } else if (METHOD_REPORT.equals(method)) {
-            doReport(req, resp);
-        } else {
-            super.service(req, resp);
+        try {
+            if (METHOD_PROPFIND.equals(method)) {
+                doPropfind(req, resp);
+            } else if (METHOD_REPORT.equals(method)) {
+                doReport(req, resp);
+            } else {
+                super.service(req, resp);
+            }
+        } catch (Throwable e) {
+            LOGGER.error("Unexpected throwable", e);
         }
     }
 
@@ -245,6 +248,7 @@ public class CaldavServlet extends HttpServlet {
             syncToken.getContent().add("<string mal formee>");
             multistatus.setSyncToken(syncToken);
         } else {
+            LOGGER.error("Not implemented " + xmlRequest);
             resp.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED);
             return;
         }

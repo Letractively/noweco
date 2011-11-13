@@ -49,6 +49,10 @@ public final class MemoryFileUtils {
         MemoryFile memoryFile = from;
         String[] uriTabs = uri.split("/");
 
+        if (uriTabs.length == 0) {
+            return from;
+        }
+
         if (uriTabs[0].length() == 0) {
             // absolute URI
             MemoryFile parent = memoryFile.getParent();

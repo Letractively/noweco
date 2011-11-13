@@ -54,17 +54,10 @@ public class BullWebmailPortalConnector implements PortalConnector {
     private static final Logger LOGGER = LoggerFactory.getLogger(BullWebmailPortalConnector.class);
 
     private static final Pattern DATAS = Pattern.compile("name=\"Datas\"\\s*value=\"([^\"]*)\"");
+    private static final Pattern NEW_PASSWD = Pattern.compile("name=\"newpsw\"");
     private static final Pattern LAST_CNX = Pattern.compile("name=\"lastCnx\"\\s*value=\"([^\"]*)\"");
 
-    public PortalConnection connect(final HttpHost proxy, final String user, final String password) throws IOException {
-        DefaultHttpClient httpclient = UnsecureHttpClientFactory.INSTANCE.createUnsecureHttpClient(proxy);
-
-        // mailbox does not appear with no FR language
-        // with Mozilla actions are simple
-        new ClientParamBean(httpclient.getParams()).setDefaultHeaders(Arrays.asList((Header) new BasicHeader("Accept-Language",
-                "fr-fr,fr;q=0.8,en;q=0.5,en-us;q=0.3"), new BasicHeader("User-Agent",
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:2.0.1) Gecko/20100101 Firefox/4.0.1")));
-
+    private String authent(final DefaultHttpClient httpclient, final String user, final String password) throws IOException {
         // prepare the request
         HttpPost httpost = new HttpPost("https://bullsentry3.bull.net:443/cgi/wway_authent?TdsName=PILX");
         List<NameValuePair> nvps = new ArrayList<NameValuePair>();
@@ -98,6 +91,40 @@ public class BullWebmailPortalConnector implements PortalConnector {
             LOGGER.trace("STEP 1 Entity : {}", firstEntity);
             EntityUtils.consume(entity);
         }
+        return firstEntity;
+    }
+
+    public PortalConnection connect(final HttpHost proxy, final String user, final String password) throws IOException {
+        DefaultHttpClient httpclient = UnsecureHttpClientFactory.INSTANCE.createUnsecureHttpClient(proxy);
+        HttpPost httpost;
+        List<NameValuePair> nvps;
+        HttpResponse rsp;
+        int statusCode;
+        HttpEntity entity;
+
+        // mailbox does not appear with no FR language
+        // with Mozilla actions are simple
+        new ClientParamBean(httpclient.getParams()).setDefaultHeaders(Arrays.asList((Header) new BasicHeader("Accept-Language",
+                "fr-fr,fr;q=0.8,en;q=0.5,en-us;q=0.3"), new BasicHeader("User-Agent",
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:2.0.1) Gecko/20100101 Firefox/4.0.1")));
+
+        String firstEntity = authent(httpclient, user, password);
+        Matcher datasMatcher = DATAS.matcher(firstEntity);
+        if (!datasMatcher.find()) {
+            Matcher matcher = NEW_PASSWD.matcher(firstEntity);
+            if (matcher.find()) {
+                // try a bad password
+                authent(httpclient, user, password + "BAD");
+                // and retry good password (expired)
+                firstEntity = authent(httpclient, user, password);
+                datasMatcher = DATAS.matcher(firstEntity);
+                if (!datasMatcher.find()) {
+                    throw new IOException("Unable to find Datas, after bad password try");
+                }
+            } else {
+                throw new IOException("Unable to find Datas");
+            }
+        }
 
         // STEP 2 : WEB-MAIL
 
@@ -115,11 +142,6 @@ public class BullWebmailPortalConnector implements PortalConnector {
         nvps.add(new BasicNameValuePair("WebAgt", "1"));
         nvps.add(new BasicNameValuePair("UrlConnect", "https://telemail.bull.fr:443/"));
         nvps.add(new BasicNameValuePair("Service", "WEB-MAIL"));
-
-        Matcher datasMatcher = DATAS.matcher(firstEntity);
-        if (!datasMatcher.find()) {
-            throw new IOException("Unable to find Datas");
-        }
         nvps.add(new BasicNameValuePair("Datas", datasMatcher.group(1)));
 
         Matcher lastCnxMatcher = LAST_CNX.matcher(firstEntity);

@@ -17,6 +17,7 @@
 package com.googlecode.noweco.webmail.lotus;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -146,20 +147,15 @@ public class LotusWebmailConnection implements WebmailConnection {
         }
     }
 
-    public String getContent(final String id) throws IOException {
-        LOGGER.info("Fetch '{}' content", id);
+    public InputStream getContent(final String id) throws IOException {
+        LOGGER.info("Fetch {} content", id);
         HttpGet httpGet = new HttpGet(prefix + "/($Inbox)/" + id + MIME_SUFFIX);
         HttpResponse response = httpclient.execute(host, httpGet);
         StatusLine statusLine = response.getStatusLine();
         if (statusLine.getStatusCode() != 200) {
             throw new IOException("Unable to get message content : " + statusLine.getReasonPhrase());
         }
-        HttpEntity entity = response.getEntity();
-        String content = EntityUtils.toString(entity);
-        if (entity != null) {
-            EntityUtils.consume(entity);
-        }
-        return content;
+        return response.getEntity().getContent();
     }
 
     private static final Pattern CONNECTED_PATTERN = Pattern.compile("<form\\s*name=\"_DominoForm\"");

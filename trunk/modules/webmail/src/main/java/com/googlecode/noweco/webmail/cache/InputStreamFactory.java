@@ -14,21 +14,16 @@
  * limitations under the License.
  */
 
-package com.googlecode.noweco.pop.spi;
+package com.googlecode.noweco.webmail.cache;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 /**
- *
  * @author Gael Lalire
  */
-public interface Message {
+public interface InputStreamFactory {
 
-    long getSize() throws IOException;
-
-    InputStream getContent() throws IOException;
-
-    String getUID();
+    InputStream createInputStream() throws IOException;
 
 }

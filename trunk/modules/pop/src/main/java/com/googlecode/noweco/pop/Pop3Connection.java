@@ -260,6 +260,9 @@ public class Pop3Connection implements Runnable {
                             String args = command.substring(Command.TOP.name().length()).trim();
                             try {
                                 String[] split = args.split(" ");
+                                if (split.length != 2) {
+                                    writeErr("TOP needs 2 params : msg and line number");
+                                }
                                 int id = Integer.parseInt(split[0]);
                                 int contentLines = Integer.parseInt(split[1]);
                                 int pos = id - 1;
@@ -270,25 +273,14 @@ public class Pop3Connection implements Runnable {
 
                                     writeOK("Begin headers content");
                                     try {
-                                        BufferedReader bufferedReader;
-                                        if (contentLines <= 0) {
-                                            bufferedReader = new BufferedReader(message.getHeaders());
-                                        } else {
-                                            bufferedReader = new BufferedReader(message.getContent());
+                                        Pop3InputStreamFilter inputStream = new Pop3InputStreamFilter(message.getContent(), contentLines);
+                                        int read = inputStream.read();
+                                        while (read != -1) {
+                                            outputStream.write(read);
+                                            read = inputStream.read();
                                         }
-                                        String line = bufferedReader.readLine();
-                                        while (line != null && line.length() != 0) {
-                                            writeLine(line);
-                                            line = bufferedReader.readLine();
-                                        }
-                                        writeLine("");
-                                        if (contentLines != 0 && line != null) {
-                                            line = bufferedReader.readLine();
-                                            while (line != null && contentLines > 0) {
-                                                writeLine(line);
-                                                line = bufferedReader.readLine();
-                                                contentLines--;
-                                            }
+                                        if (!inputStream.isEOLTerminated()) {
+                                            writeLine("");
                                         }
                                         writeEndOfLines();
                                     } catch (IOException e) {
@@ -311,11 +303,14 @@ public class Pop3Connection implements Runnable {
                                     writeOK("Begin message content");
                                     LOGGER.info("Send content of {}", message.getUID());
                                     try {
-                                        BufferedReader bufferedReader = new BufferedReader(message.getContent());
-                                        String line = bufferedReader.readLine();
-                                        while (line != null) {
-                                            writeLine(line);
-                                            line = bufferedReader.readLine();
+                                        Pop3InputStreamFilter inputStream = new Pop3InputStreamFilter(message.getContent());
+                                        int read = inputStream.read();
+                                        while (read != -1) {
+                                            outputStream.write(read);
+                                            read = inputStream.read();
+                                        }
+                                        if (!inputStream.isEOLTerminated()) {
+                                            writeLine("");
                                         }
                                         writeEndOfLines();
                                     } catch (IOException e) {
@@ -379,8 +374,8 @@ public class Pop3Connection implements Runnable {
                     mutex.notifyAll();
                 }
             }
-        } catch (RuntimeException e) {
-            LOGGER.error("Uncatched exception", e);
+        } catch (Throwable e) {
+            LOGGER.error("Uncatched throwable", e);
         }
     }
 

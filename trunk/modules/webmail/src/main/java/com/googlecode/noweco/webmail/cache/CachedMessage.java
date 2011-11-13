@@ -16,13 +16,12 @@
 
 package com.googlecode.noweco.webmail.cache;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.lang.ref.SoftReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.googlecode.noweco.webmail.Message;
 
@@ -34,87 +33,74 @@ public class CachedMessage implements Message, Serializable {
 
     private static final long serialVersionUID = 8245316141066328829L;
 
-    private transient Message delegate;
-
-    public void setDelegate(final Message delegate) {
-        this.delegate = delegate;
+    public void setDelegate(final Message delegate) throws IOException {
+        content = new CachedInputStream(new InputStreamFactory() {
+            public InputStream createInputStream() throws IOException {
+                return delegate.getContent();
+            }
+        }, data);
     }
 
     private String uniqueID;
 
     private Integer size;
 
-    private Integer headerIndex;
+    private transient CachedInputStream content;
 
-    private transient SoftReference<String> content;
+    private File data;
 
-    public CachedMessage(final Message delegate) {
-        this.delegate = delegate;
+    public CachedMessage(final Message delegate, final File data) throws IOException {
         uniqueID = delegate.getUniqueID();
+        this.data = data;
+        content = new CachedInputStream(new InputStreamFactory() {
+            public InputStream createInputStream() throws IOException {
+                return delegate.getContent();
+            }
+        }, data);
     }
 
     public String getUniqueID() {
         return uniqueID;
     }
 
-    private static final Pattern END_OF_HEADERS = Pattern.compile("(?:\r\n|\n){2}");
-
-    private String fill() throws IOException {
-        String result = null;
-        if (content != null) {
-            result = content.get();
-        }
-        if (result == null) {
-            // TODO serialize content just before it is GC, and restore it here
-            result = delegate.getContent();
-        } else {
-            return result;
-        }
-        if (content == null) {
-            content = new SoftReference<String>(result);
-            size = result.length();
-            Matcher matcher = END_OF_HEADERS.matcher(result);
-            if (matcher.find()) {
-                headerIndex = matcher.start();
-            } else {
-                headerIndex = size;
-            }
-        } else {
-            content = new SoftReference<String>(result);
-        }
-        return result;
-    }
-
-    public synchronized int getSize() throws IOException {
+    public synchronized long getSize() throws IOException {
         if (size == null) {
-            fill();
+            int csize = 0;
+            byte[] buff = new byte[2048];
+            InputStream newReader = content.newInputStream();
+            try {
+                int read = newReader.read(buff);
+                while (read != -1) {
+                    csize += read;
+                    read = newReader.read(buff);
+                }
+            } finally {
+                newReader.close();
+            }
+            size = csize;
         }
         return size.intValue();
     }
 
-    public synchronized String getHeader() throws IOException {
-        return fill().substring(0, headerIndex);
-    }
-
-    public synchronized String getContent() throws IOException {
-        return fill();
+    public synchronized InputStream getContent() throws IOException {
+        return content.newInputStream();
     }
 
     private void writeObject(final ObjectOutputStream out) throws IOException {
         out.defaultWriteObject();
         String result = null;
-        if (content != null) {
-            result = content.get();
-        }
+//        if (content != null) {
+//            result = content.get();
+//        }
         out.writeObject(result);
     }
 
     private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
         String result = (String) in.readObject();
-        if (result != null) {
-            content = new SoftReference<String>(result);
-        }
+//        if (result != null) {
+//            content = new SoftReference<String>(result);
+//        }
     }
 
 }

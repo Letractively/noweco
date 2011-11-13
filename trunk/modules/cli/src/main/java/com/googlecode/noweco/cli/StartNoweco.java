@@ -138,7 +138,9 @@ public final class StartNoweco {
                     System.exit(1);
                 }
                 String id = webmail.getId();
-                webmailInstance = new CachedWebmail(webmailInstance, new File(data, id + ".data"));
+                File popManagerData = new File(data, id);
+                popManagerData.mkdir();
+                webmailInstance = new CachedWebmail(webmailInstance, popManagerData);
                 Pop3Manager pop3Manager = new WebmailPop3Manager(webmailInstance);
 
                 Proxy proxy = webmail.getProxy();
@@ -243,8 +245,8 @@ public final class StartNoweco {
                         } finally {
                             LOGGER.info("Noweco shutdown");
                         }
-                    } catch (RuntimeException e) {
-                        LOGGER.error("Uncatched exception", e);
+                    } catch (Throwable e) {
+                        LOGGER.error("Uncatched throwable", e);
                     }
                 }
             };
@@ -260,8 +262,8 @@ public final class StartNoweco {
             Runtime.getRuntime().addShutdownHook(new Thread(stopAction));
 
             LOGGER.info("Noweco started");
-        } catch (RuntimeException e) {
-            LOGGER.error("Uncatched exception", e);
+        } catch (Throwable e) {
+            LOGGER.error("Uncatched throwable", e);
         }
     }
 }

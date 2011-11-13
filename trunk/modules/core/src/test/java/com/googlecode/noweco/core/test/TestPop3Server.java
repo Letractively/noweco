@@ -14,21 +14,34 @@
  * limitations under the License.
  */
 
-package com.googlecode.noweco.pop.spi;
+package com.googlecode.noweco.core.test;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.concurrent.Executors;
+
+import org.junit.Ignore;
+import org.junit.Test;
+
+import com.googlecode.noweco.pop.Pop3Server;
 
 /**
- *
  * @author Gael Lalire
  */
-public interface Message {
+public class TestPop3Server {
 
-    long getSize() throws IOException;
-
-    InputStream getContent() throws IOException;
-
-    String getUID();
+    @Test
+    @Ignore
+    public void test() throws IOException, InterruptedException {
+        Pop3Server pop3Server = new Pop3Server(new FakePop3Manager(), Executors.newCachedThreadPool()) {
+            @Override
+            public int getPop3Port() {
+                return 1100;
+            }
+        };
+        pop3Server.start();
+        synchronized (this) {
+            wait();
+        }
+    }
 
 }
