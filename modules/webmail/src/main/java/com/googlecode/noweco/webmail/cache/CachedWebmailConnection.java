@@ -16,6 +16,7 @@
 
 package com.googlecode.noweco.webmail.cache;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -63,9 +64,15 @@ public class CachedWebmailConnection implements WebmailConnection, Serializable 
         this.password = password;
     }
 
-    public CachedWebmailConnection(final WebmailConnection delegate, final String password) {
+    private File data;
+
+    private IDGenerator generator;
+
+    public CachedWebmailConnection(final WebmailConnection delegate, final File data, final IDGenerator generator, final String password) {
         this.password = password;
+        this.data = data;
         this.delegate = delegate;
+        this.generator = generator;
     }
 
     public String getPassword() {
@@ -82,7 +89,7 @@ public class CachedWebmailConnection implements WebmailConnection, Serializable 
         }
     }
 
-    public List<? extends Message> getMessages(final List<? extends Message> messages) {
+    public List<? extends Message> getMessages(final List<? extends Message> messages) throws IOException {
         List<Message> result = new ArrayList<Message>(messages.size());
 
         synchronized (messagesByUID) {
@@ -91,7 +98,7 @@ public class CachedWebmailConnection implements WebmailConnection, Serializable 
                 if (!deleteFailed.contains(uniqueID)) {
                     CachedMessage cachedMessage = messagesByUID.get(uniqueID);
                     if (cachedMessage == null) {
-                        cachedMessage = new CachedMessage(message);
+                        cachedMessage = new CachedMessage(message, new File(data, "msg" + generator.getID()));
                         LOGGER.info("Add {} to cache", uniqueID);
                         messagesByUID.put(uniqueID, cachedMessage);
                     } else {

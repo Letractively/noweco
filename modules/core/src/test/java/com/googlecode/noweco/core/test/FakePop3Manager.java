@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.googlecode.noweco.pop.test;
+package com.googlecode.noweco.core.test;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,6 +25,7 @@ import java.util.List;
 import com.googlecode.noweco.pop.spi.Message;
 import com.googlecode.noweco.pop.spi.Pop3Account;
 import com.googlecode.noweco.pop.spi.Pop3Manager;
+import com.googlecode.noweco.webmail.lotus.LotusMessageInputStream;
 
 /**
  * @author Gael Lalire
@@ -53,7 +54,7 @@ public class FakePop3Manager implements Pop3Manager, Pop3Account {
             }
 
             public InputStream getContent() throws IOException {
-                return getClass().getResourceAsStream("/badfile.txt");
+                return new LotusMessageInputStream(null, getClass().getResourceAsStream("/badfile.txt"));
             }
         });
     }

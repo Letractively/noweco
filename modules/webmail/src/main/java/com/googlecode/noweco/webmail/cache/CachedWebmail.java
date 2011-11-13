@@ -50,16 +50,36 @@ public class CachedWebmail implements Webmail {
 
     private Map<String, CachedWebmailConnection> restoredWebmailConnectionByUser = new HashMap<String, CachedWebmailConnection>();
 
+    private IDGenerator generator = new IDGenerator();
+
+    // STEP 0 : nothing exists
+    // STEP 1 : _webmail.ser exists but contains uncomplete data
+
+    // STEP 2 : _webmail.ser exists and contains complete data
+    // STEP 3 : webmail.ser exists and contains complete data
+    // STEP 4 : webmail.ser exists and contains complete data, _webmail.ser exists but contains uncomplete data
+    // STEP 5 : webmail.ser exists and contains complete data, _webmail.ser exists and contains complete data
+    // return to STEP 2
+
     @SuppressWarnings("unchecked")
     public CachedWebmail(final Webmail webmail, final File data) {
-        if (data.exists()) {
+        File file = new File(data, "webmail.ser");
+        if (!file.exists()) {
+            File tmpFile = new File(data, "_webmail.ser");
+            if (tmpFile.exists()) {
+                tmpFile.renameTo(file);
+            }
+        }
+        if (file.exists()) {
             try {
-                ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(data));
+                ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(file));
                 restoredWebmailConnectionByUser = (Map<String, CachedWebmailConnection>) objectInputStream.readObject();
                 objectInputStream.close();
             } catch (IOException e) {
+                file.delete();
                 LOGGER.error("Unable to restore cached data", e);
             } catch (ClassNotFoundException e) {
+                file.delete();
                 LOGGER.error("Unable to restore cached data", e);
             }
         }
@@ -73,13 +93,14 @@ public class CachedWebmail implements Webmail {
             cachedWebmailConnection = cachedWebmailConnectionByUser.get(user);
         }
         if (cachedWebmailConnection == null) {
+            // unknown user
             WebmailConnection connect = webmail.connect(user, password);
             cachedWebmailConnection = restoredWebmailConnectionByUser.get(user);
             if (cachedWebmailConnection != null) {
                 cachedWebmailConnection.setPassword(password);
                 cachedWebmailConnection.setDelegate(connect);
             } else {
-                cachedWebmailConnection = new CachedWebmailConnection(connect, password);
+                cachedWebmailConnection = new CachedWebmailConnection(connect, data, generator, password);
             }
             synchronized (cachedWebmailConnectionByUser) {
                 cachedWebmailConnectionByUser.put(user, cachedWebmailConnection);
@@ -115,10 +136,14 @@ public class CachedWebmail implements Webmail {
             }
         }
         try {
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(data));
+            File tmpFile = new File(data, "_webmail.ser");
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(tmpFile));
             objectOutputStream.writeObject(cachedWebmailConnectionByUser);
             objectOutputStream.flush();
             objectOutputStream.close();
+            File file = new File(data, "webmail.ser");
+            file.delete();
+            tmpFile.renameTo(file);
         } catch (IOException e) {
             LOGGER.error("Unable to save cached data", e);
         }

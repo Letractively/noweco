@@ -16,13 +16,8 @@
 
 package com.googlecode.noweco.webmail.lotus;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.StringReader;
-import java.text.ParseException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.InputStream;
 
 import com.googlecode.noweco.webmail.Message;
 
@@ -31,8 +26,6 @@ import com.googlecode.noweco.webmail.Message;
  * @author Gael Lalire
  */
 public class LotusMessage implements Message {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(LotusMessage.class);
 
     private String id;
 
@@ -43,69 +36,26 @@ public class LotusMessage implements Message {
         this.id = id;
     }
 
-    public int getSize() throws IOException {
+    public long getSize() throws IOException {
         // HEAD method on the web page do not work, because the message may be
         // transformed
-        return fetch().length();
+        byte[] buff = new byte[256];
+        long size = 0;
+        LotusMessageInputStream is = fetch();
+        try {
+            int read = is.read(buff);
+            size += read;
+        } finally {
+            is.close();
+        }
+        return size;
     }
 
-    private static final String DATE_PREFIX = "Date:";
-
-    private static final String NEW_LINE = "\r\n";
-
-    private String fetch() throws IOException {
-        StringBuilder content = new StringBuilder();
-
-        BufferedReader bufferedReader = new BufferedReader(new StringReader(webmail.getContent(id)));
-        String line = bufferedReader.readLine();
-
-        String dateLine = null;
-        boolean receiveHeader = false;
-        while (line != null && line.length() != 0) {
-            if (line.startsWith("Received:")) {
-                receiveHeader = true;
-            }
-            if (line.startsWith(DATE_PREFIX)) {
-                try {
-                    dateLine = LotusDateTransformer.convertNotesToRfc822(line);
-                    LOGGER.debug("Convert Date header : {} for {}", dateLine, id);
-                    content.append(dateLine);
-                    content.append(NEW_LINE);
-                } catch (ParseException e) {
-                    dateLine = line;
-                    LOGGER.trace("Not a lotus date", e);
-                    content.append(line);
-                    content.append(NEW_LINE);
-                }
-            } else {
-                content.append(line);
-                content.append(NEW_LINE);
-            }
-            line = bufferedReader.readLine();
-        }
-        if (!receiveHeader && dateLine != null) {
-            String receivedHeader = "Received: by noweco; " + dateLine.substring(DATE_PREFIX.length()) + NEW_LINE;
-            LOGGER.debug("Insert generated Received header : {} for {}", receivedHeader, id);
-            content.insert(0, receivedHeader);
-        }
-        while (line != null) {
-            content.append(line);
-            content.append(NEW_LINE);
-            line = bufferedReader.readLine();
-        }
-        return content.toString();
+    private LotusMessageInputStream fetch() throws IOException {
+        return new LotusMessageInputStream(id, webmail.getContent(id));
     }
 
-    public String getHeader() throws IOException {
-        String fetch = fetch();
-        int index = fetch.indexOf(NEW_LINE + NEW_LINE);
-        if (index == -1) {
-            index = fetch.length();
-        }
-        return fetch.substring(0, index);
-    }
-
-    public String getContent() throws IOException {
+    public InputStream getContent() throws IOException {
         return fetch();
     }
 

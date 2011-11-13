@@ -54,4 +54,4 @@ if [ ${#NOWECO_DEBUG} -ne 0 ]; then
 fi
 NOWECO_OPTS=("${NOWECO_OPTS[@]}" -Dcom.sun.management.jmxremote -Dlogback.configurationFile="$DIRNAME/logback.xml" -Dnoweco.home="$DIRNAME")
 
-"$JAVA" "${NOWECO_OPTS[@]}" -cp "$CLASSPATH" $MAIN_CLASS
+exec "$JAVA" "${NOWECO_OPTS[@]}" -cp "$CLASSPATH" $MAIN_CLASS

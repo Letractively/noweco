@@ -24,13 +24,12 @@ import junit.framework.AssertionFailedError;
  * <ul>
  * <li>NOWECO_LOTUS_USERNAME</li>
  * <li>NOWECO_LOTUS_PASSWORD</li>
- * <li>NOWECO_LOTUS_URL</li>
  * <li>NOWECO_PROXY_HOST</li>
  * <li>NOWECO_PROXY_PORT</li>
  * </ul>
  *
  * In Eclipse you can modify the jvm args to :
- * "-DNOWECO_LOTUS_USERNAME=_ -DNOWECO_LOTUS_PASSWORD=_ -DNOWECO_LOTUS_URL=_ -DNOWECO_PROXY_HOST=_ -DNOWECO_PROXY_PORT=_"
+ * "-DNOWECO_LOTUS_USERNAME=_ -DNOWECO_LOTUS_PASSWORD=_ -DNOWECO_PROXY_HOST=_ -DNOWECO_PROXY_PORT=_"
  *
  * @author Gael Lalire
  */
