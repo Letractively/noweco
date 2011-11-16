@@ -39,7 +39,9 @@ public class LotusMessageInputStream extends InputStream {
 
     private static final String DATE_PREFIX = "Date:";
 
-    private static final byte[] NEW_LINE = new byte[] { '\r', '\n' };
+    private static final String NEW_LINE = "\r\n";
+
+    private static final byte[] ASCII_NEW_LINE = new byte[] { '\r', '\n' };
 
     private static final String RECEIVED = "received:";
 
@@ -71,16 +73,16 @@ public class LotusMessageInputStream extends InputStream {
                     dateLine = LotusDateTransformer.convertNotesToRfc822(line);
                     LOGGER.debug("Convert Date header : {} for {}", dateLine, id);
                     byteBuffer.write(dateLine.getBytes("US-ASCII"));
-                    byteBuffer.write(NEW_LINE);
+                    byteBuffer.write(ASCII_NEW_LINE);
                 } catch (ParseException e) {
                     dateLine = line;
                     LOGGER.trace("Not a lotus date", e);
                     byteBuffer.write(line.getBytes("US-ASCII"));
-                    byteBuffer.write(NEW_LINE);
+                    byteBuffer.write(ASCII_NEW_LINE);
                 }
             } else {
                 byteBuffer.write(line.getBytes("US-ASCII"));
-                byteBuffer.write(NEW_LINE);
+                byteBuffer.write(ASCII_NEW_LINE);
             }
             line = delegate.readLine();
             LOGGER.trace("read line: {}", line);
@@ -92,7 +94,7 @@ public class LotusMessageInputStream extends InputStream {
         }
         if (line != null) {
             // empty line
-            byteBuffer.write(NEW_LINE);
+            byteBuffer.write(ASCII_NEW_LINE);
         }
     }
 
