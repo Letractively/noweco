@@ -34,7 +34,7 @@ public class MemoryFile {
 
     private Prop prop;
 
-    private String content;
+    private byte[] content;
 
     public MemoryFile(final MemoryFile parent, final String name, final boolean dir) {
         if (parent != null) {
@@ -78,11 +78,11 @@ public class MemoryFile {
         return parent.getURI() + name;
     }
 
-    public String getContent() {
+    public byte[] getContent() {
         return content;
     }
 
-    public void setContent(final String content) {
+    public void setContent(final byte[] content) {
         this.content = content;
     }
 

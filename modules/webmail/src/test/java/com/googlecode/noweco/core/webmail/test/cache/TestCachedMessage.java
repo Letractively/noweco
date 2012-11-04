@@ -28,7 +28,7 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.googlecode.noweco.webmail.Message;
+import com.googlecode.noweco.webmail.WebmailMessage;
 import com.googlecode.noweco.webmail.cache.CachedMessage;
 
 /**
@@ -41,7 +41,7 @@ public class TestCachedMessage {
     @Ignore
     public void test() throws IOException, ClassNotFoundException {
         final String content = "The content";
-        CachedMessage cachedMessage = new CachedMessage(new Message() {
+        CachedMessage cachedMessage = new CachedMessage(new WebmailMessage() {
 
             public String getUniqueID() {
                 return "123";
@@ -54,7 +54,7 @@ public class TestCachedMessage {
             public InputStream getContent() throws IOException {
                 return new ByteArrayInputStream(content.getBytes());
             }
-        }, File.createTempFile("test", ".test"));
+        }, File.createTempFile("test", ".test"), 3);
         Assert.assertTrue(cachedMessage.getContent().equals(content));
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ObjectOutputStream objectOutputStream = new ObjectOutputStream(out);

@@ -16,14 +16,18 @@
 
 package com.googlecode.noweco.webmail.cache;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Gael Lalire
  */
 public class CachedInputStream {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CachedInputStream.class);
 
     private ByteBuffer characterBuffer;
 
@@ -35,15 +39,30 @@ public class CachedInputStream {
 
     private Object inMutex = new Object();
 
-    public CachedInputStream(final InputStreamFactory inF, final CachedByteBuffer restored) {
-        this.inF = inF;
+    private int readers = 0;
+
+    public CachedInputStream(final InputStream in, final CachedByteBuffer restored) {
+        this.inF = new InputStreamFactory() {
+
+            private boolean first = true;
+
+            public InputStream createInputStream() throws IOException {
+                if (first) {
+                    first = false;
+                    return in;
+                } else {
+                    throw new IOException("Unable to recreate input stream");
+                }
+            }
+        };
         this.characterBuffer = restored;
         inPosition = restored.getLength();
     }
 
-    public CachedInputStream(final InputStreamFactory inF, final File data) throws IOException {
+    public CachedInputStream(final InputStreamFactory inF, final CachedByteBuffer restored) {
         this.inF = inF;
-        characterBuffer = new CachedByteBuffer(data);
+        this.characterBuffer = restored;
+        inPosition = restored.getLength();
     }
 
     private int readIn(final byte[] cbuf, final int off, final int len) throws IOException {
@@ -62,7 +81,12 @@ public class CachedInputStream {
                     characterBuffer.write(cbuf, off, read);
                 }
             } else {
-                in.close();
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    LOGGER.warn("Close failed", e);
+                }
+                in = null;
                 inF = null;
             }
             return read;
@@ -76,6 +100,12 @@ public class CachedInputStream {
         return new InputStream() {
 
             private long position = 0;
+
+            {
+                synchronized (inMutex) {
+                    readers++;
+                }
+            }
 
             @Override
             public int read(final byte[] cbuf, final int off, final int len) throws IOException {
@@ -108,7 +138,36 @@ public class CachedInputStream {
             }
 
             @Override
-            public void close() throws IOException {
+            protected void finalize() {
+                if (position != -1) {
+                    // not close but GC
+                    synchronized (inMutex) {
+                        readers--;
+                        if (readers == 0 && in != null) {
+                            try {
+                                in.close();
+                            } catch (IOException e) {
+                                LOGGER.warn("Close failed", e);
+                            }
+                            in = null;
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void close() {
+                synchronized (inMutex) {
+                    readers--;
+                    if (readers == 0 && in != null) {
+                        try {
+                            in.close();
+                        } catch (IOException e) {
+                            LOGGER.warn("Close failed", e);
+                        }
+                        in = null;
+                    }
+                }
                 position = -1;
             }
 

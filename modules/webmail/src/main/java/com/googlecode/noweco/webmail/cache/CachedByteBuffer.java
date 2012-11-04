@@ -2,7 +2,10 @@ package com.googlecode.noweco.webmail.cache;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
+import java.io.Serializable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +14,9 @@ import org.slf4j.LoggerFactory;
  *
  * @author Gael Lalire
  */
-public class CachedByteBuffer implements ByteBuffer {
+public class CachedByteBuffer implements Serializable, ByteBuffer {
+
+    private static final long serialVersionUID = -6602831217964170758L;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CachedByteBuffer.class);
 
@@ -21,10 +26,16 @@ public class CachedByteBuffer implements ByteBuffer {
     // buffer[writePosition] is empty
     private byte[] buffer = new byte[1024 * 1024];
 
-    private RandomAccessFile randomAccessFile;
+    private File file;
+
+    private transient RandomAccessFile randomAccessFile;
 
     public CachedByteBuffer(final File file) throws IOException {
-        writePosition = file.length();
+        this.file = file;
+        if (file.exists() && file.length() != 0) {
+            throw new IOException("Cache file should not exists, or be empty");
+        }
+        writePosition = 0;
         randomAccessFile = new RandomAccessFile(file, "rw");
     }
 
@@ -111,7 +122,7 @@ public class CachedByteBuffer implements ByteBuffer {
         return read;
     }
 
-    public void detachFile() throws IOException {
+    public void shutdown() throws IOException {
         randomAccessFile.close();
     }
 
@@ -144,4 +155,21 @@ public class CachedByteBuffer implements ByteBuffer {
     public int read(final long readPosition, final byte[] buff) throws IOException {
         return read(readPosition, buff, 0, buff.length);
     }
+
+    private void writeObject(final ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+    }
+
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        if (file.exists()) {
+            randomAccessFile = new RandomAccessFile(file, "rw");
+        }
+    }
+
+    public void delete() throws IOException {
+        randomAccessFile.close();
+        file.delete();
+    }
+
 }

@@ -17,9 +17,9 @@
 package com.googlecode.noweco.pop;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -29,9 +29,9 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.noweco.pop.spi.Message;
 import com.googlecode.noweco.pop.spi.Pop3Account;
 import com.googlecode.noweco.pop.spi.Pop3Manager;
+import com.googlecode.noweco.pop.spi.Pop3Message;
 
 /**
  *
@@ -56,7 +56,7 @@ public class Pop3Connection implements Runnable {
 
     private boolean finished = false;
 
-    private DataOutputStream outputStream;
+    private OutputStream outputStream;
 
     private BufferedReader reader;
 
@@ -68,7 +68,7 @@ public class Pop3Connection implements Runnable {
         this.pop3Manager = pop3Manager;
         this.socket = socket;
         reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), US_ASCII));
-        outputStream = new DataOutputStream(socket.getOutputStream());
+        outputStream = socket.getOutputStream();
     }
 
     public void stop() throws IOException, InterruptedException {
@@ -97,9 +97,9 @@ public class Pop3Connection implements Runnable {
     public void run() {
         try {
             this.thread = Thread.currentThread();
+            Pop3Account pop3Account = null;
             try {
-                Pop3Account pop3Account = null;
-                List<? extends Message> messages = null;
+                List<? extends Pop3Message> messages = null;
                 boolean[] markForDeletion = null;
                 State state = State.AUTHORIZATION;
                 writeOK("Server ready.");
@@ -141,7 +141,7 @@ public class Pop3Connection implements Runnable {
                                 writeErr("Authent OK, but unable to list");
                             }
                         } catch (UnknownHostException e) {
-                            throw new PopSocketException("disconnected", e);
+                            throw new Pop3SocketException("disconnected", e);
                         } catch (IOException e) {
                             LOGGER.info("Authent KO", e);
                             writeErr("Unable to authent");
@@ -156,7 +156,7 @@ public class Pop3Connection implements Runnable {
                                 int size = 0;
                                 int count = 0;
                                 int pos = 0;
-                                for (Message message : messages) {
+                                for (Pop3Message message : messages) {
                                     if (!markForDeletion[pos]) {
                                         size += message.getSize();
                                         count++;
@@ -174,7 +174,7 @@ public class Pop3Connection implements Runnable {
                                 try {
                                     List<String> lines = new ArrayList<String>();
                                     int pos = 0;
-                                    for (Message message : messages) {
+                                    for (Pop3Message message : messages) {
                                         if (!markForDeletion[pos]) {
                                             lines.add((pos + 1) + " " + message.getSize());
                                         }
@@ -211,7 +211,7 @@ public class Pop3Connection implements Runnable {
                             if (arg.length() == 0) {
                                 List<String> lines = new ArrayList<String>();
                                 int pos = 0;
-                                for (Message message : messages) {
+                                for (Pop3Message message : messages) {
                                     if (!markForDeletion[pos]) {
                                         lines.add((pos + 1) + " " + message.getUID());
                                     }
@@ -269,15 +269,16 @@ public class Pop3Connection implements Runnable {
                                 if (pos < 0 || pos >= messages.size() || markForDeletion[pos]) {
                                     writeErr("Message with " + id + " id not found");
                                 } else {
-                                    Message message = messages.get(pos);
+                                    Pop3Message message = messages.get(pos);
 
                                     writeOK("Begin headers content");
                                     try {
                                         Pop3InputStreamFilter inputStream = new Pop3InputStreamFilter(message.getContent(), contentLines);
-                                        int read = inputStream.read();
+                                        byte[] buffer = new byte[1024];
+                                        int read = inputStream.read(buffer);
                                         while (read != -1) {
-                                            outputStream.write(read);
-                                            read = inputStream.read();
+                                            outputStream.write(buffer, 0, read);
+                                            read = inputStream.read(buffer);
                                         }
                                         if (!inputStream.isEOLTerminated()) {
                                             writeLine("");
@@ -285,7 +286,7 @@ public class Pop3Connection implements Runnable {
                                         writeEndOfLines();
                                     } catch (IOException e) {
                                         LOGGER.error("Unable to read message", e);
-                                        throw new PopSocketException(e);
+                                        throw new Pop3SocketException(e);
                                     }
                                 }
                             } catch (NumberFormatException e) {
@@ -299,15 +300,16 @@ public class Pop3Connection implements Runnable {
                                 if (pos < 0 || pos >= messages.size() || markForDeletion[pos]) {
                                     writeErr("Message with " + id + " id not found");
                                 } else {
-                                    Message message = messages.get(pos);
+                                    Pop3Message message = messages.get(pos);
                                     writeOK("Begin message content");
                                     LOGGER.info("Send content of {}", message.getUID());
                                     try {
                                         Pop3InputStreamFilter inputStream = new Pop3InputStreamFilter(message.getContent());
-                                        int read = inputStream.read();
+                                        byte[] buffer = new byte[1024];
+                                        int read = inputStream.read(buffer);
                                         while (read != -1) {
-                                            outputStream.write(read);
-                                            read = inputStream.read();
+                                            outputStream.write(buffer, 0, read);
+                                            read = inputStream.read(buffer);
                                         }
                                         if (!inputStream.isEOLTerminated()) {
                                             writeLine("");
@@ -315,7 +317,7 @@ public class Pop3Connection implements Runnable {
                                         writeEndOfLines();
                                     } catch (IOException e) {
                                         LOGGER.error("Unable to read message", e);
-                                        throw new PopSocketException(e);
+                                        throw new Pop3SocketException(e);
                                     }
                                 }
                             } catch (NumberFormatException e) {
@@ -334,7 +336,7 @@ public class Pop3Connection implements Runnable {
                     try {
                         List<String> uids = new ArrayList<String>();
                         int pos = 0;
-                        for (Message message : messages) {
+                        for (Pop3Message message : messages) {
                             if (markForDeletion[pos]) {
                                 uids.add(message.getUID());
                             }
@@ -351,9 +353,16 @@ public class Pop3Connection implements Runnable {
                     }
                     LOGGER.info("Transaction committed");
                 }
-            } catch (PopSocketException e) {
+            } catch (Pop3SocketException e) {
                 LOGGER.error("Client connection failed", e);
             } finally {
+                if (pop3Account != null) {
+                    try {
+                        pop3Account.close();
+                    } catch (IOException e) {
+                        LOGGER.error("Unable to close pop3Account", e);
+                    }
+                }
                 try {
                     outputStream.close();
                 } catch (IOException e) {
@@ -389,20 +398,20 @@ public class Pop3Connection implements Runnable {
         return true;
     }
 
-    public String read() throws PopSocketException {
+    public String read() throws Pop3SocketException {
         try {
             String line = reader.readLine();
             LOGGER.debug("Receive: {}", line);
             if (line == null) {
-                throw new PopSocketException(new IOException("Client ends connection"));
+                throw new Pop3SocketException(new IOException("Client ends connection"));
             }
             return line;
         } catch (IOException e) {
-            throw new PopSocketException(e);
+            throw new Pop3SocketException(e);
         }
     }
 
-    public void writeLine(final String line) throws PopSocketException {
+    public void writeLine(final String line) throws Pop3SocketException {
         LOGGER.trace("Response line : {}", line);
         if (line.length() != 0 && line.charAt(0) == '.') {
             write(".");
@@ -411,14 +420,14 @@ public class Pop3Connection implements Runnable {
         write("\r\n");
     }
 
-    public void writeEndOfLines() throws PopSocketException {
+    public void writeEndOfLines() throws Pop3SocketException {
         LOGGER.trace("No more lines");
         write(".");
         write("\r\n");
         flush();
     }
 
-    public void writeOK(final String message) throws PopSocketException {
+    public void writeOK(final String message) throws Pop3SocketException {
         LOGGER.debug("OK Answer : {}", message);
         write("+OK");
         if (message != null) {
@@ -429,7 +438,7 @@ public class Pop3Connection implements Runnable {
         flush();
     }
 
-    public void writeErr(final String message) throws PopSocketException {
+    public void writeErr(final String message) throws Pop3SocketException {
         LOGGER.debug("Err Answer : {}", message);
         write("-ERR ");
         write(message);
@@ -437,19 +446,19 @@ public class Pop3Connection implements Runnable {
         flush();
     }
 
-    public void write(final String message) throws PopSocketException {
+    public void write(final String message) throws Pop3SocketException {
         try {
             outputStream.write(message.getBytes(US_ASCII));
         } catch (IOException e) {
-            throw new PopSocketException(e);
+            throw new Pop3SocketException(e);
         }
     }
 
-    public void flush() throws PopSocketException {
+    public void flush() throws Pop3SocketException {
         try {
             outputStream.flush();
         } catch (IOException e) {
-            throw new PopSocketException(e);
+            throw new Pop3SocketException(e);
         }
     }
 

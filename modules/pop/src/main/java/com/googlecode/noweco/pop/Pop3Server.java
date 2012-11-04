@@ -38,7 +38,7 @@ public class Pop3Server implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Pop3Server.class);
 
-    private static final int POP3_PORT = 110;
+    private static final int POP3_PORT = 1100;
 
     private List<Pop3Connection> connections;
 

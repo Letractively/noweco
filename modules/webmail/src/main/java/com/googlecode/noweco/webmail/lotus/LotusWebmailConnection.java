@@ -20,10 +20,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,9 +46,9 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.noweco.webmail.Message;
-import com.googlecode.noweco.webmail.Page;
 import com.googlecode.noweco.webmail.WebmailConnection;
+import com.googlecode.noweco.webmail.WebmailMessage;
+import com.googlecode.noweco.webmail.WebmailPages;
 
 /**
  * @author Gael Lalire
@@ -131,7 +132,7 @@ public class LotusWebmailConnection implements WebmailConnection {
         this.host = host;
     }
 
-    public void release() {
+    public void close() {
         if (httpclient != null) {
             httpclient.getConnectionManager().shutdown();
             httpclient = null;
@@ -141,7 +142,7 @@ public class LotusWebmailConnection implements WebmailConnection {
     @Override
     protected void finalize() {
         try {
-            release();
+            close();
         } catch (Throwable e) {
             // ignore
         }
@@ -224,10 +225,10 @@ public class LotusWebmailConnection implements WebmailConnection {
 
     }
 
-    public List<? extends Message> getMessages(final int index) throws IOException {
+    public List<? extends WebmailMessage> getMessages(final int index) throws IOException {
         String pageContent = loadPageContent(index);
 
-        final List<Message> messages = new ArrayList<Message>();
+        final List<WebmailMessage> messages = new ArrayList<WebmailMessage>();
 
         new MessageListener(pageContent) {
 
@@ -257,8 +258,8 @@ public class LotusWebmailConnection implements WebmailConnection {
         return pageContent;
     }
 
-    public Iterator<Page> getPages() throws IOException {
-        return new LotusPagesIterator(this);
+    public WebmailPages getPages() throws IOException {
+        return new LotusPages(this);
     }
 
     private static final Pattern TEMP_RAND_NUM_PATTERN = Pattern.compile("<input name=\"tmpRandNum\"[^>]*value=\"([^\"]*)\">");
@@ -267,8 +268,18 @@ public class LotusWebmailConnection implements WebmailConnection {
 
     private Pattern deleteEmptyTrashPattern;
 
-    public List<String> delete(final List<String> messageUids) throws IOException {
-        List<String> deleted = new ArrayList<String>();
+    public Set<String> delete(final Set<String> messageUids) throws IOException {
+        Set<String> deleted = new HashSet<String>();
+        // deleted in first but not deleted in second
+        deleted.addAll(tryDelete(messageUids));
+        // second time because deleting a deleted lotus message restore it
+        // message deleted on second time may or may be not deleted so keep in cache
+        deleted.removeAll(tryDelete(messageUids));
+        return deleted;
+    }
+
+    public Set<String> tryDelete(final Set<String> messageUids) throws IOException {
+        Set<String> deleted = new HashSet<String>();
         final List<String> toDelete = new ArrayList<String>();
         int page = 0;
         boolean maxMessage;

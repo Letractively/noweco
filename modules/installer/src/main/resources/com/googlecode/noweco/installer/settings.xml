@@ -1,0 +1,15 @@
+<settings xmlns="http://noweco.googlecode.com/SETTINGS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://noweco.googlecode.com/SETTINGS http://noweco.googlecode.com/svn/xsd/settings-1.2.0.xsd">
+  <registryPort>1985</registryPort>
+  <jmx>
+    <user>noweco</user>
+    <password>noweco</password>
+  </jmx>
+  <pop3Managers>
+    <webmail id="notes.bull.net" class="com.googlecode.noweco.webmail.lotus.LotusWebmail">
+      <authent class="com.googlecode.noweco.webmail.portal.bull.BullWebmailPortalConnector" />
+    </webmail>
+  </pop3Managers>
+  <popAccounts>
+    <user matches=".*" pop3Manager="notes.bull.net" />
+  </popAccounts>
+</settings>

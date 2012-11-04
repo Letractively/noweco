@@ -19,13 +19,13 @@ package com.googlecode.noweco.webmail.lotus;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.googlecode.noweco.webmail.Message;
+import com.googlecode.noweco.webmail.WebmailMessage;
 
 /**
  *
  * @author Gael Lalire
  */
-public class LotusMessage implements Message {
+public class LotusMessage implements WebmailMessage {
 
     private String id;
 
@@ -39,12 +39,15 @@ public class LotusMessage implements Message {
     public long getSize() throws IOException {
         // HEAD method on the web page do not work, because the message may be
         // transformed
-        byte[] buff = new byte[256];
+        byte[] buff = new byte[1024];
         long size = 0;
         LotusMessageInputStream is = fetch();
         try {
             int read = is.read(buff);
-            size += read;
+            while (read != -1) {
+                size += read;
+                read = is.read(buff);
+            }
         } finally {
             is.close();
         }

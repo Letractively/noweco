@@ -17,8 +17,7 @@
 package com.googlecode.noweco.webmail;
 
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -26,10 +25,10 @@ import java.util.List;
  */
 public interface WebmailConnection {
 
-    Iterator<Page> getPages() throws IOException;
+    WebmailPages getPages() throws IOException;
 
-    List<String> delete(List<String> messageUids) throws IOException;
+    Set<String> delete(Set<String> messageUids) throws IOException;
 
-    void release();
+    void close() throws IOException;
 
 }

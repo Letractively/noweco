@@ -29,7 +29,7 @@ public class IDGenerator implements Serializable {
 
     private List<Boolean> ids = new ArrayList<Boolean>();
 
-    public int getID() {
+    public int takeID() {
         int i = 0;
         synchronized (ids) {
             while (i < ids.size()) {
@@ -46,9 +46,10 @@ public class IDGenerator implements Serializable {
 
     public void releaseID(final int id) {
         synchronized (ids) {
-            if (ids.size() - 1 == id) {
+            int last = ids.size() - 1;
+            if (last == id) {
                 ids.remove(id);
-                int last = ids.size() - 1;
+                last--;
                 while (last > 0 && ids.get(last)) {
                     ids.remove(last);
                     last--;

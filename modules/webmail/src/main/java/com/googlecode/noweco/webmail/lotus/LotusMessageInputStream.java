@@ -16,10 +16,14 @@
 
 package com.googlecode.noweco.webmail.lotus;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.text.ParseException;
 
 import org.slf4j.Logger;
@@ -37,6 +41,8 @@ public class LotusMessageInputStream extends InputStream {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LotusMessageInputStream.class);
 
+    private static final CharsetDecoder ASCII_DECODER = Charset.forName("US-ASCII").newDecoder();
+
     private static final String DATE_PREFIX = "Date:";
 
     private static final String NEW_LINE = "\r\n";
@@ -51,50 +57,61 @@ public class LotusMessageInputStream extends InputStream {
 
     private InputStream beforeHeadersInputStream;
 
-    private File tmp = File.createTempFile("lmr", ".buf");
-
-    private CachedByteBuffer byteBuffer = new CachedByteBuffer(tmp);
+    private CachedByteBuffer byteBuffer = new CachedByteBuffer(File.createTempFile("lmr", ".buf"));
 
     private long position = 0;
 
+    public String decodeLine(final byte[] line, final CharsetDecoder decoder) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(line), decoder));
+        return reader.readLine();
+    }
+
     public LotusMessageInputStream(final String id, final InputStream contentReader) throws IOException {
         delegate = new ASCIILineInputStream(contentReader);
-        String line = delegate.readLine();
-        LOGGER.trace("read line: {}", line);
+
+        byte[] readLine = delegate.readLine();
 
         String dateLine = null;
         boolean receiveHeader = false;
-        while (line != null && line.length() != 0) {
-            if (line.length() > RECEIVED.length() && line.substring(0, RECEIVED.length()).toLowerCase().equals(RECEIVED)) {
-                receiveHeader = true;
-            }
-            if (line.startsWith(DATE_PREFIX)) {
-                try {
-                    dateLine = LotusDateTransformer.convertNotesToRfc822(line);
-                    LOGGER.debug("Convert Date header : {} for {}", dateLine, id);
-                    byteBuffer.write(dateLine.getBytes("US-ASCII"));
+        while (readLine != null) {
+            try {
+                if (readLine.length == 0) {
+                    // end of header
                     byteBuffer.write(ASCII_NEW_LINE);
-                } catch (ParseException e) {
-                    dateLine = line;
-                    LOGGER.trace("Not a lotus date", e);
-                    byteBuffer.write(line.getBytes("US-ASCII"));
+                    break;
+                }
+                String line = decodeLine(readLine, ASCII_DECODER);
+                if (line.length() > RECEIVED.length() && line.substring(0, RECEIVED.length()).toLowerCase().equals(RECEIVED)) {
+                    receiveHeader = true;
+                }
+                if (line.startsWith(DATE_PREFIX)) {
+                    try {
+                        dateLine = LotusDateTransformer.convertNotesToRfc822(line);
+                        LOGGER.debug("Convert Date header : {} for {}", dateLine, id);
+                        byteBuffer.write(dateLine.getBytes("US-ASCII"));
+                        byteBuffer.write(ASCII_NEW_LINE);
+                    } catch (ParseException e) {
+                        dateLine = line;
+                        LOGGER.trace("Not a lotus date", e);
+                        byteBuffer.write(readLine);
+                        byteBuffer.write(ASCII_NEW_LINE);
+                    }
+                } else {
+                    byteBuffer.write(readLine);
                     byteBuffer.write(ASCII_NEW_LINE);
                 }
-            } else {
-                byteBuffer.write(line.getBytes("US-ASCII"));
+                LOGGER.trace("read line: {}", line);
+            } catch (IOException e) {
+                LOGGER.warn("invalid line", e);
+                byteBuffer.write(readLine);
                 byteBuffer.write(ASCII_NEW_LINE);
             }
-            line = delegate.readLine();
-            LOGGER.trace("read line: {}", line);
+            readLine = delegate.readLine();
         }
         if (!receiveHeader && dateLine != null) {
             String receivedHeader = "Received: by noweco; " + dateLine.substring(DATE_PREFIX.length()) + NEW_LINE;
             LOGGER.debug("Insert generated Received header : {} for {}", receivedHeader, id);
             beforeHeadersInputStream = new ByteArrayInputStream(receivedHeader.getBytes("US-ASCII"));
-        }
-        if (line != null) {
-            // empty line
-            byteBuffer.write(ASCII_NEW_LINE);
         }
     }
 
@@ -129,17 +146,17 @@ public class LotusMessageInputStream extends InputStream {
 
     @Override
     protected void finalize() throws Throwable {
-        if (byteBuffer != null) {
-            byteBuffer.detachFile();
-            tmp.delete();
+        try {
+            close();
+        } catch (IOException e) {
+            LOGGER.warn("Unable to close", e);
         }
     }
 
     @Override
     public void close() throws IOException {
         if (byteBuffer != null) {
-            byteBuffer.detachFile();
-            tmp.delete();
+            byteBuffer.delete();
         }
         byteBuffer = null;
         delegate.close();
