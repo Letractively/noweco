@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="false">
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d %level [%thread] %logger - %msg%n</pattern>
+    </encoder>
+  </appender>
+  
+  <logger name="org.mortbay.log" level="WARN" />
+  <logger name="net.fortuna.ical4j" level="WARN" />
+
+  <root level="TRACE">
+    <appender-ref ref="STDOUT" />
+  </root>
+</configuration>
