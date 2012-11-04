@@ -17,5 +17,6 @@
     <module>calendar</module>
     <module>core</module>
     <module>cli</module>
+    <module>installer</module>
   </modules>
 </project>

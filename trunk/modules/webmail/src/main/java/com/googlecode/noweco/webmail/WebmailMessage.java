@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.googlecode.noweco.pop.spi;
+package com.googlecode.noweco.webmail;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,12 +23,16 @@ import java.io.InputStream;
  *
  * @author Gael Lalire
  */
-public interface Message {
+public interface WebmailMessage {
 
+    String getUniqueID();
+
+    /**
+     * @return getContent().length
+     * @throws IOException
+     */
     long getSize() throws IOException;
 
     InputStream getContent() throws IOException;
-
-    String getUID();
 
 }

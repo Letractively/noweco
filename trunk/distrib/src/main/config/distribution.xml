@@ -16,6 +16,7 @@
       </includes>
       <excludes>
         <exclude>*.sh</exclude>
+        <exclude>**/lib/**/*.jar</exclude>
       </excludes>
     </fileSet>
     <fileSet>
@@ -24,6 +25,7 @@
       <fileMode>0755</fileMode>
       <includes>
         <include>*.sh</include>
+        <include>**/lib/**/*.jar</include>
       </includes>
     </fileSet>
   </fileSets>

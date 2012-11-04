@@ -16,30 +16,26 @@
 
 package com.googlecode.noweco.webmail.cache;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.googlecode.noweco.webmail.Page;
+import com.googlecode.noweco.webmail.WebmailMessage;
+import com.googlecode.noweco.webmail.WebmailPages;
 
 /**
- *
  * @author Gael Lalire
  */
-public class CachedPageIterator implements Iterator<Page> {
+public class CachedPages implements WebmailPages {
 
     private CachedWebmailConnection cachedWebmailConnection;
 
-    private Iterator<Page> delegate;
+    private WebmailPages delegate;
 
     private List<String> uids;
 
-    private int pageCount = 0;
-
-    private int uidCount = 0;
-
-    public CachedPageIterator(final CachedWebmailConnection cachedWebmailConnection, final Iterator<Page> delegate) {
+    public CachedPages(final CachedWebmailConnection cachedWebmailConnection, final WebmailPages delegate) {
         Map<String, CachedMessage> messagesByUID = cachedWebmailConnection.getMessagesByUID();
         synchronized (messagesByUID) {
             uids = new ArrayList<String>(messagesByUID.keySet());
@@ -48,35 +44,26 @@ public class CachedPageIterator implements Iterator<Page> {
         this.delegate = delegate;
     }
 
-    public void addUIDs(final List<String> uids) {
-        this.uids.removeAll(uids);
-        uidCount++;
-        if (ended && pageCount == uidCount) {
-            cachedWebmailConnection.removeFromCache(this.uids);
-        }
-    }
-
-    private boolean ended;
-
-    public boolean hasNext() {
-        boolean hasNext = delegate.hasNext();
+    public boolean hasNextPage() throws IOException {
+        boolean hasNext = delegate.hasNextPage();
         if (!hasNext) {
-            ended = true;
-            if (pageCount == uidCount) {
-                cachedWebmailConnection.removeFromCache(uids);
-            }
+            cachedWebmailConnection.removeFromCache(uids);
         }
         return hasNext;
     }
 
-    public Page next() {
-        CachedPage cachedPage = new CachedPage(this, delegate.next(), cachedWebmailConnection);
-        pageCount++;
-        return cachedPage;
-    }
-
-    public void remove() {
-        delegate.remove();
+    public List<? extends WebmailMessage> getNextPageMessages() throws IOException {
+        if (!hasNextPage()) {
+            throw new IOException("no more page");
+        }
+        List<? extends WebmailMessage> messages = cachedWebmailConnection.getMessages(delegate.getNextPageMessages());
+        synchronized (this) {
+            for (WebmailMessage message : messages) {
+                // the cache must be kept
+                uids.remove(message.getUniqueID());
+            }
+        }
+        return messages;
     }
 
 }

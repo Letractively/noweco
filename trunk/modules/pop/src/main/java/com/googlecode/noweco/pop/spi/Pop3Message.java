@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-package com.googlecode.noweco.webmail;
+package com.googlecode.noweco.pop.spi;
 
 import java.io.IOException;
-import java.util.List;
+import java.io.InputStream;
 
 /**
  *
  * @author Gael Lalire
  */
-public interface Page {
+public interface Pop3Message {
 
-    List<? extends Message> getMessages() throws IOException;
+    long getSize() throws IOException;
+
+    InputStream getContent() throws IOException;
+
+    String getUID();
 
 }

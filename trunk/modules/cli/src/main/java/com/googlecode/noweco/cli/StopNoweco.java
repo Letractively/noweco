@@ -51,21 +51,27 @@ public final class StopNoweco {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StopNoweco.class);
 
-    @SuppressWarnings("unchecked")
     public static void main(final String[] args) {
-        File homeFile = new File(System.getProperty("noweco.home"));
+        int exitCode = stop(new File(args[0]));
+        if (exitCode != 0) {
+            System.exit(exitCode);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static int stop(final File homeFile) {
         Unmarshaller unMarshaller = null;
         try {
             JAXBContext jc = JAXBContext.newInstance(ObjectFactory.class.getPackage().getName());
             unMarshaller = jc.createUnmarshaller();
 
-            URL xsdURL = StartNoweco.class.getResource("settings.xsd");
+            URL xsdURL = StopNoweco.class.getResource("settings.xsd");
             SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
             Schema schema = schemaFactory.newSchema(xsdURL);
             unMarshaller.setSchema(schema);
         } catch (Exception e) {
             LOGGER.error("Unable to initialize settings parser", e);
-            System.exit(1);
+            return 1;
         }
 
         JAXBElement<Settings> settingsElement = null;
@@ -73,10 +79,10 @@ public final class StopNoweco {
             settingsElement = (JAXBElement<Settings>) unMarshaller.unmarshal(new FileInputStream(new File(homeFile, "settings.xml")));
         } catch (FileNotFoundException e) {
             LOGGER.error("Settings file not found");
-            System.exit(1);
+            return 1;
         } catch (JAXBException e) {
             LOGGER.error("Settings file is not valid", e);
-            System.exit(1);
+            return 1;
         }
 
         Settings settings = settingsElement.getValue();
@@ -88,11 +94,13 @@ public final class StopNoweco {
             MBeanServerConnection connection = connect.getMBeanServerConnection();
             ObjectName objectName = new ObjectName(AdminMBean.class.getPackage().getName() + ":type=" + AdminMBean.class.getSimpleName());
             connection.invoke(objectName, "stop", null, new String[0]);
+            connect.close();
         } catch (Exception e) {
             LOGGER.error("Unable to stop Noweco via Admin", e);
-            System.exit(1);
+            return 1;
         }
 
+        return 0;
     }
 
 }

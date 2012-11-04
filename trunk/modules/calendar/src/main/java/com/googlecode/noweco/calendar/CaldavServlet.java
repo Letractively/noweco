@@ -18,6 +18,7 @@ package com.googlecode.noweco.calendar;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -26,9 +27,11 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -36,6 +39,16 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+
+import net.fortuna.ical4j.data.CalendarBuilder;
+import net.fortuna.ical4j.data.CalendarOutputter;
+import net.fortuna.ical4j.data.ParserException;
+import net.fortuna.ical4j.model.Component;
+import net.fortuna.ical4j.model.Date;
+import net.fortuna.ical4j.model.Property;
+import net.fortuna.ical4j.model.ValidationException;
+import net.fortuna.ical4j.model.component.VEvent;
+import net.fortuna.ical4j.model.parameter.Value;
 
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
@@ -54,6 +67,7 @@ import com.googlecode.noweco.calendar.caldav.Multistatus;
 import com.googlecode.noweco.calendar.caldav.ObjectFactory;
 import com.googlecode.noweco.calendar.caldav.Owner;
 import com.googlecode.noweco.calendar.caldav.PrincipalCollectionSet;
+import com.googlecode.noweco.calendar.caldav.PrincipalSearchPropertySet;
 import com.googlecode.noweco.calendar.caldav.Prop;
 import com.googlecode.noweco.calendar.caldav.Propfind;
 import com.googlecode.noweco.calendar.caldav.Propstat;
@@ -88,6 +102,17 @@ public class CaldavServlet extends HttpServlet {
     private static final JAXBContext JAXB_CONTEXT;
 
     private static final MemoryFile ROOT;
+
+    public void init2() {
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.set(java.util.Calendar.MONTH, java.util.Calendar.DECEMBER);
+        cal.set(java.util.Calendar.DAY_OF_MONTH, 25);
+
+        VEvent christmas = new VEvent(new Date(cal.getTime()), "Christmas Day");
+        // initialise as an all-day event..
+        christmas.getProperties().getProperty(Property.DTSTART).getParameters().add(Value.DATE);
+
+    }
 
     static {
         try {
@@ -247,8 +272,12 @@ public class CaldavServlet extends HttpServlet {
             SyncToken syncToken = new SyncToken();
             syncToken.getContent().add("<string mal formee>");
             multistatus.setSyncToken(syncToken);
+        } else if (xmlRequest instanceof PrincipalSearchPropertySet) {
+           // PrincipalSearchPropertySet principalSearchPropertySet = (PrincipalSearchPropertySet) xmlRequest;
+            resp.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED);
+            return;
         } else {
-            LOGGER.error("Not implemented " + xmlRequest);
+            LOGGER.error("doReport not supported request " + xmlRequest.getClass());
             resp.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED);
             return;
         }
@@ -328,9 +357,10 @@ public class CaldavServlet extends HttpServlet {
             propstatNotFound.setProp(propNotFound);
 
             simplePropFind(memoryFile, reqProp, propOK, propNotFound);
-            if (reqProp.getCalendarData() != null) {
-                propOK.setCalendarData(memoryFile.getContent());
-            }
+//            if (reqProp.getCalendarData() != null) {
+//                // FIXME how ?
+//               // propOK.setCalendarData(memoryFile.getContent());
+//            }
             if (reqProp.getSupportedReportSet() != null) {
                 SupportedReportSet supportedReportSet = new SupportedReportSet();
                 SupportedReport supportedReport;
@@ -486,9 +516,9 @@ public class CaldavServlet extends HttpServlet {
         if (getcontenttype != null) {
             resp.setContentType(getcontenttype.getContent().get(0));
         }
-        PrintWriter writer = resp.getWriter();
-        writer.write(locate.getContent());
-        writer.close();
+        ServletOutputStream outputStream = resp.getOutputStream();
+        outputStream.write(locate.getContent());
+        outputStream.close();
     }
 
     @Override
@@ -512,15 +542,31 @@ public class CaldavServlet extends HttpServlet {
         } else {
             memoryFile = locate;
         }
-        BufferedReader reader = req.getReader();
-        String line = reader.readLine();
-        StringBuilder stringBuilder = new StringBuilder();
-        while (line != null) {
-            stringBuilder.append(line);
-            stringBuilder.append('\n');
-            line = reader.readLine();
+        CalendarBuilder builder = new CalendarBuilder();
+        net.fortuna.ical4j.model.Calendar calendar;
+        try {
+            calendar = builder.build(req.getInputStream());
+        } catch (ParserException e) {
+            throw new RuntimeException(e);
         }
-        memoryFile.setContent(stringBuilder.toString());
+        for (Iterator i = calendar.getComponents().iterator(); i.hasNext();) {
+            Component component = (Component) i.next();
+            System.out.println("Component [" + component.getName() + "]");
+
+            if (component instanceof VEvent) {
+                VEvent event = (VEvent) component;
+                LOGGER.info("Create event " + event.getSummary().getValue() + " in " + event.getLocation().getValue() + " from " + event.getStartDate().getDate() + " to " + event.getEndDate().getDate());
+
+            }
+        }
+        CalendarOutputter outputter = new CalendarOutputter();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            outputter.output(calendar, out);
+        } catch (ValidationException e) {
+            throw new RuntimeException(e);
+        }
+        memoryFile.setContent(out.toByteArray());
         Getcontenttype getcontenttype = new Getcontenttype();
         getcontenttype.getContent().add(req.getHeader("Content-Type"));
         memoryFile.getProp().setGetcontenttype(getcontenttype);

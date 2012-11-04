@@ -22,9 +22,9 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 
-import com.googlecode.noweco.pop.spi.Message;
 import com.googlecode.noweco.pop.spi.Pop3Account;
 import com.googlecode.noweco.pop.spi.Pop3Manager;
+import com.googlecode.noweco.pop.spi.Pop3Message;
 import com.googlecode.noweco.webmail.lotus.LotusMessageInputStream;
 
 /**
@@ -41,8 +41,8 @@ public class FakePop3Manager implements Pop3Manager, Pop3Account {
     }
     // 343K
 
-    public List<? extends Message> getMessages() throws IOException {
-        return Collections.singletonList(new Message() {
+    public List<? extends Pop3Message> getMessages() throws IOException {
+        return Collections.singletonList(new Pop3Message() {
 
             public String getUID() {
                 return "15B2505191F3CA630ACD25FA8942A285";
@@ -61,6 +61,11 @@ public class FakePop3Manager implements Pop3Manager, Pop3Account {
 
     public void delete(final List<String> uids) throws IOException {
         throw new IOException("casse");
+    }
+
+    public void close() throws IOException {
+        // TODO Auto-generated method stub
+
     }
 
 }

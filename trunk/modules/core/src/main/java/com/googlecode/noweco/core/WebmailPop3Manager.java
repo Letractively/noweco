@@ -38,7 +38,4 @@ public class WebmailPop3Manager implements Pop3Manager {
         return new WebmailPop3Account(webmail.connect(username, password));
     }
 
-    public void release() throws IOException {
-        webmail.release();
-    }
 }

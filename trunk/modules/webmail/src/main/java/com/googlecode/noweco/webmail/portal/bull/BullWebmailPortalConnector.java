@@ -59,7 +59,7 @@ public class BullWebmailPortalConnector implements PortalConnector {
 
     private String authent(final DefaultHttpClient httpclient, final String user, final String password) throws IOException {
         // prepare the request
-        HttpPost httpost = new HttpPost("https://bullsentry3.bull.net:443/cgi/wway_authent?TdsName=PILX");
+        HttpPost httpost = new HttpPost("https://bullsentry.bull.net:443/cgi/wway_authent?TdsName=PILX");
         List<NameValuePair> nvps = new ArrayList<NameValuePair>();
         nvps.add(new BasicNameValuePair("Internet", "1"));
         nvps.add(new BasicNameValuePair("WebAgt", "1"));
@@ -128,7 +128,7 @@ public class BullWebmailPortalConnector implements PortalConnector {
 
         // STEP 2 : WEB-MAIL
 
-        httpost = new HttpPost("https://bullsentry3.bull.fr:443/cgi/wway_cookie");
+        httpost = new HttpPost("https://bullsentry.bull.fr:443/cgi/wway_cookie");
         nvps = new ArrayList<NameValuePair>();
         nvps.add(new BasicNameValuePair("TdsName", "PILX"));
         nvps.add(new BasicNameValuePair("Proto", "s"));

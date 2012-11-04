@@ -19,19 +19,20 @@ package com.googlecode.noweco.core;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.googlecode.noweco.pop.spi.Message;
+import com.googlecode.noweco.pop.spi.Pop3Message;
+import com.googlecode.noweco.webmail.WebmailMessage;
 
 /**
  *
  * @author Gael Lalire
  */
-public class WebmailMessage implements Message {
+public class WebmailPop3Message implements Pop3Message {
 
-    private com.googlecode.noweco.webmail.Message webmailMessage;
+    private WebmailMessage webmailMessage;
 
     private int id;
 
-    public WebmailMessage(final int id, final com.googlecode.noweco.webmail.Message webmailMessage) {
+    public WebmailPop3Message(final int id, final WebmailMessage webmailMessage) {
         this.id = id;
         this.webmailMessage = webmailMessage;
     }

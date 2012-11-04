@@ -19,44 +19,49 @@ package com.googlecode.noweco.webmail.cache;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
-import com.googlecode.noweco.webmail.Message;
+import com.googlecode.noweco.webmail.WebmailMessage;
 
 /**
  *
  * @author Gael Lalire
  */
-public class CachedMessage implements Message, Serializable {
+public class CachedMessage implements WebmailMessage, Serializable {
 
     private static final long serialVersionUID = 8245316141066328829L;
 
-    public void setDelegate(final Message delegate) throws IOException {
+    public void setDelegate(final WebmailMessage delegate) throws IOException {
         content = new CachedInputStream(new InputStreamFactory() {
             public InputStream createInputStream() throws IOException {
                 return delegate.getContent();
             }
-        }, data);
+        }, cachedByteBuffer);
     }
 
     private String uniqueID;
 
-    private Integer size;
+    private Long size;
 
     private transient CachedInputStream content;
 
-    private File data;
+    private CachedByteBuffer cachedByteBuffer;
 
-    public CachedMessage(final Message delegate, final File data) throws IOException {
+    private int id;
+
+    public int getId() {
+        return id;
+    }
+
+    public CachedMessage(final WebmailMessage delegate, final File data, final int id) throws IOException {
         uniqueID = delegate.getUniqueID();
-        this.data = data;
+        this.id = id;
+        cachedByteBuffer = new CachedByteBuffer(data);
         content = new CachedInputStream(new InputStreamFactory() {
             public InputStream createInputStream() throws IOException {
                 return delegate.getContent();
             }
-        }, data);
+        }, cachedByteBuffer);
     }
 
     public String getUniqueID() {
@@ -65,7 +70,7 @@ public class CachedMessage implements Message, Serializable {
 
     public synchronized long getSize() throws IOException {
         if (size == null) {
-            int csize = 0;
+            long csize = 0;
             byte[] buff = new byte[2048];
             InputStream newReader = content.newInputStream();
             try {
@@ -79,28 +84,19 @@ public class CachedMessage implements Message, Serializable {
             }
             size = csize;
         }
-        return size.intValue();
+        return size.longValue();
     }
 
     public synchronized InputStream getContent() throws IOException {
         return content.newInputStream();
     }
 
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
-        String result = null;
-//        if (content != null) {
-//            result = content.get();
-//        }
-        out.writeObject(result);
+    public void delete() throws IOException {
+        cachedByteBuffer.delete();
     }
 
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        String result = (String) in.readObject();
-//        if (result != null) {
-//            content = new SoftReference<String>(result);
-//        }
+    public void shutdown() throws IOException {
+        cachedByteBuffer.shutdown();
     }
 
 }

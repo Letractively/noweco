@@ -26,8 +26,10 @@ import java.util.List;
  */
 public interface Pop3Account {
 
-    List<? extends Message> getMessages() throws IOException;
+    List<? extends Pop3Message> getMessages() throws IOException;
 
     void delete(List<String> uids) throws IOException;
+
+    void close() throws IOException;
 
 }

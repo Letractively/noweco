@@ -17,22 +17,16 @@
 package com.googlecode.noweco.webmail;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.List;
 
 /**
  *
  * @author Gael Lalire
  */
-public interface Message {
+public interface WebmailPages {
 
-    String getUniqueID();
+    boolean hasNextPage() throws IOException;
 
-    /**
-     * @return getContent().length
-     * @throws IOException
-     */
-    long getSize() throws IOException;
-
-    InputStream getContent() throws IOException;
+    List<? extends WebmailMessage> getNextPageMessages() throws IOException;
 
 }

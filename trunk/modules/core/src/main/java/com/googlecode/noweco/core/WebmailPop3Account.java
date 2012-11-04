@@ -18,13 +18,13 @@ package com.googlecode.noweco.core;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
 
 import com.googlecode.noweco.pop.spi.Pop3Account;
-import com.googlecode.noweco.webmail.Message;
-import com.googlecode.noweco.webmail.Page;
 import com.googlecode.noweco.webmail.WebmailConnection;
+import com.googlecode.noweco.webmail.WebmailMessage;
+import com.googlecode.noweco.webmail.WebmailPages;
 
 /**
  *
@@ -34,19 +34,18 @@ public class WebmailPop3Account implements Pop3Account {
 
     private WebmailConnection webmailConnection;
 
-    private List<WebmailMessage> webmailMessages = new ArrayList<WebmailMessage>();
+    private List<WebmailPop3Message> webmailMessages = new ArrayList<WebmailPop3Message>();
 
     public WebmailPop3Account(final WebmailConnection webmailConnection) throws IOException {
         this.webmailConnection = webmailConnection;
     }
 
-    public List<WebmailMessage> getMessages() throws IOException {
+    public List<WebmailPop3Message> getMessages() throws IOException {
         int id = 1;
-        Iterator<Page> pages = webmailConnection.getPages();
-        while (pages.hasNext()) {
-            List<? extends Message> messages = pages.next().getMessages();
-            for (Message message : messages) {
-                webmailMessages.add(new WebmailMessage(id, message));
+        WebmailPages pages = webmailConnection.getPages();
+        while (pages.hasNextPage()) {
+            for (WebmailMessage message : pages.getNextPageMessages()) {
+                webmailMessages.add(new WebmailPop3Message(id, message));
                 id++;
             }
         }
@@ -54,7 +53,11 @@ public class WebmailPop3Account implements Pop3Account {
     }
 
     public void delete(final List<String> uids) throws IOException {
-        webmailConnection.delete(uids);
+        webmailConnection.delete(new HashSet<String>(uids));
+    }
+
+    public void close() throws IOException {
+        webmailConnection.close();
     }
 
 }

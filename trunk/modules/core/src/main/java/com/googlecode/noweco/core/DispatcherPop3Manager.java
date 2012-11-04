@@ -34,12 +34,6 @@ public class DispatcherPop3Manager implements Pop3Manager {
         this.dispatchedPop3Managers = dispatchedPop3Managers;
     }
 
-    public void release() throws IOException {
-        for (DispatchedPop3Manager dest : dispatchedPop3Managers) {
-            dest.getPop3Manager().release();
-        }
-    }
-
     public Pop3Account authent(final String username, final String password) throws IOException {
         for (DispatchedPop3Manager dest : dispatchedPop3Managers) {
             if (dest.getPattern().matcher(username).matches()) {

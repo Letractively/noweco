@@ -18,11 +18,12 @@ package com.googlecode.noweco.webmail.cache;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.io.Serializable;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,12 +31,11 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.noweco.webmail.Message;
-import com.googlecode.noweco.webmail.Page;
 import com.googlecode.noweco.webmail.WebmailConnection;
+import com.googlecode.noweco.webmail.WebmailMessage;
+import com.googlecode.noweco.webmail.WebmailPages;
 
 /**
- *
  * @author Gael Lalire
  */
 public class CachedWebmailConnection implements WebmailConnection, Serializable {
@@ -68,7 +68,12 @@ public class CachedWebmailConnection implements WebmailConnection, Serializable 
 
     private IDGenerator generator;
 
-    public CachedWebmailConnection(final WebmailConnection delegate, final File data, final IDGenerator generator, final String password) {
+    private transient Thread workingThread;
+
+    private transient WeakReference<WebmailPages> lastResult;
+
+    public CachedWebmailConnection(final WebmailConnection delegate, final File data, final IDGenerator generator,
+            final String password) {
         this.password = password;
         this.data = data;
         this.delegate = delegate;
@@ -82,23 +87,31 @@ public class CachedWebmailConnection implements WebmailConnection, Serializable 
     public void removeFromCache(final List<String> uids) {
         synchronized (messagesByUID) {
             for (String uid : uids) {
-                if (messagesByUID.remove(uid) != null) {
+                CachedMessage remove = messagesByUID.remove(uid);
+                if (remove != null) {
+                    generator.releaseID(remove.getId());
+                    try {
+                        remove.delete();
+                    } catch (IOException e) {
+                        LOGGER.error("Unable to delete cache", e);
+                    }
                     LOGGER.info("Remove {} from cache", uid);
                 }
             }
         }
     }
 
-    public List<? extends Message> getMessages(final List<? extends Message> messages) throws IOException {
-        List<Message> result = new ArrayList<Message>(messages.size());
+    public List<? extends WebmailMessage> getMessages(final List<? extends WebmailMessage> messages) throws IOException {
+        List<WebmailMessage> result = new ArrayList<WebmailMessage>(messages.size());
 
         synchronized (messagesByUID) {
-            for (Message message : messages) {
+            for (WebmailMessage message : messages) {
                 String uniqueID = message.getUniqueID();
                 if (!deleteFailed.contains(uniqueID)) {
                     CachedMessage cachedMessage = messagesByUID.get(uniqueID);
                     if (cachedMessage == null) {
-                        cachedMessage = new CachedMessage(message, new File(data, "msg" + generator.getID()));
+                        int id = generator.takeID();
+                        cachedMessage = new CachedMessage(message, new File(data, "msg" + id), id);
                         LOGGER.info("Add {} to cache", uniqueID);
                         messagesByUID.put(uniqueID, cachedMessage);
                     } else {
@@ -111,33 +124,67 @@ public class CachedWebmailConnection implements WebmailConnection, Serializable 
         return result;
     }
 
-    public Iterator<Page> getPages() throws IOException {
-        return new CachedPageIterator(this, delegate.getPages());
-    }
-
-    public void release() {
-        delegate.release();
-    }
-
-    public List<String> delete(final List<String> messageUids) throws IOException {
+    public WebmailPages getPages() throws IOException {
+        CachedPages cachedPages = null;
+        if (delegate == null) {
+            throw new IOException("delegate not fixed");
+        }
+        synchronized (this) {
+            if (workingThread != null) {
+                do {
+                    try {
+                        wait();
+                    } catch (InterruptedException e) {
+                        throw new InterruptedIOException();
+                    }
+                } while (workingThread != null);
+                if (lastResult != null) {
+                    WebmailPages webmailPages = lastResult.get();
+                    if (webmailPages != null) {
+                        return webmailPages;
+                    }
+                }
+            }
+            workingThread = Thread.currentThread();
+        }
         try {
-            List<String> delegateMessageUids;
+            cachedPages = new CachedPages(this, delegate.getPages());
+            lastResult = new WeakReference<WebmailPages>(cachedPages);
+            return cachedPages;
+        } finally {
+            synchronized (this) {
+                workingThread = null;
+                notifyAll();
+            }
+        }
+    }
+
+    public void close() throws IOException {
+        if (workingThread != null) {
+            workingThread.interrupt();
+        }
+    }
+
+    public Set<String> delete(final Set<String> messageUids) {
+        try {
+            Set<String> delegateMessageUids;
             synchronized (messagesByUID) {
                 if (deleteFailed.size() != 0) {
                     Set<String> uids = new HashSet<String>(messageUids);
                     uids.addAll(deleteFailed);
-                    delegateMessageUids = new ArrayList<String>(uids);
+                    delegateMessageUids = uids;
                 } else {
                     delegateMessageUids = messageUids;
                 }
             }
-            List<String> deletedUid = delegate.delete(delegateMessageUids);
+            Set<String> deletedUid = delegate.delete(delegateMessageUids);
+            // delete successful
             synchronized (messagesByUID) {
-                deleteFailed.removeAll(delegateMessageUids);
+                deleteFailed.removeAll(deletedUid);
             }
-            List<String> result;
+            Set<String> result;
             if (delegateMessageUids != messageUids) {
-                result = new ArrayList<String>(messageUids);
+                result = new HashSet<String>(messageUids);
                 result.retainAll(deletedUid);
             } else {
                 result = deletedUid;
@@ -147,8 +194,17 @@ public class CachedWebmailConnection implements WebmailConnection, Serializable 
             synchronized (messagesByUID) {
                 deleteFailed.addAll(messageUids);
             }
-            LOGGER.warn("Delete failed, however message deletion is keeped in cache for next deletion try", e);
+            LOGGER.warn("Delete failed, however message deletion is kept in cache for next deletion try", e);
             return messageUids;
+        }
+    }
+
+    public void shutdown() throws IOException {
+        if (delegate != null) {
+            delegate.close();
+        }
+        for (CachedMessage cachedMessage : messagesByUID.values()) {
+            cachedMessage.shutdown();
         }
     }
 
